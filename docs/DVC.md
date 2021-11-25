@@ -2,14 +2,14 @@
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**getFeatures**](DVC.md#getFeatures) | **POST** v1/features | Get all features for user data
-[**getVariableByKey**](DVC.md#getVariableByKey) | **POST** v1/variables/{key} | Get variable by key for user data
-[**getVariables**](DVC.md#getVariables) | **POST** v1/variables | Get all variables for user data
+[**allFeatures**](DVC.md#allFeatures) | **POST** v1/features | Get all features for user data
+[**variable**](DVC.md#variable) | **POST** v1/variables/{key} | Get variable by key for user data
+[**allVariables**](DVC.md#allVariables) | **POST** v1/variables | Get all variables for user data
 [**track**](DVC.md#track) | **POST** v1/track | Post events to DevCycle for user
 
-<a name="getFeatures"></a>
-# **getFeatures**
-> Map&lt;String, Feature&gt; getFeatures(user)
+<a name="allFeatures"></a>
+# **allFeatures**
+> Map&lt;String, Feature&gt; allFeatures(user)
 
 Get all features for user data
 
@@ -25,13 +25,13 @@ public class MyClass {
         dvc = new DVC("your_server_key");
     }
     
-    public void getFeatures() {
+    public void allFeatures() {
         User user = User.builder()
                 .userId("a_user_id")
                 .country("US")
                 .build();
 
-        Map<String, Feature> features = dvc.getFeatures(user);
+        Map<String, Feature> features = dvc.allFeatures(user);
     }
 }
 ```
@@ -46,9 +46,9 @@ Name | Type | Description  | Notes
 
 [**Map&lt;String, Feature&gt;**](Feature.md)
 
-<a name="getVariableByKey"></a>
-# **getVariableByKey**
-> Variable getVariableByKey(user, key)
+<a name="variable"></a>
+# **variable**
+> Variable variable(user, key, defaultValue)
 
 Get variable by key for user data
 
@@ -72,7 +72,7 @@ public class MyClass {
 
         String key = "turn_on_super_cool_feature";
         Boolean defaultValue = true;
-        Variable variable = dvc.getVariableByKey(user, key, defaultValue);
+        Variable variable = dvc.variable(user, key, defaultValue);
 
         if ((Boolean) variable.getValue()) {
             // New Feature code here
@@ -94,9 +94,9 @@ Name | Type | Description  | Notes
 
 [**Variable**](Variable.md)
 
-<a name="getVariables"></a>
-# **getVariables**
-> Map&lt;String, Variable&gt; getVariables(body)
+<a name="allVariables"></a>
+# **allVariables**
+> Map&lt;String, Variable&gt; allVariables(user)
 
 Get all variables for user data
 
@@ -112,13 +112,13 @@ public class MyClass {
         dvc = new DVC("your_server_key");
     }
 
-    public void getVariables() {
+    public void allVariables() {
         User user = User.builder()
                 .userId("a_user_id")
                 .country("US")
                 .build();
         
-        Map<String, Variable> variables = dvc.getVariables(user);
+        Map<String, Variable> variables = dvc.allVariables(user);
     }
 }
 ```
@@ -127,7 +127,7 @@ public class MyClass {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **userAndEvents** | [**UserAndEvents**](UserAndEvents.md)|  |
+**user** | [**User**](User.md)|  |
 
 ### Return type
 
@@ -135,7 +135,7 @@ Name | Type | Description  | Notes
 
 <a name="track"></a>
 # **track**
-> DvcResponse track(userAndEvents)
+> DvcResponse track(user, event)
 
 Post events to DevCycle for user
 
@@ -164,11 +164,7 @@ public class MyClass {
                 .value(new BigDecimal(600))
                 .build();
 
-        UserAndEvents userAndEvents = new UserAndEvents();
-        userAndEvents.setUser(user);
-        userAndEvents.setEvents(Collections.singletonList(event));
-
-        DVCResponse response = dvc.track(userAndEvents);
+        DVCResponse response = dvc.track(user, event);
     }
 }
 ```
@@ -177,7 +173,8 @@ public class MyClass {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **body** | [**UserDataAndEventBody**](UserAndEvents.md)|  |
+**user** | [**User**](User.md)|  |
+**event** | [**Event**](Event.md)|
 
 ### Return type
 
