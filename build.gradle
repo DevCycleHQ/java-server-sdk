@@ -1,0 +1,63 @@
+plugins {
+    id 'idea'
+    id 'eclipse'
+    id 'java'
+    id 'java-library'
+    id 'maven'
+    id 'maven-publish'
+}
+
+group = 'com.devcycle'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+
+install {
+    repositories.mavenInstaller {
+        pom.artifactId = 'java-server-sdk'
+    }
+}
+
+publishing {
+    publications {
+        myLibrary(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
+task execute(type:JavaExec) {
+   main = System.getProperty('mainClass')
+   classpath = sourceSets.main.runtimeClasspath
+}
+
+ext {
+    retrofit_version = "2.9.0"
+    jackson_version = "2.13.0"
+    swagger_annotations_version = "2.1.11"
+    lombok_version = "1.18.22"
+
+    junit_version = "4.13.2"
+    mockito_core_version = "4.0.0"
+}
+
+dependencies {
+    annotationProcessor("org.projectlombok:lombok:$lombok_version")
+
+    implementation("com.squareup.retrofit2:retrofit:$retrofit_version")
+    implementation("com.squareup.retrofit2:converter-jackson:$retrofit_version")
+    api("com.fasterxml.jackson.core:jackson-databind:$jackson_version")
+    implementation("io.swagger.core.v3:swagger-annotations:$swagger_annotations_version")
+
+    compileOnly("org.projectlombok:lombok:$lombok_version")
+
+    testAnnotationProcessor("org.projectlombok:lombok:$lombok_version")
+    testImplementation("junit:junit:$junit_version")
+    testImplementation("org.mockito:mockito-core:$mockito_core_version")
+    testImplementation("com.squareup.retrofit2:retrofit-mock:$retrofit_version")
+    testCompileOnly("org.projectlombok:lombok:$lombok_version")
+}
