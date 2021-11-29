@@ -11,7 +11,7 @@ public class DVCException extends Exception {
     private final ErrorResponse errorResponse;
 
     public DVCException(HttpResponseCode httpResponseCode, ErrorResponse errorResponse) {
-        super();
+        super(errorResponse.getMessage());
         this.httpResponseCode = httpResponseCode;
         this.errorResponse = errorResponse;
     }

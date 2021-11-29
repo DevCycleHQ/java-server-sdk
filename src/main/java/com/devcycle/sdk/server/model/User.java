@@ -17,11 +17,13 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NonNull;
 
 @Data
 @Builder
 public class User {
 
+  @NonNull
   @Schema(required = true, description = "Unique id to identify the user")
   @JsonProperty("user_id")
   private String userId;

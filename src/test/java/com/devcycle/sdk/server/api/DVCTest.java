@@ -71,11 +71,11 @@ public class DVCTest {
 
         when(apiInterface.getVariableByKey(user, key)).thenReturn(dvcApiMock.getVariableByKey(user, key));
 
-        Variable variable = api.variable(user, key, true);
+        Variable<Boolean> variable = api.variable(user, key, true);
 
         assertUserDefaultsCorrect(user);
 
-        Assert.assertFalse((Boolean) variable.getValue());
+        Assert.assertFalse(variable.getValue());
     }
 
     @Test
@@ -86,11 +86,32 @@ public class DVCTest {
 
         when(apiInterface.getVariables(user)).thenReturn(dvcApiMock.getVariables(user));
 
-        Map<String, Variable> variables = api.allVariables(user);
+        Map<String, Variable<?>> variables = api.allVariables(user);
 
         assertUserDefaultsCorrect(user);
 
         Assert.assertNotNull(variables);
+    }
+
+    @Test
+    public void variable_nullUser_throwsException() {
+        Assert.assertThrows("User cannot be null",
+                IllegalArgumentException.class,
+                () -> api.variable(null, "wibble", true));
+    }
+
+    @Test
+    public void variable_nullUserId_throwsException() {
+        Assert.assertThrows("userId is marked non-null but is null",
+                NullPointerException.class, () -> User.builder().build());
+    }
+
+    @Test
+    public void variable_emptyUserId_throwsException() {
+        User user = User.builder().userId("").build();
+
+        Assert.assertThrows("userId cannot be empty",
+                IllegalArgumentException.class, () -> api.variable(user, "wibble", true));
     }
 
     @Test

@@ -14,12 +14,12 @@ public class DVCApiMock implements DVCApi {
     }
 
     @Override
-    public Call<Variable> getVariableByKey(User user, String key) {
+    public <T> Call<Variable<T>> getVariableByKey(User user, String key) {
         return TestResponse.getVariableByKey();
     }
 
     @Override
-    public Call<Map<String, Variable>> getVariables(User user) {
+    public Call<Map<String, Variable<?>>> getVariables(User user) {
         return TestResponse.getVariables();
     }
 

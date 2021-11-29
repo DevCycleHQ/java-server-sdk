@@ -9,7 +9,6 @@ import retrofit2.Response;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -36,6 +35,8 @@ public final class DVC {
    * @return Map<String, Feature>
    */
   public Map<String, Feature> allFeatures(User user) throws DVCException, IOException {
+    validateUser(user);
+
     addDefaults(user);
 
     Call<Map<String, Feature>> response = api.getFeatures(user);
@@ -47,20 +48,34 @@ public final class DVC {
    * 
    * @param user  (required)
    * @param key Variable key (required)
+   * @param defaultValue Default value to use if the variable could not be fetched (required)
    * @return Variable
    */
-  public <T> Variable variable(User user, String key, T defaultValue) {
+  @SuppressWarnings("unchecked")
+  public <T> Variable<T> variable(User user, String key, T defaultValue) {
+    validateUser(user);
+
+    if (key == null || key.equals("")) {
+      throw new IllegalArgumentException("key cannot be null or empty");
+    }
+
+    if (defaultValue == null) {
+      throw new IllegalArgumentException("defaultValue cannot be null");
+    }
+
     addDefaults(user);
 
-    Variable variable;
+    Variable<T> variable;
 
     try {
-      Call<Variable> response = api.getVariableByKey(user, key);
+      Call<Variable<T>> response = api.getVariableByKey(user, key);
       variable = getResponse(response);
     } catch (Exception exception) {
-      variable = Variable.builder()
+      variable = (Variable<T>) Variable.builder()
               .key(key)
               .value(defaultValue)
+              .isDefaulted(true)
+              .reasonUsingDefaultValue(exception.getMessage())
               .build();
     }
     return variable;
@@ -72,20 +87,25 @@ public final class DVC {
    * @param user  (required)
    * @return Map<String, Variable>
    */
-  public Map<String, Variable> allVariables(User user) throws DVCException, IOException {
+  public Map<String, Variable<?>> allVariables(User user) throws DVCException, IOException {
+    validateUser(user);
+
     addDefaults(user);
 
-    Call<Map<String, Variable>> response = api.getVariables(user);
+    Call<Map<String, Variable<?>>> response = api.getVariables(user);
     return getResponse(response);
   }
 
   /**
    * Post events to DevCycle for user
    * 
-   * @param userAndEvents  (required)
+   * @param user  (required)
+   * @param event  (required)
    * @return DVCResponse
    */
   public DVCResponse track(User user, Event event) throws DVCException, IOException {
+    validateUser(user);
+
     addDefaults(user);
 
     UserAndEvents userAndEvents = UserAndEvents.builder()
@@ -106,7 +126,7 @@ public final class DVC {
     errorResponse.setMessage("Unknown error");
 
     if (response.errorBody() != null) {
-      errorResponse.setMessage(response.errorBody().string());
+      errorResponse = OBJECT_MAPPER.readValue(response.errorBody().string(), ErrorResponse.class);
       throw new DVCException(httpResponseCode, errorResponse);
     }
 
@@ -139,6 +159,15 @@ public final class DVC {
     }
     if (Objects.isNull(user.getSdkVersion()) || Objects.equals(user.getSdkVersion(), "")) {
       user.setSdkVersion(DEFAULT_SDK_VERSION);
+    }
+  }
+
+  private void validateUser(User user) {
+    if (user == null) {
+      throw new IllegalArgumentException("User cannot be null");
+    }
+    if (user.getUserId().equals("")) {
+      throw new IllegalArgumentException("userId cannot be empty");
     }
   }
 }

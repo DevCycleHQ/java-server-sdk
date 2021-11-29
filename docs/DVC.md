@@ -72,9 +72,9 @@ public class MyClass {
 
         String key = "turn_on_super_cool_feature";
         Boolean defaultValue = true;
-        Variable variable = dvc.variable(user, key, defaultValue);
+        Variable<Boolean> variable = dvc.variable(user, key, defaultValue);
 
-        if ((Boolean) variable.getValue()) {
+        if (variable.getValue()) {
             // New Feature code here
         } else {
             // Old code here
