@@ -26,7 +26,7 @@ interface DVCApi {
    */
   @Headers({"Content-Type:application/json"})
   @POST("v1/variables/{key}")
-  <T> Call<Variable<T>> getVariableByKey(@Body User user, @Path("key") String key);
+  Call<Variable> getVariableByKey(@Body User user, @Path("key") String key);
 
   /**
    * Get all variables by key for user data
@@ -36,7 +36,7 @@ interface DVCApi {
    */
   @Headers({"Content-Type:application/json"})
   @POST("v1/variables")
-  Call<Map<String, Variable<?>>> getVariables(@Body User user);
+  Call<Map<String, Variable>> getVariables(@Body User user);
 
   /**
    * Post events to DevCycle for user

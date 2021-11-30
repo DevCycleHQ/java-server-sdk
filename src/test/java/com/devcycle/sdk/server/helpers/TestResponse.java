@@ -47,8 +47,8 @@ public final class TestResponse {
         return Calls.response(features);
     }
 
-    public static Call<Map<String, Variable<?>>> getVariables() {
-        HashMap<String, Variable<?>> variables = new HashMap<>();
+    public static Call<Map<String, Variable>> getVariables() {
+        HashMap<String, Variable> variables = new HashMap<>();
         variables.put("test-false", Variable.builder()
                 .id(UUID.randomUUID().toString())
                 .key("test-false")
@@ -78,7 +78,7 @@ public final class TestResponse {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> Call<Variable<T>> getVariableByKey() {
+    public static <T> Call<Variable> getVariableByKey() {
         Variable<T> variable = (Variable<T>) Variable.builder()
                 .id(UUID.randomUUID().toString())
                 .key("test-false")

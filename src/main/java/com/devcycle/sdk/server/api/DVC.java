@@ -32,7 +32,7 @@ public final class DVC {
    * Get all features for user data
    * 
    * @param user  (required)
-   * @return Map<String, Feature>
+   * @return Map&gt;String, Feature&lt;
    */
   public Map<String, Feature> allFeatures(User user) throws DVCException, IOException {
     validateUser(user);
@@ -68,7 +68,7 @@ public final class DVC {
     Variable<T> variable;
 
     try {
-      Call<Variable<T>> response = api.getVariableByKey(user, key);
+      Call<Variable> response = api.getVariableByKey(user, key);
       variable = getResponse(response);
     } catch (Exception exception) {
       variable = (Variable<T>) Variable.builder()
@@ -85,14 +85,14 @@ public final class DVC {
    * Get all variables by key for user data
    * 
    * @param user  (required)
-   * @return Map<String, Variable>
+   * @return Map&gt;String, Variable&lt;
    */
-  public Map<String, Variable<?>> allVariables(User user) throws DVCException, IOException {
+  public Map<String, Variable> allVariables(User user) throws DVCException, IOException {
     validateUser(user);
 
     addDefaults(user);
 
-    Call<Map<String, Variable<?>>> response = api.getVariables(user);
+    Call<Map<String, Variable>> response = api.getVariables(user);
     return getResponse(response);
   }
 

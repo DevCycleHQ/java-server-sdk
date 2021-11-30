@@ -86,7 +86,7 @@ public class DVCTest {
 
         when(apiInterface.getVariables(user)).thenReturn(dvcApiMock.getVariables(user));
 
-        Map<String, Variable<?>> variables = api.allVariables(user);
+        Map<String, Variable> variables = api.allVariables(user);
 
         assertUserDefaultsCorrect(user);
 
