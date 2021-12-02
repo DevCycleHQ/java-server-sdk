@@ -15,14 +15,14 @@ Get all features for user data
 
 ### Example
 ```java
-import com.devcycle.sdk.server.api.DVC;
+import com.devcycle.sdk.server.api.DVCClient;
 
 public class MyClass {
     
-    private DVC dvc;
+    private DVCClient dvcClient;
     
     public MyClass() {
-        dvc = new DVC("your_server_key");
+        dvcClient = new DVCClient("your_server_key");
     }
     
     public void allFeatures() {
@@ -31,7 +31,7 @@ public class MyClass {
                 .country("US")
                 .build();
 
-        Map<String, Feature> features = dvc.allFeatures(user);
+        Map<String, Feature> features = dvcClient.allFeatures(user);
     }
 }
 ```
@@ -54,14 +54,14 @@ Get variable by key for user data
 
 ### Example
 ```java
-import com.devcycle.sdk.server.api.DVC;
+import com.devcycle.sdk.server.api.DVCClient;
 
 public class MyClass {
 
-    private DVC dvc;
+    private DVCClient dvcClient;
 
     public MyClass() {
-        dvc = new DVC("your_server_key");
+        dvcClient = new DVCClient("your_server_key");
     }
 
     public void setFlag() {
@@ -72,7 +72,7 @@ public class MyClass {
 
         String key = "turn_on_super_cool_feature";
         Boolean defaultValue = true;
-        Variable<Boolean> variable = dvc.variable(user, key, defaultValue);
+        Variable<Boolean> variable = dvcClient.variable(user, key, defaultValue);
 
         if (variable.getValue()) {
             // New Feature code here
@@ -102,14 +102,14 @@ Get all variables for user data
 
 ### Example
 ```java
-import com.devcycle.sdk.server.api.DVC;
+import com.devcycle.sdk.server.api.DVCClient;
 
 public class MyClass {
 
-    private DVC dvc;
+    private DVCClient dvcClient;
 
     public MyClass() {
-        dvc = new DVC("your_server_key");
+        dvcClient = new DVCClient("your_server_key");
     }
 
     public void allVariables() {
@@ -118,7 +118,7 @@ public class MyClass {
                 .country("US")
                 .build();
         
-        Map<String, Variable> variables = dvc.allVariables(user);
+        Map<String, Variable> variables = dvcClient.allVariables(user);
     }
 }
 ```
@@ -141,14 +141,14 @@ Post events to DevCycle for user
 
 ### Example
 ```java
-import com.devcycle.sdk.server.api.DVC;
+import com.devcycle.sdk.server.api.DVCClient;
 
 public class MyClass {
 
-    private DVC dvc;
+    private DVCClient dvcClient;
 
     public MyClass() {
-        dvc = new DVC("your_server_key");
+        dvcClient = new DVCClient("your_server_key");
     }
 
     public void addAnEvent() {
@@ -164,7 +164,7 @@ public class MyClass {
                 .value(new BigDecimal(600))
                 .build();
 
-        DVCResponse response = dvc.track(user, event);
+        DVCResponse response = dvcClient.track(user, event);
     }
 }
 ```

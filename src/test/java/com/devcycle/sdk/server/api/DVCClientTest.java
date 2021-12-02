@@ -23,12 +23,12 @@ import static org.mockito.Mockito.when;
  * API tests for DevcycleApi
  */
 @RunWith(MockitoJUnitRunner.class)
-public class DVCTest {
+public class DVCClientTest {
 
     @Mock
     private DVCApi apiInterface;
 
-    private DVC api;
+    private DVCClient api;
 
     private DVCApiMock dvcApiMock;
 
@@ -36,7 +36,7 @@ public class DVCTest {
     public void setup() {
         final String apiKey = String.format("server-%s", UUID.randomUUID());
 
-        api = new DVC(apiKey);
+        api = new DVCClient(apiKey);
 
         WhiteBox.setInternalState(api, "api", apiInterface);
 
