@@ -5,10 +5,76 @@ plugins {
     id 'java-library'
     id 'maven'
     id 'maven-publish'
+    id 'signing'
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+signing {
+    sign configurations.archives
 }
 
 group = 'com.devcycle'
-version = '1.0.2'
+archivesBaseName = "java-server-sdk"
+version = '1.0.3'
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://s01.oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name 'DevCycle Java Server SDK'
+                packaging 'jar'
+                // optionally artifactId can be defined here
+                description 'Server side SDK to interact with DevCycle.'
+                url 'https://devcycle.com'
+
+                scm {
+                    connection 'scm:git:git://github.com/DevCycleHQ/java-server-sdk.git'
+                    developerConnection 'scm:git:ssh://github.com:DevCycleHQ/java-server-sdk.git'
+                    url 'https://github.com/DevCycleHQ/java-server-sdk'
+                }
+
+                licenses {
+                    license {
+                        name 'MIT License'
+                        url 'https://www.opensource.org/licenses/mit-license.php'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'squarepegg'
+                        name 'Nic Pegg'
+                        email 'nic@devcycle.com'
+                        organization 'DevCycle'
+                    }
+                }
+            }
+        }
+    }
+}
 
 repositories {
     mavenCentral()
@@ -31,8 +97,8 @@ publishing {
 }
 
 task execute(type:JavaExec) {
-   main = System.getProperty('mainClass')
-   classpath = sourceSets.main.runtimeClasspath
+    main = System.getProperty('mainClass')
+    classpath = sourceSets.main.runtimeClasspath
 }
 
 ext {
