@@ -1,4 +1,4 @@
-# DevCycle Java SDK
+# DevCycle Java Server SDK
 
 Welcome to the DevCycle Java SDK, which interfaces with the [DevCycle Bucketing API](https://docs.devcycle.com/bucketing-api/#tag/devcycle). 
 
