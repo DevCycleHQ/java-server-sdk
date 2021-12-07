@@ -1,4 +1,4 @@
-# java-server-sdk
+# DevCycle Java Server SDK
 
 ## Requirements
 
