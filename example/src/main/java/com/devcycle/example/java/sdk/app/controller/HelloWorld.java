@@ -1,6 +1,6 @@
 package com.devcycle.example.java.sdk.app.controller;
 
-import com.devcycle.sdk.server.api.DVC;
+import com.devcycle.sdk.server.api.DVCClient;
 import com.devcycle.sdk.server.model.User;
 import com.devcycle.sdk.server.model.Variable;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class HelloWorld {
 
-    com.devcycle.sdk.server.api.DVC dvc;
+    DVCClient dvc;
 
     public HelloWorld(@Qualifier("devcycleServerKey") String serverKey) {
-        dvc = new DVC(serverKey);
+        dvc = new DVCClient(serverKey);
     }
 
     @Value("${spring.application.name}")
