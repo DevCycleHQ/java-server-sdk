@@ -204,7 +204,7 @@
     <swagger-core-version>2.1.11</swagger-core-version>
     <retrofit-version>2.9.0</retrofit-version>
     <lombok-version>1.18.22</lombok-version>
-    <jackson-version>2.13.0</jackson-version>
+    <jackson-version>2.13.2.1</jackson-version>
     <junit-version>4.13.2</junit-version>
     <mockito-core-version>4.0.0</mockito-core-version>
   </properties>
