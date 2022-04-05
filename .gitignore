@@ -28,3 +28,4 @@ target
 build
 .swagger-codegen-ignore
 .DS_Store
+gradle.properties
