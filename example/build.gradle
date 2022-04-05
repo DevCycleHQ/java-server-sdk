@@ -21,7 +21,7 @@ dependencies {
 
 	compileOnly("org.projectlombok:lombok:1.18.22")
 
-	implementation("com.devcycle:java-server-sdk:1.0.3")
+	implementation("com.devcycle:java-server-sdk:1.0.4")
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
