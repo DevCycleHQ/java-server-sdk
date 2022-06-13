@@ -32,9 +32,9 @@ public class HelloWorld {
 
     @GetMapping("/activateFlag")
     public String homePageActivatedFlag(Model model) {
-        Variable updateHomePage = dvc.variable(getUser(), "activate-flag", defaultValue);
+        Variable<String> updateHomePage = dvc.variable(getUser(), "activate-flag", defaultValue);
 
-        String variationValue = (String) updateHomePage.getValue();
+        String variationValue = updateHomePage.getValue();
 
         // if the variable "activate-flag" doesn't exist isDefaulted will be true
         model.addAttribute("isDefaultValue", updateHomePage.getIsDefaulted());
