@@ -103,19 +103,26 @@ task execute(type:JavaExec) {
 
 ext {
     retrofit_version = "2.9.0"
-    jackson_version = "2.13.0"
-    swagger_annotations_version = "2.1.11"
-    lombok_version = "1.18.22"
+    jackson_version = "2.13.3"
+    swagger_annotations_version = '2.2.0'
+    lombok_version = '1.18.24'
+    okhttp_version = "4.9.3"
 
     junit_version = "4.13.2"
-    mockito_core_version = "4.0.0"
+    mockito_core_version = '4.6.1'
 }
 
 dependencies {
     annotationProcessor("org.projectlombok:lombok:$lombok_version")
 
-    implementation("com.squareup.retrofit2:retrofit:$retrofit_version")
-    implementation("com.squareup.retrofit2:converter-jackson:$retrofit_version")
+    implementation("com.squareup.okhttp3:okhttp:$okhttp_version")
+
+    implementation("com.squareup.retrofit2:retrofit:$retrofit_version") {
+        exclude group: 'com.squareup.okhttp3', module: 'okhttp'
+    }
+    implementation("com.squareup.retrofit2:converter-jackson:$retrofit_version") {
+        exclude group: 'com.squareup.okhttp3', module: 'okhttp'
+    }
     api("com.fasterxml.jackson.core:jackson-databind:$jackson_version")
     implementation("io.swagger.core.v3:swagger-annotations:$swagger_annotations_version")
 
