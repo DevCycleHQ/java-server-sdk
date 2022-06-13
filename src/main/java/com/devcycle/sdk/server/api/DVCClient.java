@@ -18,9 +18,9 @@ public final class DVCClient {
   private final DVCApi api;
 
   private static final String DEFAULT_PLATFORM = "Java";
-  private static final String DEFAULT_PLATFORM_VERSION = Runtime.class.getPackage().getImplementationVersion();
+  private static final String DEFAULT_PLATFORM_VERSION = System.getProperty("java.version");
   private static final User.SdkTypeEnum DEFAULT_SDK_TYPE = User.SdkTypeEnum.SERVER;
-  private static final String DEFAULT_SDK_VERSION = "1.0.0";
+  private static final String DEFAULT_SDK_VERSION = "1.0.5";
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 

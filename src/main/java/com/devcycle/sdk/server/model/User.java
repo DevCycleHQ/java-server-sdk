@@ -12,6 +12,7 @@
 
 package com.devcycle.sdk.server.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,6 +23,8 @@ import lombok.NonNull;
 @Data
 @Builder
 public class User {
+
+  @JsonIgnoreProperties(ignoreUnknown = true)
 
   @NonNull
   @Schema(required = true, description = "Unique id to identify the user")
@@ -58,10 +61,10 @@ public class User {
   @Schema(description = "Date the user was last seen, Unix epoch timestamp format")
   private Long lastSeenDate;
 
-  @Schema(description = "Platform the Client SDK is running on")
+  @Schema(description = "Platform the SDK is running on")
   private String platform;
 
-  @Schema(description = "Version of the platform the Client SDK is running on")
+  @Schema(description = "Version of the platform the SDK is running on")
   private String platformVersion;
 
   @Schema(description = "User's device model")

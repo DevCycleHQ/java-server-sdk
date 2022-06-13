@@ -12,6 +12,7 @@
 
 package com.devcycle.sdk.server.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -26,6 +27,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Feature {
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
+
   @Schema(required = true, description = "unique database id")
   @JsonProperty("_id")
   private String id;
@@ -39,6 +42,14 @@ public class Feature {
   @Schema(required = true, description = "Bucketed feature variation")
   @JsonProperty("_variation")
   private String variation;
+
+  @Schema(required = true, description = "Bucketed feature variation key")
+  @JsonProperty("variationKey")
+  private String variationKey;
+
+  @Schema(required = true, description = "Bucketed feature variation name")
+  @JsonProperty("variationName")
+  private String variationName;
 
   @Schema(description = "Evaluation reasoning")
   private String evalReason;
