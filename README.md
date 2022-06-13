@@ -54,4 +54,5 @@ public class MyClass {
 
 ## Usage
 
-**[Read more usage information here](https://github.com/DevCycleHQ/java-server-sdk/tree/main/docs)**
+To find usage documentation, visit our [docs](https://docs.devcycle.com/docs/sdk/server-side-sdks/java#usage).
+
