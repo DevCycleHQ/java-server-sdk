@@ -15,7 +15,7 @@ interface DVCApi {
    */
   @Headers({"Content-Type:application/json"})
   @POST("v1/features")
-  Call<Map<String, Feature>> getFeatures(@Body User user);
+  Call<Map<String, Feature>> getFeatures(@Body User user, @Query("enableEdgeDB") Boolean enableEdgeDB);
 
   /**
    * Get variable by key for user data
@@ -26,7 +26,7 @@ interface DVCApi {
    */
   @Headers({"Content-Type:application/json"})
   @POST("v1/variables/{key}")
-  Call<Variable> getVariableByKey(@Body User user, @Path("key") String key);
+  Call<Variable> getVariableByKey(@Body User user, @Path("key") String key, @Query("enableEdgeDB") Boolean enableEdgeDB);
 
   /**
    * Get all variables by key for user data
@@ -36,7 +36,7 @@ interface DVCApi {
    */
   @Headers({"Content-Type:application/json"})
   @POST("v1/variables")
-  Call<Map<String, Variable>> getVariables(@Body User user);
+  Call<Map<String, Variable>> getVariables(@Body User user, @Query("enableEdgeDB") Boolean enableEdgeDB);
 
   /**
    * Post events to DevCycle for user

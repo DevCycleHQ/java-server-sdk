@@ -10,7 +10,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collections;
@@ -32,6 +31,8 @@ public class DVCClientTest {
 
     private DVCApiMock dvcApiMock;
 
+    private DVCOptions dvcOptions;
+
     @Before
     public void setup() {
         final String apiKey = String.format("server-%s", UUID.randomUUID());
@@ -41,16 +42,18 @@ public class DVCClientTest {
         WhiteBox.setInternalState(api, "api", apiInterface);
 
         dvcApiMock = new DVCApiMock();
+
+        dvcOptions = DVCOptions.builder().build();
     }
 
     @Test
-    public void getFeaturesTest() throws IOException, DVCException {
+    public void getFeaturesTest() throws DVCException {
         User user = User.builder()
                 .userId("j_test")
                 .country("US")
                 .build();
 
-        when(apiInterface.getFeatures(user)).thenReturn(dvcApiMock.getFeatures(user));
+        when(apiInterface.getFeatures(user, dvcOptions.getEnableEdgeDB())).thenReturn(dvcApiMock.getFeatures(user, dvcOptions.getEnableEdgeDB()));
 
         Map<String, Feature> features = api.allFeatures(user);
 
@@ -69,7 +72,7 @@ public class DVCClientTest {
 
         String key = "show-quickstart";
 
-        when(apiInterface.getVariableByKey(user, key)).thenReturn(dvcApiMock.getVariableByKey(user, key));
+        when(apiInterface.getVariableByKey(user, key, dvcOptions.getEnableEdgeDB())).thenReturn(dvcApiMock.getVariableByKey(user, key, dvcOptions.getEnableEdgeDB()));
 
         Variable<Boolean> variable = api.variable(user, key, true);
 
@@ -79,12 +82,12 @@ public class DVCClientTest {
     }
 
     @Test
-    public void getVariablesTest() throws DVCException, IOException {
+    public void getVariablesTest() throws DVCException {
         User user = User.builder()
                 .userId("j_test")
                 .build();
 
-        when(apiInterface.getVariables(user)).thenReturn(dvcApiMock.getVariables(user));
+        when(apiInterface.getVariables(user, dvcOptions.getEnableEdgeDB())).thenReturn(dvcApiMock.getVariables(user, dvcOptions.getEnableEdgeDB()));
 
         Map<String, Variable> variables = api.allVariables(user);
 
@@ -115,7 +118,7 @@ public class DVCClientTest {
     }
 
     @Test
-    public void postEventsTest() throws DVCException, IOException {
+    public void postEventsTest() throws DVCException {
         User user = User.builder()
                 .userId("j_test")
                 .build();

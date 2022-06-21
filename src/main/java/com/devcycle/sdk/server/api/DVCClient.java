@@ -16,17 +16,24 @@ import java.util.Objects;
 public final class DVCClient {
 
   private final DVCApi api;
+  private final DVCOptions dvcOptions;
 
   private static final String DEFAULT_PLATFORM = "Java";
   private static final String DEFAULT_PLATFORM_VERSION = System.getProperty("java.version");
   private static final User.SdkTypeEnum DEFAULT_SDK_TYPE = User.SdkTypeEnum.SERVER;
-  private static final String DEFAULT_SDK_VERSION = "1.0.5";
+  private final String DEFAULT_SDK_VERSION;
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   public DVCClient(String serverKey) {
+    this(serverKey, DVCOptions.builder().build());
+  }
+
+  public DVCClient(String serverKey, DVCOptions dvcOptions) {
     api = new DVCApiClient(serverKey).initialize();
+    this.dvcOptions = dvcOptions;
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    DEFAULT_SDK_VERSION = "1.0.5";
   }
 
   /**
@@ -40,7 +47,7 @@ public final class DVCClient {
 
     addDefaults(user);
 
-    Call<Map<String, Feature>> response = api.getFeatures(user);
+    Call<Map<String, Feature>> response = api.getFeatures(user, dvcOptions.getEnableEdgeDB());
     return getResponse(response);
   }
 
@@ -69,7 +76,7 @@ public final class DVCClient {
     Variable<T> variable;
 
     try {
-      Call<Variable> response = api.getVariableByKey(user, key);
+      Call<Variable> response = api.getVariableByKey(user, key, dvcOptions.getEnableEdgeDB());
       variable = getResponse(response);
     } catch (Exception exception) {
       variable = (Variable<T>) Variable.builder()
@@ -93,7 +100,7 @@ public final class DVCClient {
 
     addDefaults(user);
 
-    Call<Map<String, Variable>> response = api.getVariables(user);
+    Call<Map<String, Variable>> response = api.getVariables(user, dvcOptions.getEnableEdgeDB());
     return getResponse(response);
   }
 
@@ -132,15 +139,15 @@ public final class DVCClient {
     HttpResponseCode httpResponseCode = HttpResponseCode.byCode(response.code());
     errorResponse.setMessage("Unknown error");
 
-    if (response.errorBody() != null) {
-      try {
-        errorResponse = OBJECT_MAPPER.readValue(response.errorBody().string(), ErrorResponse.class);
-      } catch (IOException e) {
-        errorResponse.setMessage(e.getMessage());
+      if (response.errorBody() != null) {
+        try {
+          errorResponse = OBJECT_MAPPER.readValue(response.errorBody().string(), ErrorResponse.class);
+        } catch (IOException e) {
+          errorResponse.setMessage(e.getMessage());
+          throw new DVCException(httpResponseCode, errorResponse);
+        }
         throw new DVCException(httpResponseCode, errorResponse);
       }
-      throw new DVCException(httpResponseCode, errorResponse);
-    }
 
     if (response.body() == null) {
       throw new DVCException(httpResponseCode, errorResponse);

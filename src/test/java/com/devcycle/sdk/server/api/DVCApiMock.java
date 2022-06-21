@@ -9,17 +9,17 @@ import java.util.Map;
 public class DVCApiMock implements DVCApi {
 
     @Override
-    public Call<Map<String, Feature>> getFeatures(User user) {
+    public Call<Map<String, Feature>> getFeatures(User user, Boolean enabledEdgeDB) {
         return TestResponse.getFeatures();
     }
 
     @Override
-    public Call<Variable> getVariableByKey(User user, String key) {
+    public Call<Variable> getVariableByKey(User user, String key, Boolean enabledEdgeDB) {
         return TestResponse.getVariableByKey();
     }
 
     @Override
-    public Call<Map<String, Variable>> getVariables(User user) {
+    public Call<Map<String, Variable>> getVariables(User user, Boolean enabledEdgeDB) {
         return TestResponse.getVariables();
     }
 
