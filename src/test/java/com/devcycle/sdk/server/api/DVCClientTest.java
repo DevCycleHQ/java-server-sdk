@@ -138,7 +138,7 @@ public class DVCClientTest {
                 .events(Collections.singletonList(event))
                 .build();
 
-        when(apiInterface.track(userAndEvents)).thenReturn(dvcApiMock.track(userAndEvents));
+        when(apiInterface.track(userAndEvents, dvcOptions.getEnableEdgeDB())).thenReturn(dvcApiMock.track(userAndEvents, dvcOptions.getEnableEdgeDB()));
 
         DVCResponse response = api.track(user, event);
 

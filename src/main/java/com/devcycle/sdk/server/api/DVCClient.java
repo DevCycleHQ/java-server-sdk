@@ -121,7 +121,7 @@ public final class DVCClient {
             .events(Collections.singletonList(event))
             .build();
 
-    Call<DVCResponse> response = api.track(userAndEvents);
+    Call<DVCResponse> response = api.track(userAndEvents, dvcOptions.getEnableEdgeDB());
     return getResponse(response);
   }
 

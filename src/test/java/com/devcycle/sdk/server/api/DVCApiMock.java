@@ -24,7 +24,7 @@ public class DVCApiMock implements DVCApi {
     }
 
     @Override
-    public Call<DVCResponse> track(UserAndEvents userAndEvents) {
+    public Call<DVCResponse> track(UserAndEvents userAndEvents, Boolean enableEdgeDB) {
         return TestResponse.getTrackResponse(1);
     }
 }

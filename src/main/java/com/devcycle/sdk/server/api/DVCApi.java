@@ -46,5 +46,5 @@ interface DVCApi {
    */
   @Headers({"Content-Type:application/json"})
   @POST("v1/track")
-  Call<DVCResponse> track(@Body UserAndEvents userAndEvents);
+  Call<DVCResponse> track(@Body UserAndEvents userAndEvents, @Query("enableEdgeDB") Boolean enableEdgeDB);
 }
