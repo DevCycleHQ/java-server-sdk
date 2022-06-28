@@ -33,7 +33,7 @@ public final class DVCClient {
     api = new DVCApiClient(serverKey).initialize();
     this.dvcOptions = dvcOptions;
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    DEFAULT_SDK_VERSION = "1.0.5";
+    DEFAULT_SDK_VERSION = "1.0.6";
   }
 
   /**
