@@ -151,6 +151,6 @@ public class DVCClientTest {
         Assert.assertEquals("Java", user.getPlatform());
         Assert.assertEquals(User.SdkTypeEnum.SERVER, user.getSdkType());
         Assert.assertNotNull(user.getPlatformVersion());
-        Assert.assertEquals("1.0.5", user.getSdkVersion());
+        Assert.assertEquals("1.0.6", user.getSdkVersion());
     }
 }
