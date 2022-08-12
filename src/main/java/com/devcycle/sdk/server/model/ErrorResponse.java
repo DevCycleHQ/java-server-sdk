@@ -24,6 +24,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ErrorResponse {
 
+  @Schema(required = true, description = "HTTP Status Code")
+  private int statusCode;
+
   @Schema(required = true, description = "Error message")
   private String message;
 
