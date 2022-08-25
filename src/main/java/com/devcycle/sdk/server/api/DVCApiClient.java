@@ -5,6 +5,8 @@ import okhttp3.*;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+import java.util.Objects;
+
 final class DVCApiClient {
 
   private final OkHttpClient.Builder okBuilder;
@@ -15,9 +17,12 @@ final class DVCApiClient {
   private DVCApiClient() {
     okBuilder = new OkHttpClient.Builder();
 
+    String bucketingApiUrl = System.getenv("BUCKETING_API_URL");
+    String url = Objects.isNull(bucketingApiUrl) || Objects.equals(bucketingApiUrl, "") ? BASE_URL : bucketingApiUrl;
+
     adapterBuilder = new Retrofit
             .Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(url)
             .addConverterFactory(JacksonConverterFactory.create());
   }
 
