@@ -1,6 +1,7 @@
 package com.devcycle.example.java.sdk.app.controller;
 
 import com.devcycle.sdk.server.api.DVCClient;
+// import com.devcycle.sdk.server.localBucketing.LocalBucketing;
 import com.devcycle.sdk.server.model.User;
 import com.devcycle.sdk.server.model.Variable;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -12,39 +13,42 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class HelloWorld {
 
-    DVCClient dvc;
+  DVCClient dvc;
 
-    public HelloWorld(@Qualifier("devcycleServerKey") String serverKey) {
-        dvc = new DVCClient(serverKey);
-    }
+  public HelloWorld(@Qualifier("devcycleServerKey") String serverKey) {
+    // LocalBucketing bucketing = new LocalBucketing();
+    dvc = new DVCClient(serverKey);
+  }
 
-    @Value("${spring.application.name}")
-    String appName;
+  @Value("${spring.application.name}")
+  String appName;
 
-    @Value("${spring.application.oops}")
-    String defaultValue;
+  @Value("${spring.application.oops}")
+  String defaultValue;
 
-    @GetMapping("/")
-    public String homePage(Model model) {
-        model.addAttribute("appName", appName);
-        return "home";
-    }
+  @GetMapping("/")
+  public String homePage(Model model) {
+    model.addAttribute("appName", appName);
+    return "home";
+  }
 
-    @GetMapping("/activateFlag")
-    public String homePageActivatedFlag(Model model) {
-        Variable<String> updateHomePage = dvc.variable(getUser(), "activate-flag", defaultValue);
+  @GetMapping("/activateFlag")
+  public String homePageActivatedFlag(Model model) {
+    Variable<Boolean> updateHomePage = dvc.variable(
+      getUser(),
+      "show-feature-history",
+      false
+    );
 
-        String variationValue = updateHomePage.getValue();
+    String variationValue = updateHomePage.getValue().toString();
 
-        // if the variable "activate-flag" doesn't exist isDefaulted will be true
-        model.addAttribute("isDefaultValue", updateHomePage.getIsDefaulted());
-        model.addAttribute("variationValue", variationValue);
-        return "fragments/flagData :: value ";
-    }
+    // if the variable "activate-flag" doesn't exist isDefaulted will be true
+    model.addAttribute("isDefaultValue", updateHomePage.getIsDefaulted());
+    model.addAttribute("variationValue", variationValue);
+    return "fragments/flagData :: value ";
+  }
 
-    private User getUser() {
-        return User.builder()
-                .userId("j_test")
-                .build();
-    }
+  private User getUser() {
+    return User.builder().userId("j_test").build();
+  }
 }

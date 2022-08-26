@@ -181,6 +181,11 @@
       <artifactId>lombok</artifactId>
       <version>${lombok-version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.github.kawamuray.wasmtime</groupId>
+      <artifactId>wasmtime-java</artifactId>
+      <version>0.11.0</version>
+    </dependency>
 
     <!-- test dependencies -->
     <dependency>
