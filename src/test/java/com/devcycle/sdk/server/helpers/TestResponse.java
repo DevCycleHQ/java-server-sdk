@@ -1,8 +1,8 @@
 package com.devcycle.sdk.server.helpers;
 
-import com.devcycle.sdk.server.model.DVCResponse;
-import com.devcycle.sdk.server.model.Feature;
-import com.devcycle.sdk.server.model.Variable;
+import com.devcycle.sdk.server.common.model.DVCResponse;
+import com.devcycle.sdk.server.common.model.Feature;
+import com.devcycle.sdk.server.common.model.Variable;
 import retrofit2.Call;
 import retrofit2.mock.Calls;
 

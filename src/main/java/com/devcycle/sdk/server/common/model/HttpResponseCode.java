@@ -1,4 +1,4 @@
-package com.devcycle.sdk.server.model;
+package com.devcycle.sdk.server.common.model;
 
 import java.util.Arrays;
 

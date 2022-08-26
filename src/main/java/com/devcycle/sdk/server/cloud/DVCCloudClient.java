@@ -1,7 +1,9 @@
-package com.devcycle.sdk.server.api;
+package com.devcycle.sdk.server.cloud;
 
-import com.devcycle.sdk.server.exception.DVCException;
-import com.devcycle.sdk.server.model.*;
+import com.devcycle.sdk.server.common.api.DVCApi;
+import com.devcycle.sdk.server.common.api.DVCApiClient;
+import com.devcycle.sdk.server.common.exception.DVCException;
+import com.devcycle.sdk.server.common.model.*;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,7 +15,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
-public final class DVCClient {
+public final class DVCCloudClient {
 
   private final DVCApi api;
   private final DVCOptions dvcOptions;
@@ -25,11 +27,11 @@ public final class DVCClient {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  public DVCClient(String serverKey) {
+  public DVCCloudClient(String serverKey) {
     this(serverKey, DVCOptions.builder().build());
   }
 
-  public DVCClient(String serverKey, DVCOptions dvcOptions) {
+  public DVCCloudClient(String serverKey, DVCOptions dvcOptions) {
     api = new DVCApiClient(serverKey).initialize();
     this.dvcOptions = dvcOptions;
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);

@@ -1,7 +1,7 @@
-package com.devcycle.sdk.server.exception;
+package com.devcycle.sdk.server.common.exception;
 
-import com.devcycle.sdk.server.model.ErrorResponse;
-import com.devcycle.sdk.server.model.HttpResponseCode;
+import com.devcycle.sdk.server.common.model.ErrorResponse;
+import com.devcycle.sdk.server.common.model.HttpResponseCode;
 import lombok.Getter;
 
 @Getter

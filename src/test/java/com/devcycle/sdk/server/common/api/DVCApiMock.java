@@ -1,7 +1,7 @@
-package com.devcycle.sdk.server.api;
+package com.devcycle.sdk.server.common.api;
 
 import com.devcycle.sdk.server.helpers.TestResponse;
-import com.devcycle.sdk.server.model.*;
+import com.devcycle.sdk.server.common.model.*;
 import retrofit2.Call;
 
 import java.util.Map;

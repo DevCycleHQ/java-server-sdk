@@ -10,8 +10,9 @@
  * Do not edit the class manually.
  */
 
-package com.devcycle.sdk.server.model;
+package com.devcycle.sdk.server.common.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +22,14 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class DVCResponse {
+public class ErrorResponse {
 
+  @Schema(required = true, description = "HTTP Status Code")
+  private int statusCode;
+
+  @Schema(required = true, description = "Error message")
   private String message;
+
+  @Schema(description = "Additional error information detailing the error reasoning")
+  private Object data;
 }

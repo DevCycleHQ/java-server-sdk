@@ -1,12 +1,12 @@
-package com.devcycle.sdk.server.api;
+package com.devcycle.sdk.server.common.api;
 
-import com.devcycle.sdk.server.model.*;
+import com.devcycle.sdk.server.common.model.*;
 import retrofit2.Call;
 import retrofit2.http.*;
 
 import java.util.Map;
 
-interface DVCApi {
+public interface DVCApi {
   /**
    * Get all features by key for user data
    *

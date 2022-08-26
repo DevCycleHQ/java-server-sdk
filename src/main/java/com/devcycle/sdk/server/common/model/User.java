@@ -10,7 +10,7 @@
  * Do not edit the class manually.
  */
 
-package com.devcycle.sdk.server.model;
+package com.devcycle.sdk.server.common.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

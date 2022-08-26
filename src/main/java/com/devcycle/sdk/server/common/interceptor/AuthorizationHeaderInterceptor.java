@@ -1,4 +1,4 @@
-package com.devcycle.sdk.server.interceptor;
+package com.devcycle.sdk.server.common.interceptor;
 
 import okhttp3.Interceptor;
 import okhttp3.Request;

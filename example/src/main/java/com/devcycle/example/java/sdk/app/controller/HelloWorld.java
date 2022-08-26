@@ -1,8 +1,8 @@
 package com.devcycle.example.java.sdk.app.controller;
 
-import com.devcycle.sdk.server.api.DVCClient;
-import com.devcycle.sdk.server.model.User;
-import com.devcycle.sdk.server.model.Variable;
+import com.devcycle.sdk.server.cloud.DVCCloudClient;
+import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.common.model.Variable;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class HelloWorld {
 
-    DVCClient dvc;
+    DVCCloudClient dvc;
 
     public HelloWorld(@Qualifier("devcycleServerKey") String serverKey) {
-        dvc = new DVCClient(serverKey);
+        dvc = new DVCCloudClient(serverKey);
     }
 
     @Value("${spring.application.name}")
@@ -30,7 +30,7 @@ public class HelloWorld {
         return "home";
     }
 
-    @GetMapping("/activateFlag")
+    @GetMapping("/cloud/activateFlag")
     public String homePageActivatedFlag(Model model) {
         Variable<String> updateHomePage = dvc.variable(getUser(), "activate-flag", defaultValue);
 

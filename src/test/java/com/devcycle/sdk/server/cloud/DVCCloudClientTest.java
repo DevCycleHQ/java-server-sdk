@@ -1,8 +1,10 @@
-package com.devcycle.sdk.server.api;
+package com.devcycle.sdk.server.cloud;
 
-import com.devcycle.sdk.server.exception.DVCException;
+import com.devcycle.sdk.server.common.api.DVCApi;
+import com.devcycle.sdk.server.common.api.DVCApiMock;
+import com.devcycle.sdk.server.common.exception.DVCException;
+import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.helpers.WhiteBox;
-import com.devcycle.sdk.server.model.*;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,12 +24,12 @@ import static org.mockito.Mockito.when;
  * API tests for DevcycleApi
  */
 @RunWith(MockitoJUnitRunner.class)
-public class DVCClientTest {
+public class DVCCloudClientTest {
 
     @Mock
     private DVCApi apiInterface;
 
-    private DVCClient api;
+    private DVCCloudClient api;
 
     private DVCApiMock dvcApiMock;
 
@@ -37,7 +39,7 @@ public class DVCClientTest {
     public void setup() {
         final String apiKey = String.format("server-%s", UUID.randomUUID());
 
-        api = new DVCClient(apiKey);
+        api = new DVCCloudClient(apiKey);
 
         WhiteBox.setInternalState(api, "api", apiInterface);
 
