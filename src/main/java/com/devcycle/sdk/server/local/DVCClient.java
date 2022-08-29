@@ -1,4 +1,4 @@
-package com.devcycle.sdk.server.cloud;
+package com.devcycle.sdk.server.local;
 
 import com.devcycle.sdk.server.common.api.DVCApi;
 import com.devcycle.sdk.server.common.api.DVCApiClient;
@@ -12,10 +12,10 @@ import retrofit2.Response;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Map;
+// import java.util.Map;
 import java.util.Objects;
 
-public final class DVCCloudClient {
+public final class DVCClient {
 
   private final DVCApi api;
   private final DVCOptions dvcOptions;
@@ -27,41 +27,48 @@ public final class DVCCloudClient {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  public DVCCloudClient(String serverKey) {
+  public DVCClient(String serverKey) {
     this(serverKey, DVCOptions.builder().build());
   }
 
-  public DVCCloudClient(String serverKey, DVCOptions dvcOptions) {
+  public DVCClient(String serverKey, DVCOptions dvcOptions) {
     api = new DVCApiClient(serverKey).initialize();
     this.dvcOptions = dvcOptions;
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     DEFAULT_SDK_VERSION = "1.1.0";
+
+    // TODO: Add Config Manager Initialization Code here
+    // TODO: Add Local Bucketing Initialization Code here
   }
 
   /**
    * Get all features for user data
    * 
-   * @param user  (required)
+   * @param user (required)
    * @return Map&gt;String, Feature&lt;
    */
-  public Map<String, Feature> allFeatures(User user) throws DVCException {
+  // TODO: Original return type should match the line below, uncomment once implemented and delete the void return
+  // public Map<String, Feature> allFeatures(User user) throws DVCException {
+  public void allFeatures(User user) throws DVCException {
     validateUser(user);
 
     addDefaults(user);
 
-    Call<Map<String, Feature>> response = api.getFeatures(user, dvcOptions.getEnableEdgeDB());
-    return getResponse(response);
+    System.out.printf("called allFeatures with user: %s", user.toString());
   }
 
   /**
    * Get variable by key for user data
    * 
-   * @param user  (required)
-   * @param key Variable key (required)
-   * @param defaultValue Default value to use if the variable could not be fetched (required)
+   * @param user         (required)
+   * @param key          Variable key (required)
+   * @param defaultValue Default value to use if the variable could not be fetched
+   *                     (required)
    * @return Variable
    */
   @SuppressWarnings("unchecked")
+  // TODO: This method will always return the default value, update with local
+  // bucketing variable call
   public <T> Variable<T> variable(User user, String key, T defaultValue) {
     validateUser(user);
 
@@ -77,54 +84,51 @@ public final class DVCCloudClient {
 
     Variable<T> variable;
 
-    try {
-      Call<Variable> response = api.getVariableByKey(user, key, dvcOptions.getEnableEdgeDB());
-      variable = getResponse(response);
-    } catch (Exception exception) {
-      variable = (Variable<T>) Variable.builder()
-              .key(key)
-              .value(defaultValue)
-              .isDefaulted(true)
-              .reasonUsingDefaultValue(exception.getMessage())
-              .build();
-    }
+    variable = (Variable<T>) Variable.builder()
+        .key(key)
+        .value(defaultValue)
+        .isDefaulted(true)
+        .reasonUsingDefaultValue("Local Bucketing Not Implemented")
+        .build();
+
     return variable;
   }
 
   /**
    * Get all variables by key for user data
    * 
-   * @param user  (required)
-   * @return Map&gt;String, Variable&lt;
+   * @param user (required)
    */
-  public Map<String, Variable> allVariables(User user) throws DVCException {
+  // TODO: Original return type should match the line below, uncomment once implemented and delete the void return
+  // public Map<String, Variable> allVariables(User user) throws DVCException {
+  public void allVariables(User user) throws DVCException {
     validateUser(user);
 
     addDefaults(user);
 
-    Call<Map<String, Variable>> response = api.getVariables(user, dvcOptions.getEnableEdgeDB());
-    return getResponse(response);
+    // Return allVariables after Local Bucketing call
   }
 
   /**
    * Post events to DevCycle for user
    * 
    * @param user  (required)
-   * @param event  (required)
+   * @param event (required)
    * @return DVCResponse
    */
-  public DVCResponse track(User user, Event event) throws DVCException {
+  // TODO: Original return type should match the line below, uncomment once implemented and delete the void return
+  // public DVCResponse track(User user, Event event) throws DVCException {
+  public void track(User user, Event event) throws DVCException {
     validateUser(user);
 
     addDefaults(user);
 
     UserAndEvents userAndEvents = UserAndEvents.builder()
-            .user(user)
-            .events(Collections.singletonList(event))
-            .build();
+        .user(user)
+        .events(Collections.singletonList(event))
+        .build();
 
-    Call<DVCResponse> response = api.track(userAndEvents, dvcOptions.getEnableEdgeDB());
-    return getResponse(response);
+    // Call track method to append custom event to queue
   }
 
   private <T> T getResponse(Call<T> call) throws DVCException {
@@ -141,15 +145,15 @@ public final class DVCCloudClient {
     HttpResponseCode httpResponseCode = HttpResponseCode.byCode(response.code());
     errorResponse.setMessage("Unknown error");
 
-      if (response.errorBody() != null) {
-        try {
-          errorResponse = OBJECT_MAPPER.readValue(response.errorBody().string(), ErrorResponse.class);
-        } catch (IOException e) {
-          errorResponse.setMessage(e.getMessage());
-          throw new DVCException(httpResponseCode, errorResponse);
-        }
+    if (response.errorBody() != null) {
+      try {
+        errorResponse = OBJECT_MAPPER.readValue(response.errorBody().string(), ErrorResponse.class);
+      } catch (IOException e) {
+        errorResponse.setMessage(e.getMessage());
         throw new DVCException(httpResponseCode, errorResponse);
       }
+      throw new DVCException(httpResponseCode, errorResponse);
+    }
 
     if (response.body() == null) {
       throw new DVCException(httpResponseCode, errorResponse);
