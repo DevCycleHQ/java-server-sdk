@@ -1,4 +1,4 @@
-package com.devcycle.sdk.server.model;
+package com.devcycle.sdk.server.common.model;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -8,6 +8,5 @@ import lombok.Setter;
 @Setter
 @Builder
 public class Meta {
-
     private String meta;
 }

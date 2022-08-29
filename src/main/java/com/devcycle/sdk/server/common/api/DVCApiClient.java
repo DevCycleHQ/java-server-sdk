@@ -1,13 +1,13 @@
-package com.devcycle.sdk.server.api;
+package com.devcycle.sdk.server.common.api;
 
-import com.devcycle.sdk.server.interceptor.AuthorizationHeaderInterceptor;
+import com.devcycle.sdk.server.common.interceptor.AuthorizationHeaderInterceptor;
 import okhttp3.*;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 import java.util.Objects;
 
-final class DVCApiClient {
+public final class DVCApiClient {
 
   private final OkHttpClient.Builder okBuilder;
   private final Retrofit.Builder adapterBuilder;
