@@ -45,7 +45,6 @@ public final class DVCClient {
    * Get all features for user data
    * 
    * @param user (required)
-   * @return Map&gt;String, Feature&lt;
    */
   // TODO: Original return type should match the line below, uncomment once implemented and delete the void return
   // public Map<String, Feature> allFeatures(User user) throws DVCException {
@@ -114,7 +113,6 @@ public final class DVCClient {
    * 
    * @param user  (required)
    * @param event (required)
-   * @return DVCResponse
    */
   // TODO: Original return type should match the line below, uncomment once implemented and delete the void return
   // public DVCResponse track(User user, Event event) throws DVCException {

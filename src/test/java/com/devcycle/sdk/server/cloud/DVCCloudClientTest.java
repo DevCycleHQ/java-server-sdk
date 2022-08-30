@@ -153,6 +153,6 @@ public class DVCCloudClientTest {
         Assert.assertEquals("Java", user.getPlatform());
         Assert.assertEquals(User.SdkTypeEnum.SERVER, user.getSdkType());
         Assert.assertNotNull(user.getPlatformVersion());
-        Assert.assertEquals("1.0.6", user.getSdkVersion());
+        Assert.assertEquals("1.1.0", user.getSdkVersion());
     }
 }
