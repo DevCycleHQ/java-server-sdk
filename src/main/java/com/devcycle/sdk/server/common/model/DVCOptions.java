@@ -7,4 +7,5 @@ import lombok.Data;
 @Builder
 public class DVCOptions {
     private Boolean enableEdgeDB;
+    private int configPollingIntervalMs;
 }

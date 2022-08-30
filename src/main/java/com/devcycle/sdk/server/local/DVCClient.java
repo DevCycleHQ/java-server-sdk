@@ -24,6 +24,7 @@ public final class DVCClient {
   private static final String DEFAULT_PLATFORM_VERSION = System.getProperty("java.version");
   private static final User.SdkTypeEnum DEFAULT_SDK_TYPE = User.SdkTypeEnum.SERVER;
   private final String DEFAULT_SDK_VERSION;
+  private final EnvironmentConfigManager configManager;
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -37,6 +38,7 @@ public final class DVCClient {
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     DEFAULT_SDK_VERSION = "1.1.0";
 
+    configManager = new EnvironmentConfigManager(serverKey, dvcOptions);
     // TODO: Add Config Manager Initialization Code here
     // TODO: Add Local Bucketing Initialization Code here
   }

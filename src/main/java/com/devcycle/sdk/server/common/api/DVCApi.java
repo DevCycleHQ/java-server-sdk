@@ -51,4 +51,14 @@ public interface DVCApi {
   @Headers({"Content-Type:application/json"})
   @POST("v1/track")
   Call<DVCResponse> track(@Body UserAndEvents userAndEvents, @Query("enableEdgeDB") Boolean enableEdgeDB);
+
+  /**
+   * Get DevCycle project Config
+   *
+   * @param sdkToken  (required)
+   * @return Call&lt;DVCResponse&gt;
+   */
+  @Headers({"Content-Type:application/json"})
+  @GET("/config/v1/server/{sdkToken}.json")
+  Call<ProjectConfig> getConfig(@Path("sdkToken") String sdkToken);
 }
