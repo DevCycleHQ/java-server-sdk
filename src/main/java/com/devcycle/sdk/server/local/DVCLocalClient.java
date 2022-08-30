@@ -1,25 +1,46 @@
 package com.devcycle.sdk.server.local;
 
+import com.devcycle.sdk.server.common.api.DVCApi;
+import com.devcycle.sdk.server.common.api.DVCApiClient;
 import com.devcycle.sdk.server.common.model.*;
-
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import retrofit2.Call;
+import retrofit2.Response;
+import java.io.IOException;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 
-public final class DVCClient {
+
+public final class DVCLocalClient {
+
+  private final DVCApi api;
+  private final DVCOptions dvcOptions;
+
+  private static LocalBucketing localBucketing = new LocalBucketing();
+
+  private final String serverKey;
+
   private static final String DEFAULT_PLATFORM = "Java";
   private static final String DEFAULT_PLATFORM_VERSION = System.getProperty("java.version");
   private static final User.SdkTypeEnum DEFAULT_SDK_TYPE = User.SdkTypeEnum.SERVER;
-  private final String DEFAULT_SDK_VERSION;
+  private final String DEFAULT_SDK_VERSION = "1.1.0";
 
-  public DVCClient(String serverKey) {
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+
+  public DVCLocalClient(String serverKey) {
     this(serverKey, DVCOptions.builder().build());
   }
 
-  public DVCClient(String serverKey, DVCOptions dvcOptions) {
+  public DVCLocalClient(String serverKey, DVCOptions dvcOptions) {
     new EnvironmentConfigManager(serverKey, dvcOptions);
-    DEFAULT_SDK_VERSION = "1.1.0";
-
-    // TODO: Add Local Bucketing Initialization Code here
+    this.serverKey = serverKey;
+    api = new DVCApiClient(serverKey, dvcOptions).initialize();
+    this.dvcOptions = dvcOptions;
+    OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
   }
 
   /**
