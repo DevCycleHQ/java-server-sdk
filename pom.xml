@@ -5,7 +5,7 @@
   <artifactId>java-server-sdk</artifactId>
   <packaging>jar</packaging>
   <name>DevCycle Java SDK</name>
-  <version>1.0.6</version>
+  <version>1.1.0</version>
   <description>Server side SDK to interact with DevCycle</description>
   <url>https://github.com/DevCycleHQ/java-server-sdk</url>
 

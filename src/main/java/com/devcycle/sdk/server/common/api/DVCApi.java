@@ -11,6 +11,7 @@ public interface DVCApi {
    * Get all features by key for user data
    *
    * @param user  (required)
+   * @param enableEdgeDB  (required)
    * @return Call&lt;Map&lt;String, Feature&gt;&gt;
    */
   @Headers({"Content-Type:application/json"})
@@ -22,6 +23,7 @@ public interface DVCApi {
    *
    * @param user  (required)
    * @param key Variable key (required)
+   * @param enableEdgeDB  (required)
    * @return Call&lt;Variable&gt;
    */
   @Headers({"Content-Type:application/json"})
@@ -32,6 +34,7 @@ public interface DVCApi {
    * Get all variables by key for user data
    *
    * @param user  (required)
+   * @param enableEdgeDB  (required)
    * @return Call&lt;Map&lt;String, Variable&gt;&gt;
    */
   @Headers({"Content-Type:application/json"})
@@ -42,6 +45,7 @@ public interface DVCApi {
    * Post events to DevCycle for user
    *
    * @param userAndEvents  (required)
+   * @param enableEdgeDB  (required)
    * @return Call&lt;DVCResponse&gt;
    */
   @Headers({"Content-Type:application/json"})
