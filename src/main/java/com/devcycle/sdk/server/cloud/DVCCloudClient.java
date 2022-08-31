@@ -28,12 +28,15 @@ public final class DVCCloudClient {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   public DVCCloudClient(String serverKey) {
-    this(serverKey, DVCOptions.builder().build());
+    this(serverKey, DVCOptions.builder().enableCloudBucketing(true).build());
   }
 
-  public DVCCloudClient(String serverKey, DVCOptions dvcOptions) {
-    api = new DVCApiClient(serverKey).initialize();
-    this.dvcOptions = dvcOptions;
+  public DVCCloudClient(String serverKey, DVCOptions options) {
+    if (options.getEnableCloudBucketing() == null) {
+      options.setEnableCloudBucketing(true);
+    }
+    api = new DVCApiClient(serverKey, options).initialize();
+    this.dvcOptions = options;
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     DEFAULT_SDK_VERSION = "1.1.0";
   }
