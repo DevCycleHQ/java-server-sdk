@@ -1,71 +1,71 @@
 package com.devcycle.sdk.server.local;
 
 import java.io.IOException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import com.devcycle.sdk.server.common.exception.DVCException;
 import com.devcycle.sdk.server.common.api.DVCApi;
+import com.devcycle.sdk.server.common.api.DVCApiClient;
 import com.devcycle.sdk.server.common.model.*;
 
-import okhttp3.OkHttpClient;
-import com.devcycle.sdk.server.common.model.ErrorResponse;
-import com.devcycle.sdk.server.common.model.HttpResponseCode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.annotation.JsonInclude;
 
 import retrofit2.Call;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
 
 public final class EnvironmentConfigManager {
-  private static final int minimumPollingIntervalMs = 1000;
-  // private final String environmentKey; 
-  private final int pollingIntervalMS;
-  // private final int requestTimeoutMs;
-  private final OkHttpClient.Builder okBuilder;
-  private final Retrofit.Builder restClient;
-  public ProjectConfig Config;
+  private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static final int DEFAULT_POLL_INTERVAL_MS = 30000;
+  private static final int MIN_INTERVALS_MS = 1000;
 
-  public EnvironmentConfigManager(String environmentKey, DVCOptions dvcOptions) {
-    OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    
-    // this.environmentKey = environmentKey;
+  private DVCApi configApiClient;
 
-    int configPollingIntervalMs = dvcOptions.getConfigPollingIntervalMs();
-    pollingIntervalMS = configPollingIntervalMs >= minimumPollingIntervalMs ? configPollingIntervalMs : minimumPollingIntervalMs;
+  private ProjectConfig config;
+  private String configETag;
 
-    String url = "https://config-cdn.devcycle.com";
-    okBuilder = new OkHttpClient.Builder();
+  private String environmentKey;
+  private int pollingIntervalMS;
 
-    restClient = new Retrofit
-    .Builder()
-    .baseUrl(url)
-    .addConverterFactory(JacksonConverterFactory.create());
+  public EnvironmentConfigManager(String environmentKey, DVCOptions options) {
+    this.environmentKey = environmentKey;
 
-    DVCApi api = restClient
-    .client(okBuilder.build())
-    .build()
-    .create(DVCApi.class);
+    configApiClient = new DVCApiClient(environmentKey, options).initialize();
 
-    Call<ProjectConfig> config = api.getConfig(environmentKey);
-    
-    try {
-      Config = getResponse(config);
-      System.out.printf(Config.getProject().toString());
-      System.out.println();
-      System.out.printf(Config.getEnvironment().toString());
-      System.out.println();
-    } catch (DVCException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+    int configPollingIntervalMs = options.getConfigPollingIntervalMs();
+    pollingIntervalMS = configPollingIntervalMs >= MIN_INTERVALS_MS ? configPollingIntervalMs
+        : DEFAULT_POLL_INTERVAL_MS;
+
+    setupScheduler();
   }
 
-  private <T> T getResponse(Call<T> call) throws DVCException {
+  private void setupScheduler() {
+    Runnable getConfigRunnable = new Runnable() {
+      public void run() {
+        try {
+          getConfig();
+        } catch (DVCException e) {
+          e.printStackTrace();
+        }
+      }
+    };
+
+    scheduler.scheduleAtFixedRate(getConfigRunnable, 0, this.pollingIntervalMS, TimeUnit.MILLISECONDS);
+  }
+
+  private ProjectConfig getConfig() throws DVCException {
+    Call<ProjectConfig> config = this.configApiClient.getConfig(environmentKey);
+
+    this.config = getConfigResponse(config);
+    return this.config;
+  }
+
+  private ProjectConfig getConfigResponse(Call<ProjectConfig> call) throws DVCException {
     ErrorResponse errorResponse = ErrorResponse.builder().build();
-    Response<T> response;
+    Response<ProjectConfig> response;
 
     try {
       response = call.execute();
@@ -77,22 +77,28 @@ public final class EnvironmentConfigManager {
     HttpResponseCode httpResponseCode = HttpResponseCode.byCode(response.code());
     errorResponse.setMessage("Unknown error");
 
-      if (response.errorBody() != null) {
-        try {
-          errorResponse = OBJECT_MAPPER.readValue(response.errorBody().string(), ErrorResponse.class);
-        } catch (IOException e) {
-          errorResponse.setMessage(e.getMessage());
-          throw new DVCException(httpResponseCode, errorResponse);
-        }
+    if (response.errorBody() != null) {
+      try {
+        errorResponse = OBJECT_MAPPER.readValue(response.errorBody().string(), ErrorResponse.class);
+      } catch (IOException e) {
+        errorResponse.setMessage(e.getMessage());
         throw new DVCException(httpResponseCode, errorResponse);
       }
+      throw new DVCException(httpResponseCode, errorResponse);
+    }
 
     if (response.body() == null) {
       throw new DVCException(httpResponseCode, errorResponse);
     }
 
     if (response.isSuccessful()) {
-      return response.body();
+      String currentETag = response.headers().get("ETag");
+      if (currentETag == this.configETag) {
+        return this.config;
+      } else {
+        this.configETag = currentETag;
+        return response.body();
+      }
     } else {
       if (httpResponseCode == HttpResponseCode.UNAUTHORIZED) {
         errorResponse.setMessage("API Key is unauthorized");
