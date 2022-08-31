@@ -8,6 +8,7 @@ import lombok.Data;
 public class DVCOptions {
     private Boolean enableCloudBucketing;
     private Boolean enableEdgeDB;
+    private int configRequestTimeoutMs;
     private int configPollingIntervalMs;
     private String configCdnBaseUrl;
 }

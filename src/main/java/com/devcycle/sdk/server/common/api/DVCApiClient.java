@@ -10,6 +10,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 public final class DVCApiClient {
 
@@ -20,9 +21,12 @@ public final class DVCApiClient {
 
   private static final String BUCKETING_URL = "https://bucketing-api.devcycle.com/";
   private static final String CONFIG_URL = "https://config-cdn.devcycle.com/";
-
+  private static final int DEFAULT_TIMEOUT_MS = 10000;
+  private static final int MIN_INTERVALS_MS = 1000;
+  
   private Boolean cloudBucketing = false;
   private String configUrl;
+  private int requestTimeoutMs;
 
   private DVCApiClient(DVCOptions options) {
     String url;
@@ -33,15 +37,18 @@ public final class DVCApiClient {
 
     String cdnUrlFromOptions = options.getConfigCdnBaseUrl();
     Boolean enableCloudBucketing = options.getEnableCloudBucketing();
+    int configRequestTimeoutMs = options.getConfigRequestTimeoutMs();
 
     this.cloudBucketing = Objects.isNull(enableCloudBucketing) ? false : enableCloudBucketing;
-
+    
     if (this.cloudBucketing) {
       url = checkIfStringNullOrEmpty(bucketingApiUrl) ? BUCKETING_URL : bucketingApiUrl;
     } else {
       configUrl = checkIfStringNullOrEmpty(cdnUrlFromOptions) ? CONFIG_URL : cdnUrlFromOptions;
-
+      requestTimeoutMs = configRequestTimeoutMs >= MIN_INTERVALS_MS ? configRequestTimeoutMs : DEFAULT_TIMEOUT_MS;
+    
       url = this.configUrl;
+      okBuilder.callTimeout(this.requestTimeoutMs, TimeUnit.MILLISECONDS);
     }
 
     adapterBuilder = new Retrofit.Builder()
