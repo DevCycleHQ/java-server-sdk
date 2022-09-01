@@ -1,7 +1,6 @@
 package com.devcycle.example.java.sdk.app.controller;
 
 import com.devcycle.sdk.server.cloud.DVCCloudClient;
-import com.devcycle.sdk.server.local.DVCClient;
 import com.devcycle.sdk.server.common.model.User;
 import com.devcycle.sdk.server.common.model.Variable;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -13,11 +12,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class HelloWorld {
 
-    DVCClient dvc;
+    DVCCloudClient dvc;
 
     public HelloWorld(@Qualifier("devcycleServerKey") String serverKey) {
-        // dvc = new DVCCloudClient(serverKey);
-        dvc = new DVCClient(serverKey);
+        dvc = new DVCCloudClient(serverKey);
     }
 
     @Value("${spring.application.name}")

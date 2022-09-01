@@ -56,9 +56,10 @@ public interface DVCApi {
    * Get DevCycle project Config
    *
    * @param sdkToken  (required)
+   * @param etag  (nullable)
    * @return Call&lt;ProjectConfig&gt;
    */
   @Headers({"Content-Type:application/json"})
   @GET("config/v1/server/{sdkToken}.json")
-  Call<ProjectConfig> getConfig(@Path("sdkToken") String sdkToken);
+  Call<ProjectConfig> getConfig(@Path("sdkToken") String sdkToken, @Header("If-None-Match") String etag);
 }

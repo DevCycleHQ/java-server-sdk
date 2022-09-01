@@ -25,7 +25,7 @@ public final class EnvironmentConfigManager {
   private DVCApi configApiClient;
 
   private ProjectConfig config;
-  private String configETag;
+  private String configETag = "";
 
   private String environmentKey;
   private int pollingIntervalMS;
@@ -57,7 +57,7 @@ public final class EnvironmentConfigManager {
   }
 
   private ProjectConfig getConfig() throws DVCException {
-    Call<ProjectConfig> config = this.configApiClient.getConfig(environmentKey);
+    Call<ProjectConfig> config = this.configApiClient.getConfig(this.environmentKey, this.configETag);
 
     this.config = getConfigResponse(config);
     return this.config;
@@ -77,29 +77,24 @@ public final class EnvironmentConfigManager {
     HttpResponseCode httpResponseCode = HttpResponseCode.byCode(response.code());
     errorResponse.setMessage("Unknown error");
 
-    if (response.errorBody() != null) {
-      try {
-        errorResponse = OBJECT_MAPPER.readValue(response.errorBody().string(), ErrorResponse.class);
-      } catch (IOException e) {
-        errorResponse.setMessage(e.getMessage());
-        throw new DVCException(httpResponseCode, errorResponse);
-      }
-      throw new DVCException(httpResponseCode, errorResponse);
-    }
-
-    if (response.body() == null) {
-      throw new DVCException(httpResponseCode, errorResponse);
-    }
-
     if (response.isSuccessful()) {
       String currentETag = response.headers().get("ETag");
-      if (currentETag == this.configETag) {
-        return this.config;
-      } else {
-        this.configETag = currentETag;
-        return response.body();
-      }
+      this.configETag = currentETag;
+      return response.body();
+    } else if (httpResponseCode == HttpResponseCode.NOT_MODIFIED) {
+      System.out.printf("Config not modified, using cache, etag: %s%n", this.configETag);
+      return this.config;
     } else {
+      if (response.errorBody() != null) {
+        try {
+          errorResponse = OBJECT_MAPPER.readValue(response.errorBody().string(), ErrorResponse.class);
+        } catch (IOException e) {
+          errorResponse.setMessage(e.getMessage());
+          throw new DVCException(httpResponseCode, errorResponse);
+        }
+        throw new DVCException(httpResponseCode, errorResponse);
+      }
+
       if (httpResponseCode == HttpResponseCode.UNAUTHORIZED) {
         errorResponse.setMessage("API Key is unauthorized");
       } else if (!response.message().equals("")) {

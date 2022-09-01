@@ -29,7 +29,7 @@ public class DVCApiMock implements DVCApi {
     }
 
     @Override
-    public Call<ProjectConfig> getConfig(String sdkToken) {
+    public Call<ProjectConfig> getConfig(String sdkToken, String etag) {
         // TODO Auto-generated method stub
         return null;
     }
