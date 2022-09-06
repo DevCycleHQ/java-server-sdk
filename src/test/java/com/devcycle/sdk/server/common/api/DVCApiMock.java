@@ -27,4 +27,10 @@ public class DVCApiMock implements DVCApi {
     public Call<DVCResponse> track(UserAndEvents userAndEvents, Boolean enableEdgeDB) {
         return TestResponse.getTrackResponse(1);
     }
+
+    @Override
+    public Call<ProjectConfig> getConfig(String sdkToken, String etag) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

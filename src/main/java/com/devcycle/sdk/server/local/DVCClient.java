@@ -1,43 +1,24 @@
 package com.devcycle.sdk.server.local;
 
-import com.devcycle.sdk.server.common.api.DVCApi;
-import com.devcycle.sdk.server.common.api.DVCApiClient;
-import com.devcycle.sdk.server.common.exception.DVCException;
 import com.devcycle.sdk.server.common.model.*;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import retrofit2.Call;
-import retrofit2.Response;
 
-import java.io.IOException;
 import java.util.Collections;
-// import java.util.Map;
 import java.util.Objects;
 
 public final class DVCClient {
-
-  private final DVCApi api;
-  private final DVCOptions dvcOptions;
-
   private static final String DEFAULT_PLATFORM = "Java";
   private static final String DEFAULT_PLATFORM_VERSION = System.getProperty("java.version");
   private static final User.SdkTypeEnum DEFAULT_SDK_TYPE = User.SdkTypeEnum.SERVER;
   private final String DEFAULT_SDK_VERSION;
-
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   public DVCClient(String serverKey) {
     this(serverKey, DVCOptions.builder().build());
   }
 
   public DVCClient(String serverKey, DVCOptions dvcOptions) {
-    api = new DVCApiClient(serverKey).initialize();
-    this.dvcOptions = dvcOptions;
-    OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    new EnvironmentConfigManager(serverKey, dvcOptions);
     DEFAULT_SDK_VERSION = "1.1.0";
 
-    // TODO: Add Config Manager Initialization Code here
     // TODO: Add Local Bucketing Initialization Code here
   }
 
@@ -48,7 +29,7 @@ public final class DVCClient {
    */
   // TODO: Original return type should match the line below, uncomment once implemented and delete the void return
   // public Map<String, Feature> allFeatures(User user) throws DVCException {
-  public void allFeatures(User user) throws DVCException {
+  public void allFeatures(User user) {
     validateUser(user);
 
     addDefaults(user);
@@ -66,8 +47,7 @@ public final class DVCClient {
    * @return Variable
    */
   @SuppressWarnings("unchecked")
-  // TODO: This method will always return the default value, update with local
-  // bucketing variable call
+  // TODO: This method will always return the default value, update with local bucketing variable call
   public <T> Variable<T> variable(User user, String key, T defaultValue) {
     validateUser(user);
 
@@ -100,7 +80,7 @@ public final class DVCClient {
    */
   // TODO: Original return type should match the line below, uncomment once implemented and delete the void return
   // public Map<String, Variable> allVariables(User user) throws DVCException {
-  public void allVariables(User user) throws DVCException {
+  public void allVariables(User user) {
     validateUser(user);
 
     addDefaults(user);
@@ -116,7 +96,7 @@ public final class DVCClient {
    */
   // TODO: Original return type should match the line below, uncomment once implemented and delete the void return
   // public DVCResponse track(User user, Event event) throws DVCException {
-  public void track(User user, Event event) throws DVCException {
+  public void track(User user, Event event) {
     validateUser(user);
 
     addDefaults(user);
@@ -127,52 +107,6 @@ public final class DVCClient {
         .build();
 
     // Call track method to append custom event to queue
-  }
-
-  private <T> T getResponse(Call<T> call) throws DVCException {
-    ErrorResponse errorResponse = ErrorResponse.builder().build();
-    Response<T> response;
-
-    try {
-      response = call.execute();
-    } catch (IOException e) {
-      errorResponse.setMessage(e.getMessage());
-      throw new DVCException(HttpResponseCode.byCode(500), errorResponse);
-    }
-
-    HttpResponseCode httpResponseCode = HttpResponseCode.byCode(response.code());
-    errorResponse.setMessage("Unknown error");
-
-    if (response.errorBody() != null) {
-      try {
-        errorResponse = OBJECT_MAPPER.readValue(response.errorBody().string(), ErrorResponse.class);
-      } catch (IOException e) {
-        errorResponse.setMessage(e.getMessage());
-        throw new DVCException(httpResponseCode, errorResponse);
-      }
-      throw new DVCException(httpResponseCode, errorResponse);
-    }
-
-    if (response.body() == null) {
-      throw new DVCException(httpResponseCode, errorResponse);
-    }
-
-    if (response.isSuccessful()) {
-      return response.body();
-    } else {
-      if (httpResponseCode == HttpResponseCode.UNAUTHORIZED) {
-        errorResponse.setMessage("API Key is unauthorized");
-      } else if (!response.message().equals("")) {
-        try {
-          errorResponse = OBJECT_MAPPER.readValue(response.message(), ErrorResponse.class);
-        } catch (JsonProcessingException e) {
-          errorResponse.setMessage(e.getMessage());
-          throw new DVCException(httpResponseCode, errorResponse);
-        }
-      }
-
-      throw new DVCException(httpResponseCode, errorResponse);
-    }
   }
 
   private void addDefaults(User user) {
