@@ -6,9 +6,14 @@ import lombok.Data;
 @Data
 @Builder
 public class DVCOptions {
-    private Boolean enableCloudBucketing;
+    @Builder.Default
+    private Boolean enableCloudBucketing = false;
+
     private Boolean enableEdgeDB;
+    
     private int configRequestTimeoutMs;
+    
     private int configPollingIntervalMs;
+    
     private String configCdnBaseUrl;
 }

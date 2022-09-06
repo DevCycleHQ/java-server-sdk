@@ -32,7 +32,7 @@ public final class DVCCloudClient {
   }
 
   public DVCCloudClient(String serverKey, DVCOptions options) {
-    if (options.getEnableCloudBucketing() == null) {
+    if (!options.getEnableCloudBucketing()) {
       options.setEnableCloudBucketing(true);
     }
     api = new DVCApiClient(serverKey, options).initialize();
