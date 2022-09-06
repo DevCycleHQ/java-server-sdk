@@ -1,5 +1,7 @@
 package com.devcycle.sdk.server.cloud;
 
+import com.devcycle.sdk.server.cloud.api.DVCCloudClient;
+import com.devcycle.sdk.server.cloud.model.DVCCloudOptions;
 import com.devcycle.sdk.server.common.api.DVCApi;
 import com.devcycle.sdk.server.common.api.DVCApiMock;
 import com.devcycle.sdk.server.common.exception.DVCException;
@@ -33,7 +35,7 @@ public class DVCCloudClientTest {
 
     private DVCApiMock dvcApiMock;
 
-    private DVCOptions dvcOptions;
+    private DVCCloudOptions dvcOptions;
 
     @Before
     public void setup() {
@@ -45,7 +47,7 @@ public class DVCCloudClientTest {
 
         dvcApiMock = new DVCApiMock();
 
-        dvcOptions = DVCOptions.builder().build();
+        dvcOptions = DVCCloudOptions.builder().build();
     }
 
     @Test

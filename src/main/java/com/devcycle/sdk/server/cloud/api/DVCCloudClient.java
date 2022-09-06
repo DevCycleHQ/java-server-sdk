@@ -1,9 +1,10 @@
-package com.devcycle.sdk.server.cloud;
+package com.devcycle.sdk.server.cloud.api;
 
+import com.devcycle.sdk.server.cloud.model.DVCCloudOptions;
 import com.devcycle.sdk.server.common.api.DVCApi;
-import com.devcycle.sdk.server.common.api.DVCApiClient;
 import com.devcycle.sdk.server.common.exception.DVCException;
 import com.devcycle.sdk.server.common.model.*;
+import com.devcycle.sdk.server.local.api.DVCLocalApiClient;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,19 +19,16 @@ import java.util.Objects;
 public final class DVCCloudClient {
 
   private final DVCApi api;
-  private final DVCOptions dvcOptions;
+  private final DVCCloudOptions dvcOptions;
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   public DVCCloudClient(String serverKey) {
-    this(serverKey, DVCOptions.builder().enableCloudBucketing(true).build());
+    this(serverKey, DVCCloudOptions.builder().build());
   }
 
-  public DVCCloudClient(String serverKey, DVCOptions options) {
-    if (!options.getEnableCloudBucketing()) {
-      options.setEnableCloudBucketing(true);
-    }
-    api = new DVCApiClient(serverKey, options).initialize();
+  public DVCCloudClient(String serverKey, DVCCloudOptions options) {
+    api = new DVCCloudApiClient(serverKey, options).initialize();
     this.dvcOptions = options;
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
   }

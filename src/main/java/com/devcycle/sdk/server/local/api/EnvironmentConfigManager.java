@@ -1,4 +1,4 @@
-package com.devcycle.sdk.server.local;
+package com.devcycle.sdk.server.local.api;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
@@ -7,9 +7,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.devcycle.sdk.server.common.exception.DVCException;
 import com.devcycle.sdk.server.common.api.DVCApi;
-import com.devcycle.sdk.server.common.api.DVCApiClient;
 import com.devcycle.sdk.server.common.model.*;
-
+import com.devcycle.sdk.server.local.model.DVCLocalOptions;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -32,10 +31,10 @@ public final class EnvironmentConfigManager {
 
   private LocalBucketing localBucketing;
 
-  public EnvironmentConfigManager(String environmentKey, LocalBucketing localBucketing, DVCOptions options) {
+  public EnvironmentConfigManager(String environmentKey, LocalBucketing localBucketing, DVCLocalOptions options) {
     this.environmentKey = environmentKey;
 
-    configApiClient = new DVCApiClient(environmentKey, options).initialize();
+    configApiClient = new DVCLocalApiClient(environmentKey, options).initialize();
 
     int configPollingIntervalMs = options.getConfigPollingIntervalMs();
     pollingIntervalMS = configPollingIntervalMs >= MIN_INTERVALS_MS ? configPollingIntervalMs
