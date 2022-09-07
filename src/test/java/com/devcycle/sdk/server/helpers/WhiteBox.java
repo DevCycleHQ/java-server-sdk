@@ -34,7 +34,7 @@ public final class WhiteBox {
         return f;
     }
 
-    private static Field getField(Class<?> clazz, String field) {
+    public static Field getField(Class<?> clazz, String field) {
         try {
             return clazz.getDeclaredField(field);
         } catch (NoSuchFieldException e) {
