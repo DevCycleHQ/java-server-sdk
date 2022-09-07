@@ -1,5 +1,8 @@
 package com.devcycle.sdk.server.local;
 
+import com.devcycle.sdk.server.common.api.DVCApi;
+import com.devcycle.sdk.server.common.api.DVCApiClient;
+import com.devcycle.sdk.server.common.exception.DVCException;
 import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -7,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 
 
 public final class DVCLocalClient {
@@ -101,8 +105,8 @@ public final class DVCLocalClient {
      localBucketing.setPlatformData(user.getPlatformData().toString());
      String userString = OBJECT_MAPPER.writeValueAsString(user);
 
-    BucketedUserConfig bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, userString);
-    return bucketedUserConfig.variables;
+     BucketedUserConfig bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, userString);
+     return bucketedUserConfig.variables;
   }
 
   /**
