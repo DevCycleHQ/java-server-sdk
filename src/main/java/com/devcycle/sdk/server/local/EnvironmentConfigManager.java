@@ -30,7 +30,9 @@ public final class EnvironmentConfigManager {
   private String environmentKey;
   private int pollingIntervalMS;
 
-  public EnvironmentConfigManager(String environmentKey, DVCOptions options) {
+  private LocalBucketing localBucketing;
+
+  public EnvironmentConfigManager(String environmentKey, LocalBucketing localBucketing, DVCOptions options) {
     this.environmentKey = environmentKey;
 
     configApiClient = new DVCApiClient(environmentKey, options).initialize();
@@ -38,6 +40,8 @@ public final class EnvironmentConfigManager {
     int configPollingIntervalMs = options.getConfigPollingIntervalMs();
     pollingIntervalMS = configPollingIntervalMs >= MIN_INTERVALS_MS ? configPollingIntervalMs
         : DEFAULT_POLL_INTERVAL_MS;
+    
+    this.localBucketing = localBucketing;
 
     setupScheduler();
   }
@@ -47,7 +51,7 @@ public final class EnvironmentConfigManager {
       public void run() {
         try {
           getConfig();
-        } catch (DVCException e) {
+        } catch (DVCException | JsonProcessingException e) {
           e.printStackTrace();
         }
       }
@@ -56,14 +60,18 @@ public final class EnvironmentConfigManager {
     scheduler.scheduleAtFixedRate(getConfigRunnable, 0, this.pollingIntervalMS, TimeUnit.MILLISECONDS);
   }
 
-  private ProjectConfig getConfig() throws DVCException {
+  public boolean isConfigInitialized() {
+    return config != null;
+  }
+
+  private ProjectConfig getConfig() throws DVCException, JsonProcessingException {
     Call<ProjectConfig> config = this.configApiClient.getConfig(this.environmentKey, this.configETag);
 
     this.config = getConfigResponse(config);
     return this.config;
   }
 
-  private ProjectConfig getConfigResponse(Call<ProjectConfig> call) throws DVCException {
+  private ProjectConfig getConfigResponse(Call<ProjectConfig> call) throws DVCException, JsonProcessingException {
     ErrorResponse errorResponse = ErrorResponse.builder().build();
     Response<ProjectConfig> response;
 
@@ -78,6 +86,18 @@ public final class EnvironmentConfigManager {
     errorResponse.setMessage("Unknown error");
 
     if (response.isSuccessful()) {
+      ProjectConfig config = response.body();
+      try {
+        ObjectMapper mapper = new ObjectMapper();
+        localBucketing.storeConfig(environmentKey, mapper.writeValueAsString(config));
+      } catch (JsonProcessingException e) {
+        if (this.config != null) {
+          System.out.printf("Unable to parse config with etag: %s. Using cache, etag %s%n", currentETag, this.configETag);
+          return this.config;
+        } else {
+          throw e;
+        }
+      }
       String currentETag = response.headers().get("ETag");
       this.configETag = currentETag;
       return response.body();
