@@ -6,7 +6,7 @@ import retrofit2.http.*;
 
 import java.util.Map;
 
-public interface DVCApi {
+public interface IDVCApi {
   /**
    * Get all features by key for user data
    *

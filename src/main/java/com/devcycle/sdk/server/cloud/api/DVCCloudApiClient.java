@@ -1,7 +1,7 @@
 package com.devcycle.sdk.server.cloud.api;
 
 import com.devcycle.sdk.server.cloud.model.DVCCloudOptions;
-import com.devcycle.sdk.server.common.api.DVCApi;
+import com.devcycle.sdk.server.common.api.IDVCApi;
 import com.devcycle.sdk.server.common.interceptor.AuthorizationHeaderInterceptor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -41,11 +41,11 @@ public final class DVCCloudApiClient {
     okBuilder.addInterceptor(new AuthorizationHeaderInterceptor(apiKey));
   }
 
-  public DVCApi initialize() {
+  public IDVCApi initialize() {
     return adapterBuilder
         .client(okBuilder.build())
         .build()
-        .create(DVCApi.class);
+        .create(IDVCApi.class);
   }
 
   private Boolean checkIfStringNullOrEmpty(String stringToCheck) {

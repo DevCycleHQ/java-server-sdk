@@ -1,10 +1,9 @@
 package com.devcycle.sdk.server.cloud.api;
 
 import com.devcycle.sdk.server.cloud.model.DVCCloudOptions;
-import com.devcycle.sdk.server.common.api.DVCApi;
+import com.devcycle.sdk.server.common.api.IDVCApi;
 import com.devcycle.sdk.server.common.exception.DVCException;
 import com.devcycle.sdk.server.common.model.*;
-import com.devcycle.sdk.server.local.api.DVCLocalApiClient;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,7 +17,7 @@ import java.util.Objects;
 
 public final class DVCCloudClient {
 
-  private final DVCApi api;
+  private final IDVCApi api;
   private final DVCCloudOptions dvcOptions;
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();

@@ -2,7 +2,7 @@ package com.devcycle.sdk.server.cloud;
 
 import com.devcycle.sdk.server.cloud.api.DVCCloudClient;
 import com.devcycle.sdk.server.cloud.model.DVCCloudOptions;
-import com.devcycle.sdk.server.common.api.DVCApi;
+import com.devcycle.sdk.server.common.api.IDVCApi;
 import com.devcycle.sdk.server.common.api.DVCApiMock;
 import com.devcycle.sdk.server.common.exception.DVCException;
 import com.devcycle.sdk.server.common.model.*;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 public class DVCCloudClientTest {
 
     @Mock
-    private DVCApi apiInterface;
+    private IDVCApi apiInterface;
 
     private DVCCloudClient api;
 

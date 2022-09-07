@@ -6,7 +6,7 @@ import retrofit2.Call;
 
 import java.util.Map;
 
-public class DVCApiMock implements DVCApi {
+public class DVCApiMock implements IDVCApi {
 
     @Override
     public Call<Map<String, Feature>> getFeatures(User user, Boolean enabledEdgeDB) {

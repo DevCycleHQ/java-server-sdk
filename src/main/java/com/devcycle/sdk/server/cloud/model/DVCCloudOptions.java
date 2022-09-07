@@ -1,6 +1,6 @@
 package com.devcycle.sdk.server.cloud.model;
 
-import com.devcycle.sdk.server.common.model.DVCOptions;
+import com.devcycle.sdk.server.common.model.IDVCOptions;
 
 import lombok.Builder;
 import lombok.Data;
@@ -11,5 +11,5 @@ public class DVCCloudOptions {
     @Builder.Default
     private Boolean enableEdgeDB = false;
 
-    public static class DVCCloudOptionsBuilder implements DVCOptions { }
+    public static class DVCCloudOptionsBuilder implements IDVCOptions { }
 }

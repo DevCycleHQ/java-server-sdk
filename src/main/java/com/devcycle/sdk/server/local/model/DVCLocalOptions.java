@@ -1,6 +1,6 @@
 package com.devcycle.sdk.server.local.model;
 
-import com.devcycle.sdk.server.common.model.DVCOptions;
+import com.devcycle.sdk.server.common.model.IDVCOptions;
 
 import lombok.Builder;
 import lombok.Data;
@@ -17,5 +17,5 @@ public class DVCLocalOptions {
     @Builder.Default
     private String configCdnBaseUrl = "https://config-cdn.devcycle.com/";
 
-    public static class DVCLocalOptionsBuilder implements DVCOptions { }
+    public static class DVCLocalOptionsBuilder implements IDVCOptions { }
 }

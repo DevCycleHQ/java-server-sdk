@@ -6,7 +6,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.devcycle.sdk.server.common.exception.DVCException;
-import com.devcycle.sdk.server.common.api.DVCApi;
+import com.devcycle.sdk.server.common.api.IDVCApi;
 import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,7 +21,7 @@ public final class EnvironmentConfigManager {
   private static final int DEFAULT_POLL_INTERVAL_MS = 30000;
   private static final int MIN_INTERVALS_MS = 1000;
 
-  private DVCApi configApiClient;
+  private IDVCApi configApiClient;
 
   private ProjectConfig config;
   private String configETag = "";
