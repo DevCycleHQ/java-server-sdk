@@ -126,6 +126,8 @@ dependencies {
     api("com.fasterxml.jackson.core:jackson-databind:$jackson_version")
     implementation("io.swagger.core.v3:swagger-annotations:$swagger_annotations_version")
 
+    implementation ('io.github.kawamuray.wasmtime:wasmtime-java:0.11.0')
+
     compileOnly("org.projectlombok:lombok:$lombok_version")
 
     testAnnotationProcessor("org.projectlombok:lombok:$lombok_version")
