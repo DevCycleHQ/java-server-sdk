@@ -30,7 +30,9 @@ public final class EnvironmentConfigManager {
   private String environmentKey;
   private int pollingIntervalMS;
 
-  public EnvironmentConfigManager(String environmentKey, DVCOptions options) {
+  private LocalBucketing localBucketing;
+
+  public EnvironmentConfigManager(String environmentKey, LocalBucketing localBucketing, DVCOptions options) {
     this.environmentKey = environmentKey;
 
     configApiClient = new DVCApiClient(environmentKey, options).initialize();
@@ -38,6 +40,8 @@ public final class EnvironmentConfigManager {
     int configPollingIntervalMs = options.getConfigPollingIntervalMs();
     pollingIntervalMS = configPollingIntervalMs >= MIN_INTERVALS_MS ? configPollingIntervalMs
         : DEFAULT_POLL_INTERVAL_MS;
+    
+    this.localBucketing = localBucketing;
 
     setupScheduler();
   }
@@ -54,6 +58,10 @@ public final class EnvironmentConfigManager {
     };
 
     scheduler.scheduleAtFixedRate(getConfigRunnable, 0, this.pollingIntervalMS, TimeUnit.MILLISECONDS);
+  }
+
+  public boolean isConfigInitialized() {
+    return config != null;
   }
 
   private ProjectConfig getConfig() throws DVCException {
@@ -80,6 +88,14 @@ public final class EnvironmentConfigManager {
     if (response.isSuccessful()) {
       String currentETag = response.headers().get("ETag");
       this.configETag = currentETag;
+      ProjectConfig config = response.body();
+      try {
+        ObjectMapper mapper = new ObjectMapper();
+        localBucketing.storeConfig(environmentKey, mapper.writeValueAsString(config));
+      } catch (JsonProcessingException e) {
+        errorResponse.setMessage(e.getMessage());
+        throw new DVCException(HttpResponseCode.byCode(500), errorResponse);
+      }
       return response.body();
     } else if (httpResponseCode == HttpResponseCode.NOT_MODIFIED) {
       System.out.printf("Config not modified, using cache, etag: %s%n", this.configETag);

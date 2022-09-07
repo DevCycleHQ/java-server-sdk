@@ -18,6 +18,8 @@ public final class DVCLocalClient {
   private final DVCOptions dvcOptions;
 
   private static LocalBucketing localBucketing = new LocalBucketing();
+  
+  private EnvironmentConfigManager configManager;
 
   private final String serverKey;
 
@@ -28,8 +30,8 @@ public final class DVCLocalClient {
     this(serverKey, DVCOptions.builder().build());
   }
 
-  public DVCLocalClient(String serverKey, DVCOptions dvcOptions ) {
-    new EnvironmentConfigManager(serverKey, dvcOptions);
+  public DVCLocalClient(String serverKey, DVCOptions dvcOptions) {
+    configManager = new EnvironmentConfigManager(serverKey, localBucketing, dvcOptions);
     this.serverKey = serverKey;
     this.dvcOptions = dvcOptions;
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -69,7 +71,11 @@ public final class DVCLocalClient {
     if (defaultValue == null) {
       throw new IllegalArgumentException("defaultValue cannot be null");
     }
-    
+
+    if (!configManager.isConfigInitialized()) {
+      System.out.println("Variable called before DVCClient has initialized, returning default value");
+    }
+
     try {
       String userString = OBJECT_MAPPER.writeValueAsString(user);
 
@@ -91,6 +97,13 @@ public final class DVCLocalClient {
         .isDefaulted(true)
         .reasonUsingDefaultValue("Variable not found")
         .build();
+
+    // TODO queue events
+    //        eventQueue.queueAggregateEvent(
+    //              user,
+    //              new Event(type: EventTypes.variableDefaulted, target: key),
+    //              null
+    //        );
 
     return variable;
   }
