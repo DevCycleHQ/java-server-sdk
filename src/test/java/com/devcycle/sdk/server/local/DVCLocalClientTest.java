@@ -1,19 +1,21 @@
 package com.devcycle.sdk.server.local;
 
-import com.devcycle.sdk.server.common.model.Feature;
-import com.devcycle.sdk.server.common.model.PlatformData;
-import com.devcycle.sdk.server.common.model.User;
-import com.devcycle.sdk.server.common.model.Variable;
-import com.devcycle.sdk.server.helpers.WhiteBox;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Map;
+import java.util.UUID;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.Map;
-import java.util.UUID;
+import com.devcycle.sdk.server.common.model.Feature;
+import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.common.model.Variable;
+import com.devcycle.sdk.server.helpers.WhiteBox;
+import com.devcycle.sdk.server.local.api.DVCLocalClient;
+import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DVCLocalClientTest {

@@ -13,7 +13,6 @@ import retrofit2.Response;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Objects;
 
 public final class DVCCloudClient {
 
@@ -27,8 +26,8 @@ public final class DVCCloudClient {
   }
 
   public DVCCloudClient(String serverKey, DVCCloudOptions options) {
-    api = new DVCCloudApiClient(serverKey, options).initialize();
     this.dvcOptions = options;
+    api = new DVCCloudApiClient(serverKey, options).initialize();
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
   }
 

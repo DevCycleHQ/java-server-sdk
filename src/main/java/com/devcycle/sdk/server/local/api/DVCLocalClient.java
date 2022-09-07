@@ -1,35 +1,34 @@
-package com.devcycle.sdk.server.local;
+package com.devcycle.sdk.server.local.api;
 
-import com.devcycle.sdk.server.common.model.*;
-import com.devcycle.sdk.server.local.model.BucketedUserConfig;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.Map;
 
+import com.devcycle.sdk.server.common.model.*;
+import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
+import com.devcycle.sdk.server.local.configManager.EnvironmentConfigManager;
+import com.devcycle.sdk.server.local.model.BucketedUserConfig;
+import com.devcycle.sdk.server.local.model.DVCLocalOptions;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public final class DVCLocalClient {
 
-  private final DVCOptions dvcOptions;
-
   private static LocalBucketing localBucketing = new LocalBucketing();
-  
+
   private EnvironmentConfigManager configManager;
 
   private final String serverKey;
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-
   public DVCLocalClient(String serverKey) {
-    this(serverKey, DVCOptions.builder().build());
+    this(serverKey, DVCLocalOptions.builder().build());
   }
 
-  public DVCLocalClient(String serverKey, DVCOptions dvcOptions) {
+  public DVCLocalClient(String serverKey, DVCLocalOptions dvcOptions) {
     configManager = new EnvironmentConfigManager(serverKey, localBucketing, dvcOptions);
     this.serverKey = serverKey;
-    this.dvcOptions = dvcOptions;
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
   }
 
@@ -38,7 +37,7 @@ public final class DVCLocalClient {
    * 
    * @param user (required)
    */
-   public Map<String, Feature> allFeatures(User user) throws JsonProcessingException {
+  public Map<String, Feature> allFeatures(User user) throws JsonProcessingException {
     validateUser(user);
     localBucketing.setPlatformData(user.getPlatformData().toString());
     String userString = OBJECT_MAPPER.writeValueAsString(user);
@@ -77,12 +76,12 @@ public final class DVCLocalClient {
 
       BucketedUserConfig bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, userString);
       if (bucketedUserConfig.variables.containsKey(key)) {
-        Variable variable = bucketedUserConfig.variables.get(key);
+        Variable<T> variable = bucketedUserConfig.variables.get(key);
         variable.setIsDefaulted(false);
         return variable;
       }
     } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
+      System.out.printf("Unable to parse JSON for Variable %s due to error: %s", key, e.toString());
     }
 
     Variable<T> variable;
@@ -95,11 +94,11 @@ public final class DVCLocalClient {
         .build();
 
     // TODO queue events
-    //        eventQueue.queueAggregateEvent(
-    //              user,
-    //              new Event(type: EventTypes.variableDefaulted, target: key),
-    //              null
-    //        );
+    // eventQueue.queueAggregateEvent(
+    // user,
+    // new Event(type: EventTypes.variableDefaulted, target: key),
+    // null
+    // );
 
     return variable;
   }
@@ -109,10 +108,10 @@ public final class DVCLocalClient {
    * 
    * @param user (required)
    */
-   public Map<String, Variable> allVariables(User user) throws JsonProcessingException {
-     validateUser(user);
-     localBucketing.setPlatformData(user.getPlatformData().toString());
-     String userString = OBJECT_MAPPER.writeValueAsString(user);
+  public Map<String, Variable> allVariables(User user) throws JsonProcessingException {
+    validateUser(user);
+    localBucketing.setPlatformData(user.getPlatformData().toString());
+    String userString = OBJECT_MAPPER.writeValueAsString(user);
 
     BucketedUserConfig bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, userString);
     return bucketedUserConfig.variables;
@@ -124,7 +123,8 @@ public final class DVCLocalClient {
    * @param user  (required)
    * @param event (required)
    */
-  // TODO: Original return type should match the line below, uncomment once implemented and delete the void return
+  // TODO: Original return type should match the line below, uncomment once
+  // implemented and delete the void return
   // public DVCResponse track(User user, Event event) throws DVCException {
   public void track(User user, Event event) {
     validateUser(user);
