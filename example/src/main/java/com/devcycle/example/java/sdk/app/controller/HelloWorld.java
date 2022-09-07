@@ -35,9 +35,9 @@ public class HelloWorld {
 
     @GetMapping("/cloud/activateFlag")
     public String homePageActivatedFlag(Model model) {
-        Variable<Boolean> updateHomePage = dvcCloud.variable(getUser(), "a-cool-new-feature", false);
+        Variable<String> updateHomePage = dvcCloud.variable(getUser(), "string-var", "default string");
 
-        String variationValue = updateHomePage.getValue().toString();
+        String variationValue = updateHomePage.getValue();
 
         // if the variable "activate-flag" doesn't exist isDefaulted will be true
         model.addAttribute("isDefaultValue", updateHomePage.getIsDefaulted());
@@ -47,9 +47,9 @@ public class HelloWorld {
 
     @GetMapping("/local/activateFlag")
     public String homePageActivatedFlagLocal(Model model) {
-        Variable<Boolean> updateHomePage = dvcLocal.variable(getUser(), "a-cool-new-feature", false);
+        Variable<String> updateHomePage = dvcLocal.variable(getUser(), "string-var", "default string");
 
-        String variationValue = updateHomePage.getValue().toString();
+        String variationValue = updateHomePage.getValue();
 
         // if the variable "activate-flag" doesn't exist isDefaulted will be true
         model.addAttribute("isDefaultValue", updateHomePage.getIsDefaulted());

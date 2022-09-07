@@ -3,6 +3,7 @@ package com.devcycle.sdk.server.local;
 import com.devcycle.sdk.server.common.api.DVCApi;
 import com.devcycle.sdk.server.common.api.DVCApiClient;
 import com.devcycle.sdk.server.common.model.*;
+import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,7 +11,6 @@ import retrofit2.Call;
 import retrofit2.Response;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Objects;
 
 
@@ -41,6 +41,10 @@ public final class DVCLocalClient {
     api = new DVCApiClient(serverKey, dvcOptions).initialize();
     this.dvcOptions = dvcOptions;
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+    // TODO: handle this in config manager
+    String testConfigString = "{\"project\":{\"_id\":\"61f97628ff4afcb6d057dbf0\",\"key\":\"emma-project\",\"a0_organization\":\"org_tPyJN5dvNNirKar7\",\"settings\":{\"edgeDB\":{\"enabled\":false},\"optIn\":{\"enabled\":true,\"title\":\"EarlyAccess\",\"description\":\"Getearlyaccesstobetafeaturesbelow!\",\"imageURL\":\"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR68cgQT_BTgnhWTdfjUXSN8zM9Vpxgq82dhw&usqp=CAU\",\"colors\":{\"primary\":\"#531cd9\",\"secondary\":\"#16dec0\"}}}},\"environment\":{\"_id\":\"61f97628ff4afcb6d057dbf2\",\"key\":\"development\"},\"features\":[{\"_id\":\"62fbf6566f1ba302829f9e32\",\"key\":\"a-cool-new-feature\",\"type\":\"release\",\"variations\":[{\"key\":\"variation-on\",\"name\":\"VariationOn\",\"variables\":[{\"_var\":\"62fbf6566f1ba302829f9e34\",\"value\":true},{\"_var\":\"63125320a4719939fd57cb2b\",\"value\":\"iamlocal\"}],\"_id\":\"62fbf6566f1ba302829f9e38\"},{\"key\":\"variation-off\",\"name\":\"VariationOff\",\"variables\":[{\"_var\":\"62fbf6566f1ba302829f9e34\",\"value\":false},{\"_var\":\"63125320a4719939fd57cb2b\",\"value\":\"iamcloud\"}],\"_id\":\"62fbf6566f1ba302829f9e39\"}],\"configuration\":{\"_id\":\"62fbf6576f1ba302829f9e4d\",\"targets\":[{\"_audience\":{\"_id\":\"63125321d31c601f992288b6\",\"filters\":{\"filters\":[{\"type\":\"user\",\"subType\":\"platform\",\"comparator\":\"=\",\"values\":[\"java-local\"],\"filters\":[]}],\"operator\":\"and\"}},\"distribution\":[{\"_variation\":\"62fbf6566f1ba302829f9e38\",\"percentage\":1}],\"_id\":\"63125321d31c601f992288bb\"},{\"_audience\":{\"_id\":\"63125321d31c601f992288b7\",\"filters\":{\"filters\":[{\"type\":\"all\",\"values\":[],\"filters\":[]}],\"operator\":\"and\"}},\"distribution\":[{\"_variation\":\"62fbf6566f1ba302829f9e39\",\"percentage\":1}],\"_id\":\"63125321d31c601f992288bc\"}],\"forcedUsers\":{}}}],\"variables\":[{\"_id\":\"62fbf6566f1ba302829f9e34\",\"key\":\"a-cool-new-feature\",\"type\":\"Boolean\"},{\"_id\":\"63125320a4719939fd57cb2b\",\"key\":\"string-var\",\"type\":\"String\"}],\"variableHashes\":{\"a-cool-new-feature\":1868656757,\"string-var\":2413071944}}";
+    localBucketing.storeConfig(serverKey, testConfigString);
   }
 
   /**
@@ -82,13 +86,28 @@ public final class DVCLocalClient {
 
     addDefaults(user);
 
+    try {
+      localBucketing.setPlatformData(user.getPlatformDataString());
+      ObjectMapper mapper = new ObjectMapper();
+      String userString = mapper.writeValueAsString(user);
+
+      BucketedUserConfig bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, userString);
+      if (bucketedUserConfig.variables.containsKey(key)) {
+        Variable variable = bucketedUserConfig.variables.get(key);
+        variable.setIsDefaulted(false);
+        return variable;
+      }
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+
     Variable<T> variable;
 
     variable = (Variable<T>) Variable.builder()
         .key(key)
         .value(defaultValue)
         .isDefaulted(true)
-        .reasonUsingDefaultValue("Local Bucketing Not Implemented")
+        .reasonUsingDefaultValue("Variable not found")
         .build();
 
     return variable;

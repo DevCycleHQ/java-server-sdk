@@ -3,6 +3,7 @@ package com.devcycle.sdk.server.local;
 import static io.github.kawamuray.wasmtime.WasmValType.I32;
 import static io.github.kawamuray.wasmtime.WasmValType.F64;
 
+import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.kawamuray.wasmtime.*;
@@ -10,14 +11,11 @@ import io.github.kawamuray.wasmtime.Module;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.ByteBuffer;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class LocalBucketing {
@@ -129,7 +127,7 @@ public class LocalBucketing {
         fn.accept(platformDataAddress);
     }
 
-    public Map<String, Object> generateBucketedConfig(String token, String user) throws JsonProcessingException {
+    public BucketedUserConfig generateBucketedConfig(String token, String user) throws JsonProcessingException {
 
         int tokenAddress = newWasmString(token);
         int userAddress = newWasmString(user);
@@ -141,9 +139,9 @@ public class LocalBucketing {
         int resultAddress = generateBucketedConfigForUser.call(tokenAddress, userAddress);
         String bucketedConfigString = readWasmString(resultAddress);
 
-        Map<String, Object> mapping = new ObjectMapper().readValue(bucketedConfigString, HashMap.class);
-        // TODO parse json as BucketedUserConfig class and return that
-        return mapping;
+        ObjectMapper objectMapper = new ObjectMapper();
+        BucketedUserConfig config = objectMapper.readValue(bucketedConfigString, BucketedUserConfig.class);
+        return config;
     }
 }
 

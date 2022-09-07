@@ -13,8 +13,12 @@
 package com.devcycle.sdk.server.common.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +26,7 @@ import lombok.NonNull;
 
 @Data
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class User {
 
   @JsonIgnoreProperties(ignoreUnknown = true)
@@ -62,19 +67,36 @@ public class User {
   private Long lastSeenDate;
 
   @Schema(description = "Platform the SDK is running on")
-  private String platform;
+  @Builder.Default
+  private String platform = "";
 
   @Schema(description = "Version of the platform the SDK is running on")
-  private String platformVersion;
+  @Builder.Default
+  private String platformVersion = "";
 
   @Schema(description = "User's device model")
-  private String deviceModel;
+  @Builder.Default
+  private String deviceModel = "";
 
   @Schema(description = "DevCycle SDK type")
-  private SdkTypeEnum sdkType;
+  @Builder.Default
+  private SdkTypeEnum sdkType = SdkTypeEnum.SERVER;
 
   @Schema(description = "DevCycle SDK Version")
-  private String sdkVersion;
+  @Builder.Default
+  private String sdkVersion = "";
+
+  public String getPlatformDataString() throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode platformData = mapper.createObjectNode();
+    platformData.put("platform", platform);
+    platformData.put("platformVersion", platformVersion);
+    platformData.put("deviceModel", deviceModel);
+    platformData.put("sdkType", sdkType.toString());
+    platformData.put("sdkVersion", sdkVersion);
+
+    return mapper.writeValueAsString(platformData);
+  }
 
   public enum SdkTypeEnum {
     API("api"),
