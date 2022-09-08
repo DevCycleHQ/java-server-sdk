@@ -1,22 +1,22 @@
-package com.devcycle.sdk.server.local;
+package com.devcycle.sdk.server.local.bucketing;
 
-import static io.github.kawamuray.wasmtime.WasmValType.I32;
 import static io.github.kawamuray.wasmtime.WasmValType.F64;
-
-import com.devcycle.sdk.server.local.model.BucketedUserConfig;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.kawamuray.wasmtime.*;
-import io.github.kawamuray.wasmtime.Module;
+import static io.github.kawamuray.wasmtime.WasmValType.I32;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicReference;
+
+import com.devcycle.sdk.server.local.model.BucketedUserConfig;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.github.kawamuray.wasmtime.*;
+import io.github.kawamuray.wasmtime.Module;
 
 public class LocalBucketing {
     Store<Void> store; // WASM compilation environment

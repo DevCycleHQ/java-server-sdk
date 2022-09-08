@@ -1,15 +1,18 @@
-package com.devcycle.sdk.server.local;
+package com.devcycle.sdk.server.local.configManager;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.devcycle.sdk.server.common.api.IDVCApi;
 import com.devcycle.sdk.server.common.exception.DVCException;
-import com.devcycle.sdk.server.common.api.DVCApi;
-import com.devcycle.sdk.server.common.api.DVCApiClient;
-import com.devcycle.sdk.server.common.model.*;
-
+import com.devcycle.sdk.server.common.model.ErrorResponse;
+import com.devcycle.sdk.server.common.model.HttpResponseCode;
+import com.devcycle.sdk.server.common.model.ProjectConfig;
+import com.devcycle.sdk.server.local.api.DVCLocalApiClient;
+import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
+import com.devcycle.sdk.server.local.model.DVCLocalOptions;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -22,7 +25,8 @@ public final class EnvironmentConfigManager {
   private static final int DEFAULT_POLL_INTERVAL_MS = 30000;
   private static final int MIN_INTERVALS_MS = 1000;
 
-  private DVCApi configApiClient;
+  private IDVCApi configApiClient;
+  private LocalBucketing localBucketing;
 
   private ProjectConfig config;
   private String configETag = "";
@@ -30,12 +34,11 @@ public final class EnvironmentConfigManager {
   private String environmentKey;
   private int pollingIntervalMS;
 
-  private LocalBucketing localBucketing;
-
-  public EnvironmentConfigManager(String environmentKey, LocalBucketing localBucketing, DVCOptions options) {
+  public EnvironmentConfigManager(String environmentKey, LocalBucketing localBucketing, DVCLocalOptions options) {
     this.environmentKey = environmentKey;
+    this.localBucketing = localBucketing;
 
-    configApiClient = new DVCApiClient(environmentKey, options).initialize();
+    configApiClient = new DVCLocalApiClient(environmentKey, options).initialize();
 
     int configPollingIntervalMs = options.getConfigPollingIntervalMs();
     pollingIntervalMS = configPollingIntervalMs >= MIN_INTERVALS_MS ? configPollingIntervalMs
@@ -86,6 +89,7 @@ public final class EnvironmentConfigManager {
     errorResponse.setMessage("Unknown error");
 
     if (response.isSuccessful()) {
+      String currentETag = response.headers().get("ETag");
       ProjectConfig config = response.body();
       try {
         ObjectMapper mapper = new ObjectMapper();
@@ -98,7 +102,6 @@ public final class EnvironmentConfigManager {
           throw e;
         }
       }
-      String currentETag = response.headers().get("ETag");
       this.configETag = currentETag;
       return response.body();
     } else if (httpResponseCode == HttpResponseCode.NOT_MODIFIED) {
