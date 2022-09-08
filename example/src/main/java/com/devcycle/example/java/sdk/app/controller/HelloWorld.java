@@ -1,7 +1,7 @@
 package com.devcycle.example.java.sdk.app.controller;
 
-import com.devcycle.sdk.server.cloud.DVCCloudClient;
-import com.devcycle.sdk.server.local.DVCLocalClient;
+import com.devcycle.sdk.server.cloud.api.DVCCloudClient;
+import com.devcycle.sdk.server.local.api.DVCLocalClient;
 import com.devcycle.sdk.server.common.model.User;
 import com.devcycle.sdk.server.common.model.Variable;
 import org.springframework.beans.factory.annotation.Qualifier;
