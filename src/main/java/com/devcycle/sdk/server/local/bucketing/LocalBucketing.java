@@ -7,14 +7,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collection;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
+import com.devcycle.sdk.server.local.model.EventPayload;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.fasterxml.jackson.databind.SerializationFeature;
 import io.github.kawamuray.wasmtime.*;
 import io.github.kawamuray.wasmtime.Module;
 
@@ -60,6 +62,11 @@ public class LocalBucketing {
             throw new RuntimeException("Exception in " + fileName + ":" + linenum + " : " + colnum + " " + message);
         });
         linker.define("env", "abort", Extern.fromFunc(abortFn));
+
+        Func seedFn = WasmFunctions.wrap(store, F64, () -> {
+            return System.currentTimeMillis() * Math.random();
+        });
+        linker.define("env", "seed", Extern.fromFunc(seedFn));
 
         return Arrays.asList(Extern.fromFunc(dateNowFn), Extern.fromFunc(consoleLogFn), Extern.fromFunc(abortFn));
     }
@@ -142,6 +149,76 @@ public class LocalBucketing {
         ObjectMapper objectMapper = new ObjectMapper();
         BucketedUserConfig config = objectMapper.readValue(bucketedConfigString, BucketedUserConfig.class);
         return config;
+    }
+
+    public void initEventQueue(String token, String options) {
+        int tokenAddress = newWasmString(token);
+        int optionsAddress = newWasmString(options);
+
+        Func initEventQueuePtr = linker.get(store, "", "initEventQueue").get().func();
+        WasmFunctions.Consumer2<Integer, Integer> fn = WasmFunctions.consumer(store, initEventQueuePtr, I32, I32);
+        fn.accept(tokenAddress, optionsAddress);
+    }
+
+    public void queueEvent(String token, String user, String event) {
+        int tokenAddress = newWasmString(token);
+        int userAddress = newWasmString(user);
+        int eventAddress = newWasmString(event);
+
+        Func queueEventPtr = linker.get(store, "", "queueEvent").get().func();
+        WasmFunctions.Consumer3<Integer, Integer, Integer> fn = WasmFunctions.consumer(store, queueEventPtr, I32, I32, I32);
+        fn.accept(tokenAddress, userAddress, eventAddress);
+    }
+
+    public void queueAggregateEvent(String token, String event, String variableVariationMap) {
+        int tokenAddress = newWasmString(token);
+        int eventAddress = newWasmString(event);
+        int variableVariationMapAddress = newWasmString(variableVariationMap);
+
+        Func queueAggregateEventPtr = linker.get(store, "", "queueAggregateEvent").get().func();
+        WasmFunctions.Consumer3<Integer, Integer, Integer> fn = WasmFunctions.consumer(store, queueAggregateEventPtr, I32, I32, I32);
+        fn.accept(tokenAddress, eventAddress, variableVariationMapAddress);
+    }
+
+    public EventPayload[] flushEventQueue(String token) throws JsonProcessingException {
+        int tokenAddress = newWasmString(token);
+
+        Func flushEventQueuePtr = linker.get(store, "", "flushEventQueue").get().func();
+        WasmFunctions.Function1<Integer, Integer> fn = WasmFunctions.func(
+                store, flushEventQueuePtr, I32, I32);
+
+        int resultAddress = fn.call(tokenAddress);
+        String flushPayloadsStr = readWasmString(resultAddress);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ"); //2022-09-08T20:16:31.741Z
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        objectMapper.setDateFormat(df);
+
+        EventPayload[] payloads = objectMapper.readValue(flushPayloadsStr, EventPayload[].class);
+
+        return payloads;
+    }
+
+    public void onPayloadFailure(String token, String payloadId, boolean retryable) {
+        // TODO - passing int value doesn't work yet (only addresses)
+//        int tokenAddress = newWasmString(token);
+//        int payloadIdAddress = newWasmString(payloadId);
+//
+//        Func onPayloadFailurePtr = linker.get(store, "", "onPayloadFailure").get().func();
+//        WasmFunctions.Consumer3<Integer, Integer, Integer> fn = WasmFunctions.consumer(store, onPayloadFailurePtr, I32, I32, I32);
+//        fn.accept(tokenAddress, payloadIdAddress, retryable ? 1 : 0);
+    }
+
+    public void onPayloadSuccess(String token, String payloadId) {
+        int tokenAddress = newWasmString(token);
+        int payloadIdAddress = newWasmString(payloadId);
+
+        Func onPayloadSuccessPtr = linker.get(store, "", "onPayloadSuccess").get().func();
+        WasmFunctions.Consumer2<Integer, Integer> fn = WasmFunctions.consumer(store, onPayloadSuccessPtr, I32, I32);
+        fn.accept(tokenAddress, payloadIdAddress);
     }
 }
 
