@@ -20,11 +20,6 @@ public final class DVCCloudClient {
   private final DVCApi api;
   private final DVCOptions dvcOptions;
 
-  private static final String DEFAULT_PLATFORM = "Java";
-  private static final String DEFAULT_PLATFORM_VERSION = System.getProperty("java.version");
-  private static final User.SdkTypeEnum DEFAULT_SDK_TYPE = User.SdkTypeEnum.SERVER;
-  private final String DEFAULT_SDK_VERSION;
-
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   public DVCCloudClient(String serverKey) {
@@ -38,7 +33,6 @@ public final class DVCCloudClient {
     api = new DVCApiClient(serverKey, options).initialize();
     this.dvcOptions = options;
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    DEFAULT_SDK_VERSION = "1.1.0";
   }
 
   /**
@@ -49,8 +43,6 @@ public final class DVCCloudClient {
    */
   public Map<String, Feature> allFeatures(User user) throws DVCException {
     validateUser(user);
-
-    addDefaults(user);
 
     Call<Map<String, Feature>> response = api.getFeatures(user, dvcOptions.getEnableEdgeDB());
     return getResponse(response);
@@ -75,8 +67,6 @@ public final class DVCCloudClient {
     if (defaultValue == null) {
       throw new IllegalArgumentException("defaultValue cannot be null");
     }
-
-    addDefaults(user);
 
     Variable<T> variable;
 
@@ -103,8 +93,6 @@ public final class DVCCloudClient {
   public Map<String, Variable> allVariables(User user) throws DVCException {
     validateUser(user);
 
-    addDefaults(user);
-
     Call<Map<String, Variable>> response = api.getVariables(user, dvcOptions.getEnableEdgeDB());
     return getResponse(response);
   }
@@ -118,8 +106,6 @@ public final class DVCCloudClient {
    */
   public DVCResponse track(User user, Event event) throws DVCException {
     validateUser(user);
-
-    addDefaults(user);
 
     UserAndEvents userAndEvents = UserAndEvents.builder()
             .user(user)
@@ -173,21 +159,6 @@ public final class DVCCloudClient {
       }
 
       throw new DVCException(httpResponseCode, errorResponse);
-    }
-  }
-
-  private void addDefaults(User user) {
-    if (Objects.isNull(user.getPlatform()) || Objects.equals(user.getPlatform(), "")) {
-      user.setPlatform(DEFAULT_PLATFORM);
-    }
-    if (Objects.isNull(user.getPlatformVersion()) || Objects.equals(user.getPlatformVersion(), "")) {
-      user.setPlatformVersion(DEFAULT_PLATFORM_VERSION);
-    }
-    if (Objects.isNull(user.getSdkType())) {
-      user.setSdkType(DEFAULT_SDK_TYPE);
-    }
-    if (Objects.isNull(user.getSdkVersion()) || Objects.equals(user.getSdkVersion(), "")) {
-      user.setSdkVersion(DEFAULT_SDK_VERSION);
     }
   }
 
