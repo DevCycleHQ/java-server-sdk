@@ -2,6 +2,7 @@ package com.devcycle.sdk.server.local.api;
 
 import com.devcycle.sdk.server.common.api.IDVCApi;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;
+import com.devcycle.sdk.server.local.model.FlushPayload;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -16,6 +17,7 @@ public final class DVCLocalApiClient {
 
   private final OkHttpClient.Builder okBuilder;
   private final Retrofit.Builder adapterBuilder;
+  private final Retrofit.Builder eventsBuilder;
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -44,6 +46,10 @@ public final class DVCLocalApiClient {
     adapterBuilder = new Retrofit.Builder()
         .baseUrl(url)
         .addConverterFactory(JacksonConverterFactory.create());
+
+    eventsBuilder = new Retrofit.Builder()
+            .baseUrl("https://events.devcycle.com")
+            .addConverterFactory(JacksonConverterFactory.create());
   }
 
   public DVCLocalApiClient(String apiKey, DVCLocalOptions options) {
@@ -59,5 +65,11 @@ public final class DVCLocalApiClient {
 
   private Boolean checkIfStringNullOrEmpty(String stringToCheck) {
     return Objects.isNull(stringToCheck) || Objects.equals(stringToCheck, "");
+  }
+
+  public void publishEvents(String environmentKey, FlushPayload.Record[] eventsBatch) throws Exception {
+    if (environmentKey == null || environmentKey.equals("")) {
+      throw new Exception("DevCycle is not yet initialized to publish events.");
+    }
   }
 }

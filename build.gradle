@@ -129,6 +129,10 @@ dependencies {
 
     implementation ("io.github.kawamuray.wasmtime:wasmtime-java:$wasmtime_version")
 
+    implementation("com.squareup.okhttp3:logging-interceptor:$okhttp_version") {
+        exclude group: "com.squareup.okhttp3", module: "okhttp"
+    }
+
     compileOnly("org.projectlombok:lombok:$lombok_version")
 
     testAnnotationProcessor("org.projectlombok:lombok:$lombok_version")

@@ -43,8 +43,6 @@ public final class EnvironmentConfigManager {
     int configPollingIntervalMs = options.getConfigPollingIntervalMs();
     pollingIntervalMS = configPollingIntervalMs >= MIN_INTERVALS_MS ? configPollingIntervalMs
         : DEFAULT_POLL_INTERVAL_MS;
-    
-    this.localBucketing = localBucketing;
 
     setupScheduler();
   }
