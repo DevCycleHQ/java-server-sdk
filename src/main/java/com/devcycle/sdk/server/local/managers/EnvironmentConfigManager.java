@@ -1,4 +1,4 @@
-package com.devcycle.sdk.server.local.configManager;
+package com.devcycle.sdk.server.local.managers;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;

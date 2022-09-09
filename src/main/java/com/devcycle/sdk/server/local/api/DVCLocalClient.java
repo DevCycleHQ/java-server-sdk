@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
-import com.devcycle.sdk.server.local.configManager.EnvironmentConfigManager;
+import com.devcycle.sdk.server.local.managers.EnvironmentConfigManager;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;
 import com.fasterxml.jackson.annotation.JsonInclude;
