@@ -52,7 +52,7 @@ public final class DVCLocalApiClient {
             .addConverterFactory(JacksonConverterFactory.create());
   }
 
-  public DVCLocalApiClient(String apiKey, DVCLocalOptions options) {
+  public DVCLocalApiClient(String serverKey, DVCLocalOptions options) {
     this(options);
   }
 
@@ -65,11 +65,5 @@ public final class DVCLocalApiClient {
 
   private Boolean checkIfStringNullOrEmpty(String stringToCheck) {
     return Objects.isNull(stringToCheck) || Objects.equals(stringToCheck, "");
-  }
-
-  public void publishEvents(String environmentKey, FlushPayload.Record[] eventsBatch) throws Exception {
-    if (environmentKey == null || environmentKey.equals("")) {
-      throw new Exception("DevCycle is not yet initialized to publish events.");
-    }
   }
 }

@@ -36,7 +36,7 @@ public class DVCLocalClientTest {
         client = new DVCLocalClient(apiKey);
         localBucketing = new LocalBucketing();
         localBucketing.storeConfig(apiKey, testConfigString);
-        eventQueueManager = new EventQueueManager(localBucketing, apiKey, DVCLocalOptions.builder().build());
+        eventQueueManager = new EventQueueManager(apiKey, localBucketing, DVCLocalOptions.builder().build());
         WhiteBox.setInternalState(client, "localBucketing", localBucketing);
         WhiteBox.setInternalState(client, "eventQueueManager", eventQueueManager);
     }

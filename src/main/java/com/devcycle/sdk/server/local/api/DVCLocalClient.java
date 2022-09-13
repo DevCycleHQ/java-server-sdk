@@ -33,7 +33,7 @@ public final class DVCLocalClient {
     configManager = new EnvironmentConfigManager(serverKey, localBucketing, dvcOptions);
     this.serverKey = serverKey;
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    eventQueueManager = new EventQueueManager(localBucketing, serverKey, dvcOptions);
+    eventQueueManager = new EventQueueManager(serverKey, localBucketing, dvcOptions);
   }
 
   /**
@@ -132,7 +132,6 @@ public final class DVCLocalClient {
     localBucketing.setPlatformData(user.getPlatformData().toString());
 
     eventQueueManager.queueEvent(user, event);
-    eventQueueManager.flushEvents();
   }
 
   private void validateUser(User user) {

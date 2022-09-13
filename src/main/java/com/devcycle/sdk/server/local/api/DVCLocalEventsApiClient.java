@@ -43,9 +43,9 @@ public final class DVCLocalEventsApiClient {
                 .addConverterFactory(JacksonConverterFactory.create());
     }
 
-    public DVCLocalEventsApiClient(String apiKey, DVCLocalOptions options) {
+    public DVCLocalEventsApiClient(String serverKey, DVCLocalOptions options) {
         this(options);
-        okBuilder.addInterceptor(new AuthorizationHeaderInterceptor(apiKey));
+        okBuilder.addInterceptor(new AuthorizationHeaderInterceptor(serverKey));
         logging.setLevel(Level.BODY);
 
         okBuilder.addInterceptor(logging);

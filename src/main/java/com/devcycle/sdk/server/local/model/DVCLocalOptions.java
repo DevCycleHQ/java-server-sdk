@@ -21,7 +21,7 @@ public class DVCLocalOptions {
     private String eventsApiBaseUrl = "https://events.devcycle.com/";
 
     @Builder.Default
-    private int flushEventsMs = 10000;
+    private int eventFlushIntervalMS = 10000;
 
     public static class DVCLocalOptionsBuilder implements IDVCOptions { }
 }
