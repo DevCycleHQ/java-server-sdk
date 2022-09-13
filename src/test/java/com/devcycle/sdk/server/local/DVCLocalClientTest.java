@@ -68,12 +68,6 @@ public class DVCLocalClientTest {
         Assert.assertEquals(variables.get("a-cool-new-feature").getId(), "62fbf6566f1ba302829f9e34");
         Assert.assertEquals(variables.size(), 2);
     }
-    @Test
-    public void trackTest() throws Exception {
-        // TODO: remove test
-        User user = getUser();
-        client.track(user, Event.builder().type("test").build());
-    }
 
     private User getUser() {
         return User.builder()
