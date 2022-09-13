@@ -203,13 +203,12 @@ public class LocalBucketing {
     }
 
     public void onPayloadFailure(String token, String payloadId, boolean retryable) {
-        // TODO - passing int value doesn't work yet (only addresses)
-//        int tokenAddress = newWasmString(token);
-//        int payloadIdAddress = newWasmString(payloadId);
-//
-//        Func onPayloadFailurePtr = linker.get(store, "", "onPayloadFailure").get().func();
-//        WasmFunctions.Consumer3<Integer, Integer, Integer> fn = WasmFunctions.consumer(store, onPayloadFailurePtr, I32, I32, I32);
-//        fn.accept(tokenAddress, payloadIdAddress, retryable ? 1 : 0);
+        int tokenAddress = newWasmString(token);
+        int payloadIdAddress = newWasmString(payloadId);
+
+        Func onPayloadFailurePtr = linker.get(store, "", "onPayloadFailure").get().func();
+        WasmFunctions.Consumer3<Integer, Integer, Integer> fn = WasmFunctions.consumer(store, onPayloadFailurePtr, I32, I32, I32);
+        fn.accept(tokenAddress, payloadIdAddress, retryable ? 1 : 0);
     }
 
     public void onPayloadSuccess(String token, String payloadId) {
