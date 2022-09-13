@@ -2,6 +2,7 @@ package com.devcycle.sdk.server.common.api;
 
 import com.devcycle.sdk.server.helpers.TestResponse;
 import com.devcycle.sdk.server.common.model.*;
+import com.devcycle.sdk.server.local.model.EventsBatch;
 import retrofit2.Call;
 
 import java.util.Map;
@@ -30,6 +31,12 @@ public class DVCApiMock implements IDVCApi {
 
     @Override
     public Call<ProjectConfig> getConfig(String sdkToken, String etag) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Call<DVCResponse> publishEvents(EventsBatch eventsBatch) {
         // TODO Auto-generated method stub
         return null;
     }

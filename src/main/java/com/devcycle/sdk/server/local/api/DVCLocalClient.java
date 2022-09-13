@@ -6,6 +6,7 @@ import java.util.Map;
 import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
 import com.devcycle.sdk.server.local.managers.EnvironmentConfigManager;
+import com.devcycle.sdk.server.local.managers.EventQueueManager;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -22,6 +23,8 @@ public final class DVCLocalClient {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+  private EventQueueManager eventQueueManager;
+
   public DVCLocalClient(String serverKey) {
     this(serverKey, DVCLocalOptions.builder().build());
   }
@@ -30,6 +33,7 @@ public final class DVCLocalClient {
     configManager = new EnvironmentConfigManager(serverKey, localBucketing, dvcOptions);
     this.serverKey = serverKey;
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    eventQueueManager = new EventQueueManager(serverKey, localBucketing, dvcOptions);
   }
 
   /**
@@ -71,6 +75,13 @@ public final class DVCLocalClient {
       System.out.println("Variable called before DVCClient has initialized, returning default value");
     }
 
+    Variable<T> defaultVariable = (Variable<T>) Variable.builder()
+            .key(key)
+            .value(defaultValue)
+            .isDefaulted(true)
+            .reasonUsingDefaultValue("Variable not found")
+            .build();
+
     try {
       String userString = OBJECT_MAPPER.writeValueAsString(user);
 
@@ -78,29 +89,22 @@ public final class DVCLocalClient {
       if (bucketedUserConfig.variables.containsKey(key)) {
         Variable<T> variable = bucketedUserConfig.variables.get(key);
         variable.setIsDefaulted(false);
+        eventQueueManager.queueAggregateEvent(Event.builder().type("aggVariableEvaluated").target(key).build(), bucketedUserConfig);
         return variable;
+      } else {
+        eventQueueManager.queueAggregateEvent(Event.builder().type("aggVariableDefaulted").target(key).build(), bucketedUserConfig);
+        return defaultVariable;
       }
     } catch (JsonProcessingException e) {
       System.out.printf("Unable to parse JSON for Variable %s due to error: %s", key, e.toString());
     }
 
-    Variable<T> variable;
-
-    variable = (Variable<T>) Variable.builder()
-        .key(key)
-        .value(defaultValue)
-        .isDefaulted(true)
-        .reasonUsingDefaultValue("Variable not found")
-        .build();
-
-    // TODO queue events
-    // eventQueue.queueAggregateEvent(
-    // user,
-    // new Event(type: EventTypes.variableDefaulted, target: key),
-    // null
-    // );
-
-    return variable;
+    try {
+      eventQueueManager.queueAggregateEvent(Event.builder().type("aggVariableDefaulted").target(key).build(), null);
+    } catch (JsonProcessingException e) {
+      System.out.printf("Unable to parse aggVariableDefaulted event for Variable %s due to error: %s", key, e.toString());
+    }
+    return defaultVariable;
   }
 
   /**
@@ -123,19 +127,11 @@ public final class DVCLocalClient {
    * @param user  (required)
    * @param event (required)
    */
-  // TODO: Original return type should match the line below, uncomment once
-  // implemented and delete the void return
-  // public DVCResponse track(User user, Event event) throws DVCException {
-  public void track(User user, Event event) {
+  public void track(User user, Event event) throws Exception {
     validateUser(user);
     localBucketing.setPlatformData(user.getPlatformData().toString());
 
-    UserAndEvents userAndEvents = UserAndEvents.builder()
-        .user(user)
-        .events(Collections.singletonList(event))
-        .build();
-
-    // Call track method to append custom event to queue
+    eventQueueManager.queueEvent(user, event);
   }
 
   private void validateUser(User user) {

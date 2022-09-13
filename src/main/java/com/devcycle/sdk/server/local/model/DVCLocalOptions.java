@@ -17,5 +17,11 @@ public class DVCLocalOptions {
     @Builder.Default
     private String configCdnBaseUrl = "https://config-cdn.devcycle.com/";
 
+    @Builder.Default
+    private String eventsApiBaseUrl = "https://events.devcycle.com/";
+
+    @Builder.Default
+    private int eventFlushIntervalMS = 10000;
+
     public static class DVCLocalOptionsBuilder implements IDVCOptions { }
 }

@@ -1,8 +1,7 @@
 
 package com.devcycle.sdk.server.local.model;
 
-import com.devcycle.sdk.server.local.utils.LongTimestampDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.Map;
 
 @Data
@@ -32,12 +32,12 @@ public class RequestEvent {
     private String target;
 
     @Schema(description = "Unix epoch time the event occurred according to client")
-    @JsonDeserialize(using = LongTimestampDeserializer.class)
-    private Long date;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'hh:mm:ss.SSS'Z'")
+    private String date;
 
     @Schema(description = "Unix epoch time the event occurred according to client")
-    @JsonDeserialize(using = LongTimestampDeserializer.class)
-    private Long clientDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'hh:mm:ss.SSS'Z'")
+    private Date clientDate;
 
     @Schema(description = "Value for numerical events. Contextual to event type")
     private BigDecimal value;

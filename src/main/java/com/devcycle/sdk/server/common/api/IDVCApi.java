@@ -1,6 +1,7 @@
 package com.devcycle.sdk.server.common.api;
 
 import com.devcycle.sdk.server.common.model.*;
+import com.devcycle.sdk.server.local.model.EventsBatch;
 import retrofit2.Call;
 import retrofit2.http.*;
 
@@ -62,4 +63,15 @@ public interface IDVCApi {
   @Headers({"Content-Type:application/json"})
   @GET("config/v1/server/{sdkToken}.json")
   Call<ProjectConfig> getConfig(@Path("sdkToken") String sdkToken, @Header("If-None-Match") String etag);
+
+  /**
+   * Post events to DevCycle for user
+   *
+   * @param eventsBatch  (required)
+   * @return Call&lt;DVCResponse&gt;
+   */
+  @Headers({"Content-Type:application/json"})
+  @POST("v1/events/batch")
+  Call<DVCResponse> publishEvents(@Body EventsBatch eventsBatch);
 }
+

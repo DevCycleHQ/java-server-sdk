@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
-import com.devcycle.sdk.server.local.model.EventPayload;
+import com.devcycle.sdk.server.local.model.FlushPayload;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -180,7 +180,7 @@ public class LocalBucketing {
         fn.accept(tokenAddress, eventAddress, variableVariationMapAddress);
     }
 
-    public EventPayload[] flushEventQueue(String token) throws JsonProcessingException {
+    public FlushPayload[] flushEventQueue(String token) throws JsonProcessingException {
         int tokenAddress = newWasmString(token);
 
         Func flushEventQueuePtr = linker.get(store, "", "flushEventQueue").get().func();
@@ -197,7 +197,7 @@ public class LocalBucketing {
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
         objectMapper.setDateFormat(df);
 
-        EventPayload[] payloads = objectMapper.readValue(flushPayloadsStr, EventPayload[].class);
+        FlushPayload[] payloads = objectMapper.readValue(flushPayloadsStr, FlushPayload[].class);
 
         return payloads;
     }
