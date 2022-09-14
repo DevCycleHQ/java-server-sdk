@@ -3,7 +3,7 @@ package com.devcycle.sdk.server.local;
 import com.devcycle.sdk.server.common.model.Event;
 import com.devcycle.sdk.server.common.model.User;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
-import com.devcycle.sdk.server.local.model.EventPayload;
+import com.devcycle.sdk.server.local.model.FlushPayload;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,9 +42,13 @@ public class LocalBucketingTest {
         // Add 2 events, aggregated by same target (should create 1 event with eventCount 2)
         localBucketing.queueEvent(apiKey, mapper.writeValueAsString(getUser()), mapper.writeValueAsString(event));
         localBucketing.queueAggregateEvent(apiKey, mapper.writeValueAsString(event), varMap);
-        EventPayload[] payloads = localBucketing.flushEventQueue(apiKey);
+        FlushPayload[] payloads = localBucketing.flushEventQueue(apiKey);
         Assert.assertEquals(payloads.length, 1);
         Assert.assertEquals(payloads[0].eventCount, 2);
+
+        // Check event queue sizesss
+        int eventQueueSize = localBucketing.getEventQueueSize(apiKey);
+        Assert.assertEquals(eventQueueSize, 2);
 
         // Callback payload failure, retryable (should keep events)
         localBucketing.onPayloadFailure(apiKey, payloads[0].payloadId, true);

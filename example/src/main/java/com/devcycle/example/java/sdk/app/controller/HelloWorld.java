@@ -16,7 +16,7 @@ public class HelloWorld {
     DVCCloudClient dvcCloud;
     DVCLocalClient dvcLocal;
 
-    public HelloWorld(@Qualifier("devcycleServerKey") String serverKey) {
+    public HelloWorld(@Qualifier("devcycleServerKey") String serverKey) throws Exception {
         dvcCloud = new DVCCloudClient(serverKey);
         dvcLocal = new DVCLocalClient(serverKey);
     }
@@ -46,7 +46,7 @@ public class HelloWorld {
     }
 
     @GetMapping("/local/activateFlag")
-    public String homePageActivatedFlagLocal(Model model) {
+    public String homePageActivatedFlagLocal(Model model) throws Exception {
         Variable<String> updateHomePage = dvcLocal.variable(getUser(), "string-var", "default string");
 
         String variationValue = updateHomePage.getValue();

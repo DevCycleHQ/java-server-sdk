@@ -219,5 +219,15 @@ public class LocalBucketing {
         WasmFunctions.Consumer2<Integer, Integer> fn = WasmFunctions.consumer(store, onPayloadSuccessPtr, I32, I32);
         fn.accept(tokenAddress, payloadIdAddress);
     }
+
+    public int getEventQueueSize(String token) {
+        int tokenAddress = newWasmString(token);
+
+        Func getEventQueueSizePtr = linker.get(store, "", "eventQueueSize").get().func();
+        WasmFunctions.Function1<Integer, Integer> getEventQueueSize = WasmFunctions.func(
+                store, getEventQueueSizePtr, I32, I32);
+
+        return getEventQueueSize.call(tokenAddress);
+    }
 }
 
