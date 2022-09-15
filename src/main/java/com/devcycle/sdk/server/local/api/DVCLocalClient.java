@@ -25,11 +25,11 @@ public final class DVCLocalClient {
 
   private EventQueueManager eventQueueManager;
 
-  public DVCLocalClient(String serverKey) {
+  public DVCLocalClient(String serverKey) throws Exception {
     this(serverKey, DVCLocalOptions.builder().build());
   }
 
-  public DVCLocalClient(String serverKey, DVCLocalOptions dvcOptions) {
+  public DVCLocalClient(String serverKey, DVCLocalOptions dvcOptions) throws Exception {
     configManager = new EnvironmentConfigManager(serverKey, localBucketing, dvcOptions);
     this.serverKey = serverKey;
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -59,7 +59,7 @@ public final class DVCLocalClient {
    *                     (required)
    * @return Variable
    */
-  public <T> Variable<T> variable(User user, String key, T defaultValue) {
+  public <T> Variable<T> variable(User user, String key, T defaultValue) throws Exception {
     validateUser(user);
     localBucketing.setPlatformData(user.getPlatformData().toString());
 

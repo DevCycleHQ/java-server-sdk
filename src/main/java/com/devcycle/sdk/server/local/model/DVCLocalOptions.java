@@ -23,5 +23,17 @@ public class DVCLocalOptions {
     @Builder.Default
     private int eventFlushIntervalMS = 10000;
 
+    @Builder.Default
+    private int flushEventQueueSize = 1000;
+
+    @Builder.Default
+    private int maxEventQueueSize = 2000;
+
+    @Builder.Default
+    private boolean disableAutomaticEventLogging = false;
+
+    @Builder.Default
+    private boolean disableCustomEventLogging = false;
+
     public static class DVCLocalOptionsBuilder implements IDVCOptions { }
 }

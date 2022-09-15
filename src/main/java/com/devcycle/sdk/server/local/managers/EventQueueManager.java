@@ -26,18 +26,28 @@ public class EventQueueManager {
     private int eventFlushIntervalMS;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private boolean isFlushingEvents = false;
+    private int flushEventQueueSize;
+    private int maxEventQueueSize;
 
-    public EventQueueManager(String serverKey, LocalBucketing localBucketing, DVCLocalOptions options) {
+    public EventQueueManager(String serverKey, LocalBucketing localBucketing, DVCLocalOptions options) throws Exception {
         this.localBucketing = localBucketing;
         this.serverKey = serverKey;
         eventFlushIntervalMS = options.getEventFlushIntervalMS();
+        flushEventQueueSize = options.getFlushEventQueueSize();
+        maxEventQueueSize = options.getMaxEventQueueSize();
 
-        this.localBucketing.initEventQueue(serverKey, "{}");
+        if (flushEventQueueSize >= maxEventQueueSize) {
+            throw new Exception("flushEventQueueSize: " + flushEventQueueSize + " must be larger than maxEventQueueSize: " + maxEventQueueSize);
+        } else if (flushEventQueueSize > 20000 || maxEventQueueSize > 20000 ) {
+            throw new Exception("flushEventQueueSize: " + flushEventQueueSize + " or maxEventQueueSize: " + maxEventQueueSize + " must be smaller than 20,000");
+        }
 
         this.localBucketing.setPlatformData(User.builder().userId("java-server-sdk").build().getPlatformData().toString());
         eventsApiClient = new DVCLocalEventsApiClient(serverKey, options).initialize();
 
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+        this.localBucketing.initEventQueue(serverKey, OBJECT_MAPPER.writeValueAsString(options));
 
         setupScheduler();
     }
@@ -59,12 +69,11 @@ public class EventQueueManager {
     /**
      * Flush events in queue to DevCycle Events API. Requeue events if flush fails
      */
-    //flushEvents
     public void flushEvents() throws Exception {
         if (isFlushingEvents) return;
 
         if (serverKey == null || serverKey.equals("")) {
-            throw new Exception("DevCycle is not yet initialized to publish events.");
+            throw new Exception("DevCycle is not yet initialized to publish events."); // TODO: change to DVCException
         }
 
         FlushPayload[] flushPayloads = new FlushPayload[0];
@@ -90,7 +99,12 @@ public class EventQueueManager {
     /**
      * Queue DVCAPIEvent for publishing to DevCycle Events API.
      */
-    public void queueEvent(User user, Event event) throws JsonProcessingException {
+    public void queueEvent(User user, Event event) throws Exception {
+        if (checkEventQueueSize()) {
+            System.out.printf("Max event queue size reached, dropping event: %s%n", event);
+            return;
+        }
+
         this.localBucketing.queueEvent(this.serverKey, OBJECT_MAPPER.writeValueAsString(user), OBJECT_MAPPER.writeValueAsString(event));
     }
 
@@ -98,7 +112,12 @@ public class EventQueueManager {
      * Queue DVCEvent that can be aggregated together, where multiple calls are aggregated
      * by incrementing the 'value' field.
      */
-    public void queueAggregateEvent(Event event, BucketedUserConfig bucketedConfig) throws JsonProcessingException {
+    public void queueAggregateEvent(Event event, BucketedUserConfig bucketedConfig) throws Exception {
+        if (checkEventQueueSize()) {
+            System.out.printf("Max event queue size reached, dropping aggregate event: %s%n", event);
+            return;
+        }
+
         if (bucketedConfig != null) {
             this.localBucketing.queueAggregateEvent(this.serverKey, OBJECT_MAPPER.writeValueAsString(event), OBJECT_MAPPER.writeValueAsString(bucketedConfig.variableVariationMap));
         } else {
@@ -140,5 +159,24 @@ public class EventQueueManager {
         } else {
             return response.code();
         }
+    }
+
+    /**
+     * Returns true if event queue size is greater or equal to flushEventQueueSize or maxEventQueueSize
+     * Flushes events if event queue size is equal or greater to flushEventQueueSize
+     */
+    private boolean checkEventQueueSize() throws Exception {
+        int queueSize = localBucketing.getEventQueueSize(serverKey);
+
+        if (queueSize >= flushEventQueueSize) {
+            if (!isFlushingEvents) {
+                flushEvents();
+            }
+
+            if (queueSize >= maxEventQueueSize) {
+                return true;
+            }
+        }
+        return false;
     }
 }
