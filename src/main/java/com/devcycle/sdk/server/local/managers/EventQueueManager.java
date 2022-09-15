@@ -6,7 +6,6 @@ import com.devcycle.sdk.server.local.api.DVCLocalEventsApiClient;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
 import com.devcycle.sdk.server.local.model.*;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -73,7 +72,7 @@ public class EventQueueManager {
         if (isFlushingEvents) return;
 
         if (serverKey == null || serverKey.equals("")) {
-            throw new Exception("DevCycle is not yet initialized to publish events."); // TODO: change to DVCException
+            throw new Exception("DevCycle is not yet initialized to publish events.");
         }
 
         FlushPayload[] flushPayloads = new FlushPayload[0];
