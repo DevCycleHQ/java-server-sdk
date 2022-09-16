@@ -1,5 +1,6 @@
 package com.devcycle.sdk.server.local.api;
 
+import java.util.Collections;
 import java.util.Map;
 
 import com.devcycle.sdk.server.common.model.*;
@@ -56,6 +57,7 @@ public final class DVCLocalClient {
       bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, userString);
     } catch (JsonProcessingException e) {
       System.out.printf("Unable to parse JSON for allFeatures due to error: %s%n", e.getMessage());
+      return Collections.emptyMap();
     }
     return bucketedUserConfig.features;
   }
@@ -132,6 +134,7 @@ public final class DVCLocalClient {
       bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, userString);
     } catch (JsonProcessingException e) {
       System.out.printf("Unable to parse JSON for allVariables due to error: %s%n", e.getMessage());
+      return Collections.emptyMap();
     }
     return bucketedUserConfig.variables;
   }
