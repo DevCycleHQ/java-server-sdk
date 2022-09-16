@@ -1,5 +1,13 @@
 package com.devcycle.sdk.server.local;
 
+import java.util.UUID;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
+
 import com.devcycle.sdk.server.common.model.Event;
 import com.devcycle.sdk.server.common.model.User;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
@@ -7,13 +15,6 @@ import com.devcycle.sdk.server.local.model.FlushPayload;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
-
-import java.util.UUID;
 
 @RunWith(MockitoJUnitRunner.class)
 public class LocalBucketingTest {

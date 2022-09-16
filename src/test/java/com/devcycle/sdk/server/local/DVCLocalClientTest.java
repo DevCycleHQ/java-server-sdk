@@ -3,9 +3,6 @@ package com.devcycle.sdk.server.local;
 import java.util.Map;
 import java.util.UUID;
 
-import com.devcycle.sdk.server.common.model.PlatformData;
-import com.devcycle.sdk.server.local.managers.EventQueueManager;
-import com.devcycle.sdk.server.local.model.DVCLocalOptions;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -13,11 +10,14 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import com.devcycle.sdk.server.common.model.Feature;
+import com.devcycle.sdk.server.common.model.PlatformData;
 import com.devcycle.sdk.server.common.model.User;
 import com.devcycle.sdk.server.common.model.Variable;
 import com.devcycle.sdk.server.helpers.WhiteBox;
 import com.devcycle.sdk.server.local.api.DVCLocalClient;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
+import com.devcycle.sdk.server.local.managers.EventQueueManager;
+import com.devcycle.sdk.server.local.model.DVCLocalOptions;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DVCLocalClientTest {
