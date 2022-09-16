@@ -2,7 +2,6 @@ package com.devcycle.sdk.server.local.api;
 
 import com.devcycle.sdk.server.common.api.IDVCApi;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;
-import com.devcycle.sdk.server.local.model.FlushPayload;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.annotation.JsonInclude;
 

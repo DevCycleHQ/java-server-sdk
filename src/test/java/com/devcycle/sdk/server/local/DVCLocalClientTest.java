@@ -17,7 +17,6 @@ import com.devcycle.sdk.server.common.model.Variable;
 import com.devcycle.sdk.server.helpers.WhiteBox;
 import com.devcycle.sdk.server.local.api.DVCLocalClient;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DVCLocalClientTest {
@@ -38,7 +37,7 @@ public class DVCLocalClientTest {
         WhiteBox.setInternalState(client, "eventQueueManager", eventQueueManager);
     }
     @Test
-    public void variableTest() throws Exception {
+    public void variableTest() {
         User user = getUser();
         user.setEmail("giveMeVariationOff@email.com");
         Variable<String> var = client.variable(user, "string-var", "default string");
@@ -50,7 +49,7 @@ public class DVCLocalClientTest {
     }
 
     @Test
-    public void allFeaturesTest() throws JsonProcessingException {
+    public void allFeaturesTest() {
         User user = getUser();
         Map<String, Feature> features = client.allFeatures(user);
         Assert.assertEquals(features.get("a-cool-new-feature").getId(), "62fbf6566f1ba302829f9e32");
@@ -58,7 +57,7 @@ public class DVCLocalClientTest {
     }
 
     @Test
-    public void allVariablesTest() throws JsonProcessingException {
+    public void allVariablesTest() {
         User user = getUser();
         Map<String, Variable> variables = client.allVariables(user);
         Assert.assertEquals(variables.get("string-var").getId(), "63125320a4719939fd57cb2b");

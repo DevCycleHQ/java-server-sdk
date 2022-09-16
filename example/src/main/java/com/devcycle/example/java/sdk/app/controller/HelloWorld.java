@@ -16,7 +16,7 @@ public class HelloWorld {
     DVCCloudClient dvcCloud;
     DVCLocalClient dvcLocal;
 
-    public HelloWorld(@Qualifier("devcycleServerKey") String serverKey) throws Exception {
+    public HelloWorld(@Qualifier("devcycleServerKey") String serverKey) {
         dvcCloud = new DVCCloudClient(serverKey);
         dvcLocal = new DVCLocalClient(serverKey);
     }
@@ -35,7 +35,7 @@ public class HelloWorld {
 
     @GetMapping("/cloud/activateFlag")
     public String homePageActivatedFlag(Model model) {
-        Variable<String> updateHomePage = dvcCloud.variable(getUser(), "string-var", "default string");
+        Variable<String> updateHomePage = dvcCloud.variable(getUser(false), "string-var", "default string");
 
         String variationValue = updateHomePage.getValue();
 
@@ -46,8 +46,8 @@ public class HelloWorld {
     }
 
     @GetMapping("/local/activateFlag")
-    public String homePageActivatedFlagLocal(Model model) throws Exception {
-        Variable<String> updateHomePage = dvcLocal.variable(getUser(), "string-var", "default string");
+    public String homePageActivatedFlagLocal(Model model) {
+        Variable<String> updateHomePage = dvcLocal.variable(getUser(true), "string-var", "default string");
 
         String variationValue = updateHomePage.getValue();
 
@@ -57,9 +57,14 @@ public class HelloWorld {
         return "fragments/flagData :: value ";
     }
 
-    private User getUser() {
-        return User.builder()
-                .userId("j_test")
-                .build();
+    private User getUser(boolean isLocal) {
+        return isLocal ?
+                User.builder()
+                        .userId("j_test")
+                        .platform("java-local")
+                        .build() :
+                User.builder()
+                        .userId("j_test")
+                        .build();
     }
 }

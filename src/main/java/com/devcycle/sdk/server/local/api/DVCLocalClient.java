@@ -25,15 +25,19 @@ public final class DVCLocalClient {
 
   private EventQueueManager eventQueueManager;
 
-  public DVCLocalClient(String serverKey) throws Exception {
+  public DVCLocalClient(String serverKey) {
     this(serverKey, DVCLocalOptions.builder().build());
   }
 
-  public DVCLocalClient(String serverKey, DVCLocalOptions dvcOptions) throws Exception {
+  public DVCLocalClient(String serverKey, DVCLocalOptions dvcOptions) {
     configManager = new EnvironmentConfigManager(serverKey, localBucketing, dvcOptions);
     this.serverKey = serverKey;
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    eventQueueManager = new EventQueueManager(serverKey, localBucketing, dvcOptions);
+    try {
+      eventQueueManager = new EventQueueManager(serverKey, localBucketing, dvcOptions);
+    } catch (Exception e) {
+      System.out.printf("Error creating event queue due to error: %s%n", e.getMessage());
+    }
   }
 
   /**
@@ -41,12 +45,20 @@ public final class DVCLocalClient {
    * 
    * @param user (required)
    */
-  public Map<String, Feature> allFeatures(User user) throws JsonProcessingException {
+  public Map<String, Feature> allFeatures(User user) {
     validateUser(user);
     localBucketing.setPlatformData(user.getPlatformData().toString());
-    String userString = OBJECT_MAPPER.writeValueAsString(user);
+    String userString = null;
+    BucketedUserConfig bucketedUserConfig = null;
 
-    BucketedUserConfig bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, userString);
+    try {
+      userString = OBJECT_MAPPER.writeValueAsString(user);
+
+      bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, userString);
+    } catch (JsonProcessingException e) {
+      System.out.printf("Unable to parse JSON for allFeatures due to error: %s%n", e.getMessage());
+      return Collections.emptyMap();
+    }
     return bucketedUserConfig.features;
   }
 
@@ -59,7 +71,7 @@ public final class DVCLocalClient {
    *                     (required)
    * @return Variable
    */
-  public <T> Variable<T> variable(User user, String key, T defaultValue) throws Exception {
+  public <T> Variable<T> variable(User user, String key, T defaultValue) {
     validateUser(user);
     localBucketing.setPlatformData(user.getPlatformData().toString());
 
@@ -95,13 +107,13 @@ public final class DVCLocalClient {
         eventQueueManager.queueAggregateEvent(Event.builder().type("aggVariableDefaulted").target(key).build(), bucketedUserConfig);
         return defaultVariable;
       }
-    } catch (JsonProcessingException e) {
+    } catch (Exception e) {
       System.out.printf("Unable to parse JSON for Variable %s due to error: %s", key, e.toString());
     }
 
     try {
       eventQueueManager.queueAggregateEvent(Event.builder().type("aggVariableDefaulted").target(key).build(), null);
-    } catch (JsonProcessingException e) {
+    } catch (Exception e) {
       System.out.printf("Unable to parse aggVariableDefaulted event for Variable %s due to error: %s", key, e.toString());
     }
     return defaultVariable;
@@ -112,12 +124,18 @@ public final class DVCLocalClient {
    * 
    * @param user (required)
    */
-  public Map<String, Variable> allVariables(User user) throws JsonProcessingException {
+  public Map<String, Variable> allVariables(User user) {
     validateUser(user);
     localBucketing.setPlatformData(user.getPlatformData().toString());
-    String userString = OBJECT_MAPPER.writeValueAsString(user);
+    BucketedUserConfig bucketedUserConfig = null;
+    try {
+      String userString = OBJECT_MAPPER.writeValueAsString(user);
 
-    BucketedUserConfig bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, userString);
+      bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, userString);
+    } catch (JsonProcessingException e) {
+      System.out.printf("Unable to parse JSON for allVariables due to error: %s%n", e.getMessage());
+      return Collections.emptyMap();
+    }
     return bucketedUserConfig.variables;
   }
 
@@ -127,11 +145,15 @@ public final class DVCLocalClient {
    * @param user  (required)
    * @param event (required)
    */
-  public void track(User user, Event event) throws Exception {
+  public void track(User user, Event event) {
     validateUser(user);
     localBucketing.setPlatformData(user.getPlatformData().toString());
 
-    eventQueueManager.queueEvent(user, event);
+    try {
+      eventQueueManager.queueEvent(user, event);
+    } catch (Exception e) {
+      System.out.printf("Failed to queue event due to error: %s%n", e.getMessage());
+    }
   }
 
   private void validateUser(User user) {
