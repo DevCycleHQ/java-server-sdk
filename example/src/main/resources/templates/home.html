@@ -25,6 +25,9 @@
                 <button type="button" class="btn btn-primary btn-lg px-4 gap-3" th:onclick="getVariableLocal()">
                     Local - Get Variable
                 </button>
+                <button type="button" class="btn btn-primary btn-lg px-4 gap-3" th:onclick="trackLocal()">
+                    Local - Track
+                </button>
             </div>
         </div>
         <div class="p-5 mb-4 bg-light rounded-3">
@@ -48,6 +51,16 @@
 
     const getVariableLocal = () => {
         fetch('local/activateFlag').then(function (response) {
+            return response.text();
+        }).then(function (html) {
+            document.getElementById("variablePlaceholder").innerHTML = html;
+        }).catch(function (err) {
+            console.warn('Something went wrong.', err);
+        });
+    }
+
+    const trackLocal = () => {
+        fetch('local/track').then(function (response) {
             return response.text();
         }).then(function (html) {
             document.getElementById("variablePlaceholder").innerHTML = html;
