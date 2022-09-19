@@ -4,6 +4,7 @@ import com.devcycle.sdk.server.cloud.api.DVCCloudClient;
 import com.devcycle.sdk.server.local.api.DVCLocalClient;
 import com.devcycle.sdk.server.common.model.User;
 import com.devcycle.sdk.server.common.model.Variable;
+import com.devcycle.sdk.server.common.model.Event;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -55,6 +56,13 @@ public class HelloWorld {
         model.addAttribute("isDefaultValue", updateHomePage.getIsDefaulted());
         model.addAttribute("variationValue", variationValue);
         return "fragments/flagData :: value ";
+    }
+
+    @GetMapping("/local/track")
+    public String trackLocal(Model model) {
+        dvcLocal.track(getUser(true), Event.builder().type("java-local-custom").build());
+        model.addAttribute("trackSuccessMessage", "Custom event tracked!");
+        return "fragments/trackData :: value ";
     }
 
     private User getUser(boolean isLocal) {
