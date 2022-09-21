@@ -11,8 +11,10 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.devcycle.sdk.server.common.model.User;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.devcycle.sdk.server.local.model.FlushPayload;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -24,8 +26,11 @@ public class LocalBucketing {
     Store<Void> store; // WASM compilation environment
     Linker linker; // used to read/write to WASM
     AtomicReference<Memory> memRef; // reference to start of WASM's memory
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public LocalBucketing() {
+        OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
         store = Store.withoutData();
         linker = new Linker(store.engine());
         memRef = new AtomicReference<>();
@@ -134,10 +139,11 @@ public class LocalBucketing {
         fn.accept(platformDataAddress);
     }
 
-    public BucketedUserConfig generateBucketedConfig(String token, String user) throws JsonProcessingException {
+    public BucketedUserConfig generateBucketedConfig(String token, User user) throws JsonProcessingException {
+        String userString = OBJECT_MAPPER.writeValueAsString(user);
 
         int tokenAddress = newWasmString(token);
-        int userAddress = newWasmString(user);
+        int userAddress = newWasmString(userString);
 
         Func generateBucketedConfigForUserPtr = linker.get(store, "", "generateBucketedConfigForUser").get().func();
         WasmFunctions.Function2<Integer, Integer, Integer> generateBucketedConfigForUser = WasmFunctions.func(

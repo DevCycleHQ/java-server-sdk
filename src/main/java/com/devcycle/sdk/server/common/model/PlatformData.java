@@ -15,19 +15,20 @@ import lombok.Data;
 
 public class PlatformData {
     @Schema(description = "Platform the SDK is running on")
-    private String platform;
+    @Builder.Default
+    private String platform = "Java";
 
     @Schema(description = "Version of the platform the SDK is running on")
-    private String platformVersion;
-
-    @Schema(description = "User's device model")
-    private String deviceModel;
+    @Builder.Default
+    private String platformVersion = System.getProperty("java.version");
 
     @Schema(description = "DevCycle SDK type")
-    private PlatformData.SdkTypeEnum sdkType;
+    @Builder.Default
+    private PlatformData.SdkTypeEnum sdkType = PlatformData.SdkTypeEnum.SERVER;
 
     @Schema(description = "DevCycle SDK Version")
-    private String sdkVersion;
+    @Builder.Default
+    private String sdkVersion = "1.1.0";
 
     @Override
     public String toString() {
@@ -35,7 +36,6 @@ public class PlatformData {
         ObjectNode platformData = mapper.createObjectNode();
         platformData.put("platform", platform);
         platformData.put("platformVersion", platformVersion);
-        platformData.put("deviceModel", deviceModel);
         platformData.put("sdkType", sdkType.toString());
         platformData.put("sdkVersion", sdkVersion);
 

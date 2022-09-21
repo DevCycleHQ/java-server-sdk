@@ -9,9 +9,7 @@ import com.devcycle.sdk.server.local.managers.EnvironmentConfigManager;
 import com.devcycle.sdk.server.local.managers.EventQueueManager;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public final class DVCLocalClient {
 
@@ -21,8 +19,6 @@ public final class DVCLocalClient {
 
   private final String serverKey;
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
   private EventQueueManager eventQueueManager;
 
   public DVCLocalClient(String serverKey) {
@@ -30,9 +26,10 @@ public final class DVCLocalClient {
   }
 
   public DVCLocalClient(String serverKey, DVCLocalOptions dvcOptions) {
+    localBucketing.setPlatformData(PlatformData.builder().build().toString());
+
     configManager = new EnvironmentConfigManager(serverKey, localBucketing, dvcOptions);
     this.serverKey = serverKey;
-    OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     try {
       eventQueueManager = new EventQueueManager(serverKey, localBucketing, dvcOptions);
     } catch (Exception e) {
@@ -47,14 +44,10 @@ public final class DVCLocalClient {
    */
   public Map<String, Feature> allFeatures(User user) {
     validateUser(user);
-    localBucketing.setPlatformData(user.getPlatformData().toString());
-    String userString = null;
     BucketedUserConfig bucketedUserConfig = null;
 
     try {
-      userString = OBJECT_MAPPER.writeValueAsString(user);
-
-      bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, userString);
+      bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, user);
     } catch (JsonProcessingException e) {
       System.out.printf("Unable to parse JSON for allFeatures due to error: %s%n", e.getMessage());
       return Collections.emptyMap();
@@ -73,7 +66,6 @@ public final class DVCLocalClient {
    */
   public <T> Variable<T> variable(User user, String key, T defaultValue) {
     validateUser(user);
-    localBucketing.setPlatformData(user.getPlatformData().toString());
 
     if (key == null || key.equals("")) {
       throw new IllegalArgumentException("key cannot be null or empty");
@@ -95,9 +87,7 @@ public final class DVCLocalClient {
             .build();
 
     try {
-      String userString = OBJECT_MAPPER.writeValueAsString(user);
-
-      BucketedUserConfig bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, userString);
+      BucketedUserConfig bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, user);
       if (bucketedUserConfig.variables.containsKey(key)) {
         Variable<T> variable = bucketedUserConfig.variables.get(key);
         variable.setIsDefaulted(false);
@@ -126,12 +116,10 @@ public final class DVCLocalClient {
    */
   public Map<String, Variable> allVariables(User user) {
     validateUser(user);
-    localBucketing.setPlatformData(user.getPlatformData().toString());
+
     BucketedUserConfig bucketedUserConfig = null;
     try {
-      String userString = OBJECT_MAPPER.writeValueAsString(user);
-
-      bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, userString);
+      bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, user);
     } catch (JsonProcessingException e) {
       System.out.printf("Unable to parse JSON for allVariables due to error: %s%n", e.getMessage());
       return Collections.emptyMap();
@@ -147,7 +135,6 @@ public final class DVCLocalClient {
    */
   public void track(User user, Event event) {
     validateUser(user);
-    localBucketing.setPlatformData(user.getPlatformData().toString());
 
     try {
       eventQueueManager.queueEvent(user, event);

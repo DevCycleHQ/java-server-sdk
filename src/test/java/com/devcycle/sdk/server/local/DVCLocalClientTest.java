@@ -3,6 +3,7 @@ package com.devcycle.sdk.server.local;
 import java.util.Map;
 import java.util.UUID;
 
+import com.devcycle.sdk.server.common.model.PlatformData;
 import com.devcycle.sdk.server.local.managers.EventQueueManager;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;
 import org.junit.Assert;
@@ -32,6 +33,7 @@ public class DVCLocalClientTest {
         client = new DVCLocalClient(apiKey);
         localBucketing = new LocalBucketing();
         localBucketing.storeConfig(apiKey, testConfigString);
+        localBucketing.setPlatformData(PlatformData.builder().build().toString());
         eventQueueManager = new EventQueueManager(apiKey, localBucketing, DVCLocalOptions.builder().build());
         WhiteBox.setInternalState(client, "localBucketing", localBucketing);
         WhiteBox.setInternalState(client, "eventQueueManager", eventQueueManager);

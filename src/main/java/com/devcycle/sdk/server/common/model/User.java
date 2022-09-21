@@ -88,11 +88,6 @@ public class User {
   @JsonProperty("platformVersion")
   private String platformVersion = System.getProperty("java.version");
 
-  @Schema(description = "User's device model")
-  @Builder.Default
-  @JsonProperty("deviceModel")
-  private String deviceModel = "";
-
   @Schema(description = "DevCycle SDK type")
   @Builder.Default
   @JsonProperty("sdkType")
@@ -104,11 +99,6 @@ public class User {
   private String sdkVersion = "1.1.0";
 
   public PlatformData getPlatformData() {
-    return PlatformData.builder()
-            .platform(platform)
-            .platformVersion(platformVersion)
-            .sdkType(sdkType)
-            .sdkVersion(sdkVersion)
-            .build();
+    return PlatformData.builder().build();
   }
 }

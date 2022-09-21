@@ -35,13 +35,6 @@ public class EventQueueManager {
         flushEventQueueSize = options.getFlushEventQueueSize();
         maxEventQueueSize = options.getMaxEventQueueSize();
 
-        if (flushEventQueueSize >= maxEventQueueSize) {
-            throw new Exception("flushEventQueueSize: " + flushEventQueueSize + " must be larger than maxEventQueueSize: " + maxEventQueueSize);
-        } else if (flushEventQueueSize > 20000 || maxEventQueueSize > 20000 ) {
-            throw new Exception("flushEventQueueSize: " + flushEventQueueSize + " or maxEventQueueSize: " + maxEventQueueSize + " must be smaller than 20,000");
-        }
-
-        this.localBucketing.setPlatformData(User.builder().userId("java-server-sdk").build().getPlatformData().toString());
         eventsApiClient = new DVCLocalEventsApiClient(serverKey, options).initialize();
 
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);

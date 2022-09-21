@@ -2,9 +2,11 @@ package com.devcycle.example.java.sdk.app.controller;
 
 import com.devcycle.sdk.server.cloud.api.DVCCloudClient;
 import com.devcycle.sdk.server.local.api.DVCLocalClient;
+import com.devcycle.sdk.server.common.exception.DVCException;
+import com.devcycle.sdk.server.common.model.DVCResponse;
+import com.devcycle.sdk.server.common.model.Event;
 import com.devcycle.sdk.server.common.model.User;
 import com.devcycle.sdk.server.common.model.Variable;
-import com.devcycle.sdk.server.common.model.Event;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -36,7 +38,7 @@ public class HelloWorld {
 
     @GetMapping("/cloud/activateFlag")
     public String homePageActivatedFlag(Model model) {
-        Variable<String> updateHomePage = dvcCloud.variable(getUser(false), "string-var", "default string");
+        Variable<String> updateHomePage = dvcCloud.variable(getUser(), "string-var", "default string");
 
         String variationValue = updateHomePage.getValue();
 
@@ -46,9 +48,22 @@ public class HelloWorld {
         return "fragments/flagData :: value ";
     }
 
+    @GetMapping("/cloud/track")
+    public String trackCloud(Model model) {
+        DVCResponse response = null;
+        try {
+            response = dvcCloud.track(getUser(), Event.builder().type("java-cloud-custom").build());
+        } catch(DVCException e) {
+            System.out.println("Error tracking custom event: " + e.getMessage());
+        }
+        model.addAttribute("trackSuccessMessage", "Cloud custom event tracked!");
+        model.addAttribute("trackResponse", response.getMessage());
+        return "fragments/trackData :: value ";
+    }
+
     @GetMapping("/local/activateFlag")
     public String homePageActivatedFlagLocal(Model model) {
-        Variable<String> updateHomePage = dvcLocal.variable(getUser(true), "string-var", "default string");
+        Variable<String> updateHomePage = dvcLocal.variable(getUser(), "string-var", "default string");
 
         String variationValue = updateHomePage.getValue();
 
@@ -60,19 +75,14 @@ public class HelloWorld {
 
     @GetMapping("/local/track")
     public String trackLocal(Model model) {
-        dvcLocal.track(getUser(true), Event.builder().type("java-local-custom").build());
-        model.addAttribute("trackSuccessMessage", "Custom event tracked!");
+        dvcLocal.track(getUser(), Event.builder().type("java-local-custom").build());
+        model.addAttribute("trackSuccessMessage", "Local custom event tracked!");
         return "fragments/trackData :: value ";
     }
 
-    private User getUser(boolean isLocal) {
-        return isLocal ?
-                User.builder()
-                        .userId("j_test")
-                        .platform("java-local")
-                        .build() :
-                User.builder()
-                        .userId("j_test")
-                        .build();
+    private User getUser() {
+        return User.builder()
+                .userId("j_test")
+                .build();
     }
 }
