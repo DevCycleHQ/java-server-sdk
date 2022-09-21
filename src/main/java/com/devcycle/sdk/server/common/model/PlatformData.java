@@ -9,11 +9,28 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 @Data
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 
 public class PlatformData {
+    public PlatformData(String platform, String platformVersion, SdkTypeEnum sdkType, String sdkVersion, String hostname) {
+        this.platform = platform;
+        this.platformVersion = platformVersion;
+        this.sdkType = sdkType;
+        this.sdkVersion = sdkVersion;
+        try {
+            this.hostname = hostname != null ? hostname : InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            System.out.println("Error getting hostname: " + e.getMessage());
+            this.hostname = "";
+        }
+        System.out.println("hostname is: " +this.hostname);
+    }
+
     @Schema(description = "Platform the SDK is running on")
     @Builder.Default
     private String platform = "Java";
@@ -28,7 +45,10 @@ public class PlatformData {
 
     @Schema(description = "DevCycle SDK Version")
     @Builder.Default
-    private String sdkVersion = "1.1.0";
+    private String sdkVersion = PlatformData.class.getPackage().getImplementationVersion();
+
+    @Schema(description = "Hostname where the SDK is running")
+    private String hostname;
 
     @Override
     public String toString() {

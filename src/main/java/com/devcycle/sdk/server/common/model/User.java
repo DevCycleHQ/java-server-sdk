@@ -96,7 +96,7 @@ public class User {
   @Schema(description = "DevCycle SDK Version")
   @Builder.Default
   @JsonProperty("sdkVersion")
-  private String sdkVersion = "1.1.0";
+  private String sdkVersion = User.class.getPackage().getImplementationVersion();
 
   public PlatformData getPlatformData() {
     return PlatformData.builder().build();
