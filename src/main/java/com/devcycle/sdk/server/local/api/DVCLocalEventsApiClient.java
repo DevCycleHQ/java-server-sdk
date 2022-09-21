@@ -7,8 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
-import okhttp3.logging.HttpLoggingInterceptor.Level;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
@@ -18,7 +16,6 @@ public final class DVCLocalEventsApiClient {
 
     private final OkHttpClient.Builder okBuilder;
     private final Retrofit.Builder adapterBuilder;
-    private HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -46,9 +43,6 @@ public final class DVCLocalEventsApiClient {
     public DVCLocalEventsApiClient(String serverKey, DVCLocalOptions options) {
         this(options);
         okBuilder.addInterceptor(new AuthorizationHeaderInterceptor(serverKey));
-        logging.setLevel(Level.BODY);
-
-        okBuilder.addInterceptor(logging);
     }
 
     public IDVCApi initialize() {

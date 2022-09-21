@@ -1,18 +1,6 @@
 package com.devcycle.sdk.server.cloud;
 
-import com.devcycle.sdk.server.cloud.api.DVCCloudClient;
-import com.devcycle.sdk.server.cloud.model.DVCCloudOptions;
-import com.devcycle.sdk.server.common.api.IDVCApi;
-import com.devcycle.sdk.server.common.api.DVCApiMock;
-import com.devcycle.sdk.server.common.exception.DVCException;
-import com.devcycle.sdk.server.common.model.*;
-import com.devcycle.sdk.server.helpers.WhiteBox;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -20,7 +8,20 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.mockito.Mockito.when;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import com.devcycle.sdk.server.cloud.api.DVCCloudClient;
+import com.devcycle.sdk.server.cloud.model.DVCCloudOptions;
+import com.devcycle.sdk.server.common.api.DVCApiMock;
+import com.devcycle.sdk.server.common.api.IDVCApi;
+import com.devcycle.sdk.server.common.exception.DVCException;
+import com.devcycle.sdk.server.common.model.*;
+import com.devcycle.sdk.server.helpers.WhiteBox;
 
 /**
  * API tests for DevcycleApi
