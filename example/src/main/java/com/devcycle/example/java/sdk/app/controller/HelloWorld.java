@@ -1,8 +1,12 @@
 package com.devcycle.example.java.sdk.app.controller;
 
-import com.devcycle.sdk.server.api.DVCClient;
-import com.devcycle.sdk.server.model.User;
-import com.devcycle.sdk.server.model.Variable;
+import com.devcycle.sdk.server.cloud.api.DVCCloudClient;
+import com.devcycle.sdk.server.local.api.DVCLocalClient;
+import com.devcycle.sdk.server.common.exception.DVCException;
+import com.devcycle.sdk.server.common.model.DVCResponse;
+import com.devcycle.sdk.server.common.model.Event;
+import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.common.model.Variable;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -12,10 +16,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class HelloWorld {
 
-    DVCClient dvc;
+    DVCCloudClient dvcCloud;
+    DVCLocalClient dvcLocal;
 
     public HelloWorld(@Qualifier("devcycleServerKey") String serverKey) {
-        dvc = new DVCClient(serverKey);
+        dvcCloud = new DVCCloudClient(serverKey);
+        dvcLocal = new DVCLocalClient(serverKey);
     }
 
     @Value("${spring.application.name}")
@@ -30,9 +36,9 @@ public class HelloWorld {
         return "home";
     }
 
-    @GetMapping("/activateFlag")
+    @GetMapping("/cloud/activateFlag")
     public String homePageActivatedFlag(Model model) {
-        Variable<String> updateHomePage = dvc.variable(getUser(), "activate-flag", defaultValue);
+        Variable<String> updateHomePage = dvcCloud.variable(getUser(), "string-var", "default string");
 
         String variationValue = updateHomePage.getValue();
 
@@ -40,6 +46,38 @@ public class HelloWorld {
         model.addAttribute("isDefaultValue", updateHomePage.getIsDefaulted());
         model.addAttribute("variationValue", variationValue);
         return "fragments/flagData :: value ";
+    }
+
+    @GetMapping("/cloud/track")
+    public String trackCloud(Model model) {
+        DVCResponse response = null;
+        try {
+            response = dvcCloud.track(getUser(), Event.builder().type("java-cloud-custom").build());
+        } catch(DVCException e) {
+            System.out.println("Error tracking custom event: " + e.getMessage());
+        }
+        model.addAttribute("trackSuccessMessage", "Cloud custom event tracked!");
+        model.addAttribute("trackResponse", response.getMessage());
+        return "fragments/trackData :: value ";
+    }
+
+    @GetMapping("/local/activateFlag")
+    public String homePageActivatedFlagLocal(Model model) {
+        Variable<String> updateHomePage = dvcLocal.variable(getUser(), "string-var", "default string");
+
+        String variationValue = updateHomePage.getValue();
+
+        // if the variable "activate-flag" doesn't exist isDefaulted will be true
+        model.addAttribute("isDefaultValue", updateHomePage.getIsDefaulted());
+        model.addAttribute("variationValue", variationValue);
+        return "fragments/flagData :: value ";
+    }
+
+    @GetMapping("/local/track")
+    public String trackLocal(Model model) {
+        dvcLocal.track(getUser(), Event.builder().type("java-local-custom").build());
+        model.addAttribute("trackSuccessMessage", "Local custom event tracked!");
+        return "fragments/trackData :: value ";
     }
 
     private User getUser() {

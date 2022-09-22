@@ -1,14 +1,13 @@
 package com.devcycle.sdk.server.helpers;
 
-import com.devcycle.sdk.server.model.DVCResponse;
-import com.devcycle.sdk.server.model.Feature;
-import com.devcycle.sdk.server.model.Variable;
-import retrofit2.Call;
-import retrofit2.mock.Calls;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import com.devcycle.sdk.server.common.model.*;
+
+import retrofit2.Call;
+import retrofit2.mock.Calls;
 
 public final class TestResponse {
 

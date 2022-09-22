@@ -5,7 +5,7 @@
   <artifactId>java-server-sdk</artifactId>
   <packaging>jar</packaging>
   <name>DevCycle Java SDK</name>
-  <version>1.0.6</version>
+  <version>1.1.0</version>
   <description>Server side SDK to interact with DevCycle</description>
   <url>https://github.com/DevCycleHQ/java-server-sdk</url>
 
@@ -181,6 +181,11 @@
       <artifactId>lombok</artifactId>
       <version>${lombok-version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.github.kawamuray.wasmtime</groupId>
+      <artifactId>wasmtime-java</artifactId>
+      <version>${wasmtime-version}</version>
+    </dependency>
 
     <!-- test dependencies -->
     <dependency>
@@ -204,6 +209,7 @@
     <swagger-core-version>2.2.0</swagger-core-version>
     <retrofit-version>2.9.0</retrofit-version>
     <lombok-version>1.18.24</lombok-version>
+    <wasmtime-version>0.11.0</wasmtime-version>
     <jackson-version>2.13.3</jackson-version>
     <junit-version>4.13.2</junit-version>
     <mockito-core-version>4.6.1</mockito-core-version>

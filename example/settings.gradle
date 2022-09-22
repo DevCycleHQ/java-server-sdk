@@ -1,1 +1,3 @@
 rootProject.name = "java-server-sdk-example-app"
+include ':java-server-sdk'
+project(':java-server-sdk').projectDir = new File(settingsDir, '../')
