@@ -81,22 +81,22 @@ public class User {
   @Schema(description = "Platform the SDK is running on")
   @Builder.Default
   @JsonProperty("platform")
-  private String platform = "Java";
+  private String platform = getPlatformData().getPlatform();
 
   @Schema(description = "Version of the platform the SDK is running on")
   @Builder.Default
   @JsonProperty("platformVersion")
-  private String platformVersion = System.getProperty("java.version");
+  private String platformVersion = getPlatformData().getPlatformVersion();
 
   @Schema(description = "DevCycle SDK type")
   @Builder.Default
   @JsonProperty("sdkType")
-  private PlatformData.SdkTypeEnum sdkType = PlatformData.SdkTypeEnum.SERVER;
+  private PlatformData.SdkTypeEnum sdkType = getPlatformData().getSdkType();
 
   @Schema(description = "DevCycle SDK Version")
   @Builder.Default
   @JsonProperty("sdkVersion")
-  private String sdkVersion = "1.1.0";
+  private String sdkVersion = getPlatformData().getSdkVersion();
 
   @Schema(description = "Hostname where the SDK is running")
   @Builder.Default

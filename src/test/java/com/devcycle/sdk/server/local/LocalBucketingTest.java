@@ -47,7 +47,7 @@ public class LocalBucketingTest {
         Assert.assertEquals(payloads.length, 1);
         Assert.assertEquals(payloads[0].eventCount, 2);
 
-        // Check event queue sizesss
+        // Check event queue size
         int eventQueueSize = localBucketing.getEventQueueSize(apiKey);
         Assert.assertEquals(eventQueueSize, 2);
 

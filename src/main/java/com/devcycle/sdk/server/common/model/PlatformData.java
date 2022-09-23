@@ -28,7 +28,6 @@ public class PlatformData {
             System.out.println("Error getting hostname: " + e.getMessage());
             this.hostname = "";
         }
-        System.out.println("hostname is: " +this.hostname);
     }
 
     @Schema(description = "Platform the SDK is running on")
@@ -45,7 +44,7 @@ public class PlatformData {
 
     @Schema(description = "DevCycle SDK Version")
     @Builder.Default
-    private String sdkVersion = PlatformData.class.getPackage().getImplementationVersion();
+    private String sdkVersion = "1.1.1";
 
     @Schema(description = "Hostname where the SDK is running")
     private String hostname;
