@@ -18,7 +18,7 @@ You can use the SDK in your Maven project by adding the following to your *pom.x
 <dependency>
     <groupId>com.devcycle</groupId>
     <artifactId>java-server-sdk</artifactId>
-    <version>1.0.4</version>
+    <version>1.1.1</version>
     <scope>compile</scope>
 </dependency>
 ```
@@ -27,7 +27,7 @@ You can use the SDK in your Maven project by adding the following to your *pom.x
 Alternatively you can use the SDK in your Gradle project by adding the following to *build.gradle*:
 
 ```yaml
-implementation("com.devcycle:java-server-sdk:1.0.4")
+implementation("com.devcycle:java-server-sdk:1.1.1")
 ```
 
 ## DNS Caching
@@ -39,15 +39,30 @@ Recommended settings and how to configure them can be found [here](https://docs.
 
 To use the DevCycle Java SDK, initialize a client object. 
 
+Cloud:
 ```java
-import com.devcycle.sdk.server.api.DVCClient;
+import com.devcycle.sdk.server.cloud.api.DVCCloudClient;
+
+public class MyClass {
+
+    private DVCCloudClient dvcCloudClient;
+
+    public MyClass() {
+        dvcCloudClient = new DVCCloudClient("your_server_key");
+    }
+}
+```
+
+Local:
+```java
+import com.devcycle.sdk.server.local.api.DVCLocalClient;
 
 public class MyClass {
     
-    private DVCClient dvcClient;
+    private DVCLocalClient dvcLocalClient;
     
     public MyClass() {
-        dvcClient = new DVCClient("your_server_key");
+        dvcLocalClient = new DVCLocalClient("your_server_key");
     }
 }
 ```
