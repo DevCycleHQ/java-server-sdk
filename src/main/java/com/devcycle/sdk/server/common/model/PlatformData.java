@@ -58,6 +58,7 @@ public class PlatformData {
         platformData.put("platformVersion", platformVersion);
         platformData.put("sdkType", sdkType.toString());
         platformData.put("sdkVersion", sdkVersion);
+        platformData.put("hostname", hostname);
 
         String platformDataString = null;
         try {

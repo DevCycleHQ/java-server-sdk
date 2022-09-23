@@ -96,9 +96,14 @@ public class User {
   @Schema(description = "DevCycle SDK Version")
   @Builder.Default
   @JsonProperty("sdkVersion")
-  private String sdkVersion = User.class.getPackage().getImplementationVersion();
+  private String sdkVersion = "1.1.0";
 
-  public PlatformData getPlatformData() {
+  @Schema(description = "Hostname where the SDK is running")
+  @Builder.Default
+  @JsonProperty("hostname")
+  private String hostname = getPlatformData().getHostname();
+
+  public static PlatformData getPlatformData() {
     return PlatformData.builder().build();
   }
 }
