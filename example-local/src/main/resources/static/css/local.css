@@ -1,0 +1,10 @@
+.togglebot {
+    width: 400px;
+    height: 90px;
+    margin-left: 20px;
+    background: url("../img/togglebot.svg") no-repeat;
+    display: inline-block;
+}
+.togglebot:hover {
+    background: url("../img/togglebot-winking.svg") no-repeat;
+}
