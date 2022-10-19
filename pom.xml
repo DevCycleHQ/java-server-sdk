@@ -210,7 +210,7 @@
     <retrofit-version>2.9.0</retrofit-version>
     <lombok-version>1.18.24</lombok-version>
     <wasmtime-version>0.11.0</wasmtime-version>
-    <jackson-version>2.13.3</jackson-version>
+    <jackson-version>2.13.4.1</jackson-version>
     <junit-version>4.13.2</junit-version>
     <mockito-core-version>4.6.1</mockito-core-version>
   </properties>
