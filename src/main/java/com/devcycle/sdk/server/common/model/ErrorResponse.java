@@ -12,6 +12,7 @@
 
 package com.devcycle.sdk.server.common.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,8 +23,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ErrorResponse {
-
   @Schema(required = true, description = "HTTP Status Code")
   private int statusCode;
 

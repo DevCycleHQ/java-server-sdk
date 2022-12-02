@@ -28,9 +28,6 @@ import lombok.extern.jackson.Jacksonized;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class User {
-
-  @JsonIgnoreProperties(ignoreUnknown = true)
-
   @NonNull
   @Schema(required = true, description = "Unique id to identify the user")
   @JsonProperty("user_id")
