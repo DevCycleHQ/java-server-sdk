@@ -22,7 +22,7 @@ public class Project {
                 public String secondary;
             }
             public Colors colors;
-
+            public String poweredByAlignment;
         }
 
         public EdgeDBSettings edgeDB;

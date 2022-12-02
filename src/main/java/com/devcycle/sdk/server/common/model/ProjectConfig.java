@@ -11,10 +11,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ProjectConfig {
-
-  @JsonIgnoreProperties(ignoreUnknown = false)
-
   @Schema(description = "Project Settings")
   private Object project;
 
