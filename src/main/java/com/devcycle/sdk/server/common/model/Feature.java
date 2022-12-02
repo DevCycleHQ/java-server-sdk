@@ -25,10 +25,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Feature {
-
-  @JsonIgnoreProperties(ignoreUnknown = true)
-
   @Schema(required = true, description = "unique database id")
   @JsonProperty("_id")
   private String id;
