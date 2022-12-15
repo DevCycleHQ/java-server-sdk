@@ -29,9 +29,9 @@ public final class DVCCloudApiClient {
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     okBuilder = new OkHttpClient.Builder();
 
-    if (!checkIfStringNullOrEmpty(bucketingApiUrl)) {
+    if (!isStringNullOrEmpty(bucketingApiUrl)) {
       url = bucketingApiUrl;
-    } else if (!checkIfStringNullOrEmpty(options.getBaseURLOverride())) {
+    } else if (!isStringNullOrEmpty(options.getBaseURLOverride())) {
       url = options.getBaseURLOverride();
     } else {
       url = bucketingApiUrl;
@@ -54,7 +54,7 @@ public final class DVCCloudApiClient {
         .create(IDVCApi.class);
   }
 
-  private Boolean checkIfStringNullOrEmpty(String stringToCheck) {
+  private Boolean isStringNullOrEmpty(String stringToCheck) {
     return Objects.isNull(stringToCheck) || Objects.equals(stringToCheck, "");
   }
 }
