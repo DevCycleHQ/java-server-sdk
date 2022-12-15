@@ -34,7 +34,7 @@ public final class DVCCloudApiClient {
     } else if (!isStringNullOrEmpty(options.getBaseURLOverride())) {
       url = options.getBaseURLOverride();
     } else {
-      url = bucketingApiUrl;
+      url = BUCKETING_URL;
     }
 
     adapterBuilder = new Retrofit.Builder()
