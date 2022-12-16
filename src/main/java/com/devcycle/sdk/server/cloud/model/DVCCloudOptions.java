@@ -11,5 +11,8 @@ public class DVCCloudOptions {
     @Builder.Default
     private Boolean enableEdgeDB = false;
 
+    @Builder.Default
+    private String baseURLOverride = null;
+
     public static class DVCCloudOptionsBuilder implements IDVCOptions { }
 }

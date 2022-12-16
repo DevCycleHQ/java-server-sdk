@@ -29,7 +29,13 @@ public final class DVCCloudApiClient {
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     okBuilder = new OkHttpClient.Builder();
 
-    url = checkIfStringNullOrEmpty(bucketingApiUrl) ? BUCKETING_URL : bucketingApiUrl;
+    if (!isStringNullOrEmpty(bucketingApiUrl)) {
+      url = bucketingApiUrl;
+    } else if (!isStringNullOrEmpty(options.getBaseURLOverride())) {
+      url = options.getBaseURLOverride();
+    } else {
+      url = BUCKETING_URL;
+    }
 
     adapterBuilder = new Retrofit.Builder()
         .baseUrl(url)
@@ -48,7 +54,7 @@ public final class DVCCloudApiClient {
         .create(IDVCApi.class);
   }
 
-  private Boolean checkIfStringNullOrEmpty(String stringToCheck) {
+  private Boolean isStringNullOrEmpty(String stringToCheck) {
     return Objects.isNull(stringToCheck) || Objects.equals(stringToCheck, "");
   }
 }
