@@ -19,7 +19,7 @@ public class HelloWorld {
     DVCLocalClient dvcClient;
 
     private DVCLocalOptions dvcLocalOptions = DVCLocalOptions.builder()
-        .configPollingIntervalMs(10000)
+        .configPollingIntervalMS(10000)
         .configRequestTimeoutMs(5000)
         .eventFlushIntervalMS(5000)
         .build();

@@ -9,7 +9,7 @@ import lombok.Data;
 public class DVCLocalOptions implements IDVCOptions {
     private int configRequestTimeoutMs = 10000;
 
-    private int configPollingIntervalMs = 30000;
+    private int configPollingIntervalMS = 30000;
 
     private String configCdnBaseUrl = "https://config-cdn.devcycle.com/";
 
@@ -25,12 +25,24 @@ public class DVCLocalOptions implements IDVCOptions {
 
     private boolean disableAutomaticEventLogging = false;
 
+    public int getConfigPollingIntervalMS(int configPollingIntervalMs, int configPollingIntervalMS) {
+        if (configPollingIntervalMS > 0) {
+            return configPollingIntervalMS;
+        } else if (configPollingIntervalMs > 0) {
+            return configPollingIntervalMs;
+        } else {
+            return this.configPollingIntervalMS;
+        }
+    }
+
     private boolean disableCustomEventLogging = false;
 
     @Builder()
     public DVCLocalOptions(
             int configRequestTimeoutMs,
+            @Deprecated
             int configPollingIntervalMs,
+            int configPollingIntervalMS,
             String configCdnBaseUrl,
             String eventsApiBaseUrl,
             int eventFlushIntervalMS,
@@ -41,7 +53,7 @@ public class DVCLocalOptions implements IDVCOptions {
             boolean disableCustomEventLogging
     ) {
         this.configRequestTimeoutMs = configRequestTimeoutMs > 0 ? configRequestTimeoutMs : this.configRequestTimeoutMs;
-        this.configPollingIntervalMs = configPollingIntervalMs > 0 ? configPollingIntervalMs : this.configPollingIntervalMs;
+        this.configPollingIntervalMS = getConfigPollingIntervalMS(configPollingIntervalMs, configPollingIntervalMS);
         this.configCdnBaseUrl = configCdnBaseUrl != null ? configCdnBaseUrl : this.configCdnBaseUrl;
         this.eventsApiBaseUrl = eventsApiBaseUrl != null ? eventsApiBaseUrl : this.eventsApiBaseUrl;
         this.eventFlushIntervalMS = eventFlushIntervalMS > 0 ? eventFlushIntervalMS : this.eventFlushIntervalMS;

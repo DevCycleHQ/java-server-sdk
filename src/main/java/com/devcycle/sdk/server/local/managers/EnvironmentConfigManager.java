@@ -40,8 +40,8 @@ public final class EnvironmentConfigManager {
 
     configApiClient = new DVCLocalApiClient(serverKey, options).initialize();
 
-    int configPollingIntervalMs = options.getConfigPollingIntervalMs();
-    pollingIntervalMS = configPollingIntervalMs >= MIN_INTERVALS_MS ? configPollingIntervalMs
+    int configPollingIntervalMS = options.getConfigPollingIntervalMS();
+    pollingIntervalMS = configPollingIntervalMS >= MIN_INTERVALS_MS ? configPollingIntervalMS
         : DEFAULT_POLL_INTERVAL_MS;
 
     setupScheduler();
