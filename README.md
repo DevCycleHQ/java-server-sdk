@@ -69,5 +69,5 @@ public class MyClass {
 
 ## Usage
 
-To find usage documentation, visit our [docs](https://docs.devcycle.com/docs/sdk/server-side-sdks/java#usage).
+To find usage documentation, visit our docs for [Local Bucketing](https://docs.devcycle.com/docs/sdk/server-side-sdks/java-local).
 
