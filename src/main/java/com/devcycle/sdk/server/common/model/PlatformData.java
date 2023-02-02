@@ -44,7 +44,7 @@ public class PlatformData {
 
     @Schema(description = "DevCycle SDK Version")
     @Builder.Default
-    private String sdkVersion = "1.1.2";
+    private String sdkVersion = "1.1.3";
 
     @Schema(description = "Hostname where the SDK is running")
     private String hostname;
