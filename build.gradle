@@ -103,7 +103,7 @@ task execute(type:JavaExec) {
 }
 
 def wasmResourcePath = "$projectDir/src/main/resources"
-def wasmVersion = "1.1.2"
+def wasmVersion = "1.1.28"
 def wasmUrl = "https://unpkg.com/@devcycle/bucketing-assembly-script@$wasmVersion/build/bucketing-lib.release.wasm"
 task downloadDVCBucketingWASM(type: Download) {
     src wasmUrl
