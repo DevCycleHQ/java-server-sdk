@@ -24,19 +24,16 @@ public final class DVCLocalEventsApiClient {
     private String eventsApiUrl;
 
     private DVCLocalEventsApiClient(DVCLocalOptions options) {
-        String url;
-
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         okBuilder = new OkHttpClient.Builder();
 
         String eventsApiUrlFromOptions = options.getEventsApiBaseUrl();
 
         eventsApiUrl = checkIfStringNullOrEmpty(eventsApiUrlFromOptions) ? EVENTS_API_URL : eventsApiUrlFromOptions;
-
-        url = this.eventsApiUrl;
+        eventsApiUrl = eventsApiUrl.endsWith("/") ? eventsApiUrl : eventsApiUrl + "/";
 
         adapterBuilder = new Retrofit.Builder()
-                .baseUrl(url)
+                .baseUrl(eventsApiUrl)
                 .addConverterFactory(JacksonConverterFactory.create());
     }
 

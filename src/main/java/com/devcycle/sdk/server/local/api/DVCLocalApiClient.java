@@ -16,7 +16,6 @@ public final class DVCLocalApiClient {
 
   private final OkHttpClient.Builder okBuilder;
   private final Retrofit.Builder adapterBuilder;
-  private final Retrofit.Builder eventsBuilder;
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -28,7 +27,6 @@ public final class DVCLocalApiClient {
   private int requestTimeoutMs;
 
   private DVCLocalApiClient(DVCLocalOptions options) {
-    String url;
 
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     okBuilder = new OkHttpClient.Builder();
@@ -39,16 +37,13 @@ public final class DVCLocalApiClient {
     configUrl = checkIfStringNullOrEmpty(cdnUrlFromOptions) ? CONFIG_URL : cdnUrlFromOptions;
     requestTimeoutMs = configRequestTimeoutMs >= MIN_INTERVALS_MS ? configRequestTimeoutMs : DEFAULT_TIMEOUT_MS;
   
-    url = this.configUrl;
     okBuilder.callTimeout(this.requestTimeoutMs, TimeUnit.MILLISECONDS);
 
-    adapterBuilder = new Retrofit.Builder()
-        .baseUrl(url)
-        .addConverterFactory(JacksonConverterFactory.create());
+    configUrl = configUrl.endsWith("/") ? configUrl : configUrl + "/";
 
-    eventsBuilder = new Retrofit.Builder()
-            .baseUrl("https://events.devcycle.com")
-            .addConverterFactory(JacksonConverterFactory.create());
+    adapterBuilder = new Retrofit.Builder()
+        .baseUrl(configUrl)
+        .addConverterFactory(JacksonConverterFactory.create());
   }
 
   public DVCLocalApiClient(String serverKey, DVCLocalOptions options) {
