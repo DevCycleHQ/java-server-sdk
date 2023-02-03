@@ -20,25 +20,22 @@ public final class DVCCloudApiClient {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private static final String BUCKETING_URL = "https://bucketing-api.devcycle.com/";
-  
+  private String bucketingUrl;
 
   private DVCCloudApiClient(DVCCloudOptions options) {
-    String url;
-
-    String bucketingApiUrl = System.getenv("BUCKETING_API_URL");
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     okBuilder = new OkHttpClient.Builder();
 
-    if (!isStringNullOrEmpty(bucketingApiUrl)) {
-      url = bucketingApiUrl;
-    } else if (!isStringNullOrEmpty(options.getBaseURLOverride())) {
-      url = options.getBaseURLOverride();
+    if (!isStringNullOrEmpty(options.getBaseURLOverride())) {
+      bucketingUrl = options.getBaseURLOverride();
     } else {
-      url = BUCKETING_URL;
+      bucketingUrl = BUCKETING_URL;
     }
 
+    bucketingUrl = bucketingUrl.endsWith("/") ? bucketingUrl : bucketingUrl + "/";
+
     adapterBuilder = new Retrofit.Builder()
-        .baseUrl(url)
+        .baseUrl(bucketingUrl)
         .addConverterFactory(JacksonConverterFactory.create());
   }
 
