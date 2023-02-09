@@ -154,6 +154,10 @@ public final class DVCLocalClient {
   public void track(User user, Event event) {
     validateUser(user);
 
+    if (event == null || event.getType().equals("")) {
+      throw new IllegalArgumentException("Invalid Event");
+    }
+
     try {
       eventQueueManager.queueEvent(user, event);
     } catch (Exception e) {
