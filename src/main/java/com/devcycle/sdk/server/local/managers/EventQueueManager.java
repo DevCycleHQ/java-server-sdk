@@ -171,4 +171,13 @@ public class EventQueueManager {
         }
         return false;
     }
+
+    public void cleanup() {
+        try {
+            flushEvents();
+        } catch (Exception e) {
+            System.out.printf("DVC Cleanup error: %s%n", e.getMessage());
+        }
+        scheduler.shutdown();
+    }
 }
