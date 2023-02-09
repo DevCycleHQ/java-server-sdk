@@ -28,6 +28,13 @@ public final class DVCLocalClient {
   }
 
   public DVCLocalClient(String serverKey, DVCLocalOptions dvcOptions) {
+    if(serverKey == null || serverKey.equals("")) {
+      throw new IllegalArgumentException("Missing sdk key! Call initialize with a valid sdk key");
+    }
+    if(!isValidServerKey(serverKey)) {
+      throw new IllegalArgumentException("Invalid sdk key provided. Please call initialize with a valid server sdk key");
+    }
+
     localBucketing.setPlatformData(PlatformData.builder().build().toString());
 
     configManager = new EnvironmentConfigManager(serverKey, localBucketing, dvcOptions);
@@ -165,5 +172,9 @@ public final class DVCLocalClient {
     if (user.getUserId().equals("")) {
       throw new IllegalArgumentException("userId cannot be empty");
     }
+  }
+
+  private boolean isValidServerKey(String serverKey) {
+    return serverKey.startsWith("server") || serverKey.startsWith("dvc_server");
   }
 }
