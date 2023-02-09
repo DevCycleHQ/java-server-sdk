@@ -13,6 +13,7 @@
 
 package com.devcycle.sdk.server.common.model;
 
+import java.util.LinkedHashMap;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -29,7 +30,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Variable<T> {
-  @Schema(required = true, description = "unique database id")
+  @Schema(required = false, description = "unique database id")
+  @JsonIgnore
   @JsonProperty("_id")
   private String id;
 
@@ -42,12 +44,11 @@ public class Variable<T> {
   @Schema(required = true, description = "Variable type")
   private TypeEnum type;
 
-  @JsonIgnore
+  @Schema(required = true, description = "Variable default value")
+  private T defaultValue;
+
   @Builder.Default
   private Boolean isDefaulted = false;
-
-  @JsonIgnore
-  private String reasonUsingDefaultValue;
 
   public enum TypeEnum {
     STRING("String"),
@@ -71,13 +72,18 @@ public class Variable<T> {
       return String.valueOf(value);
     }
 
-    public static TypeEnum fromValue(String text) {
-      for (TypeEnum b : TypeEnum.values()) {
-        if (String.valueOf(b.value).equals(text)) {
-          return b;
-        }
+    public static TypeEnum fromClass(Class<?> clazz) {
+      if (clazz == LinkedHashMap.class) {
+        return JSON;
+      } else if (clazz == Boolean.class) {
+        return BOOLEAN;
+      } else if (clazz == Integer.class || clazz == Double.class || clazz == Float.class) {
+        return NUMBER;
+      } else if (clazz == String.class) {
+        return STRING;
+      } else {
+        return null;
       }
-      return null;
     }
   }
 }
