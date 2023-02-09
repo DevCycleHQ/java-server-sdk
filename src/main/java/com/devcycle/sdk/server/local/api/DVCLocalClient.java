@@ -21,6 +21,8 @@ public final class DVCLocalClient {
 
   private EventQueueManager eventQueueManager;
 
+  private Boolean isInitialized = false;
+
   public DVCLocalClient(String serverKey) {
     this(serverKey, DVCLocalOptions.builder().build());
   }
@@ -35,6 +37,7 @@ public final class DVCLocalClient {
     } catch (Exception e) {
       System.out.printf("Error creating event queue due to error: %s%n", e.getMessage());
     }
+    isInitialized = true;
   }
 
   /**
@@ -141,6 +144,18 @@ public final class DVCLocalClient {
     } catch (Exception e) {
       System.out.printf("Failed to queue event due to error: %s%n", e.getMessage());
     }
+  }
+
+  /**
+   * Gracefully close the client
+   * 
+   */
+  public void close() {
+    if (!isInitialized) {
+      return;
+    }
+    configManager.cleanup();
+    eventQueueManager.cleanup();
   }
 
   private void validateUser(User user) {

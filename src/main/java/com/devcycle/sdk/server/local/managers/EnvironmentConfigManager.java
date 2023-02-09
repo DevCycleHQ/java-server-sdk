@@ -130,4 +130,8 @@ public final class EnvironmentConfigManager {
       throw new DVCException(httpResponseCode, errorResponse);
     }
   }
+
+  public void cleanup() {
+    scheduler.shutdown();
+  }
 }
