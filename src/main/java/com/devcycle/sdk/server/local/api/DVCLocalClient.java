@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.devcycle.sdk.server.common.model.*;
+import com.devcycle.sdk.server.common.model.Variable.TypeEnum;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
 import com.devcycle.sdk.server.local.managers.EnvironmentConfigManager;
 import com.devcycle.sdk.server.local.managers.EventQueueManager;
@@ -89,17 +90,24 @@ public final class DVCLocalClient {
       System.out.println("Variable called before DVCClient has initialized, returning default value");
     }
 
+    TypeEnum variableType = TypeEnum.fromClass(defaultValue.getClass());
     Variable<T> defaultVariable = (Variable<T>) Variable.builder()
             .key(key)
+            .type(variableType)
             .value(defaultValue)
+            .defaultValue(defaultValue)
             .isDefaulted(true)
-            .reasonUsingDefaultValue("Variable not found")
             .build();
+
+    if (!isInitialized) {
+      return defaultVariable;
+    }
 
     try {
       BucketedUserConfig bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, user);
       if (bucketedUserConfig.variables.containsKey(key)) {
         Variable<T> variable = bucketedUserConfig.variables.get(key);
+        variable.setDefaultValue(defaultValue);
         variable.setIsDefaulted(false);
         eventQueueManager.queueAggregateEvent(Event.builder().type("aggVariableEvaluated").target(key).build(), bucketedUserConfig);
         return variable;

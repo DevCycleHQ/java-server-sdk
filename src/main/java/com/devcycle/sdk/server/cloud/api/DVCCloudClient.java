@@ -4,6 +4,7 @@ import com.devcycle.sdk.server.cloud.model.DVCCloudOptions;
 import com.devcycle.sdk.server.common.api.IDVCApi;
 import com.devcycle.sdk.server.common.exception.DVCException;
 import com.devcycle.sdk.server.common.model.*;
+import com.devcycle.sdk.server.common.model.Variable.TypeEnum;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,18 +65,21 @@ public final class DVCCloudClient {
       throw new IllegalArgumentException("defaultValue cannot be null");
     }
 
+    TypeEnum variableType = TypeEnum.fromClass(defaultValue.getClass());
     Variable<T> variable;
 
     try {
       Call<Variable> response = api.getVariableByKey(user, key, dvcOptions.getEnableEdgeDB());
       variable = getResponse(response);
+      variable.setIsDefaulted(false);
     } catch (Exception exception) {
       variable = (Variable<T>) Variable.builder()
-              .key(key)
-              .value(defaultValue)
-              .isDefaulted(true)
-              .reasonUsingDefaultValue(exception.getMessage())
-              .build();
+          .key(key)
+          .type(variableType)
+          .value(defaultValue)
+          .defaultValue(defaultValue)
+          .isDefaulted(true)
+          .build();
     }
     return variable;
   }
