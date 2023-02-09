@@ -102,10 +102,13 @@ public final class DVCCloudClient {
    * 
    * @param user  (required)
    * @param event  (required)
-   * @return DVCResponse
    */
-  public DVCResponse track(User user, Event event) throws DVCException {
+  public void track(User user, Event event) throws DVCException {
     validateUser(user);
+
+    if (event == null || event.getType().equals("")) {
+      throw new IllegalArgumentException("Invalid Event");
+    }
 
     UserAndEvents userAndEvents = UserAndEvents.builder()
             .user(user)
@@ -113,7 +116,7 @@ public final class DVCCloudClient {
             .build();
 
     Call<DVCResponse> response = api.track(userAndEvents, dvcOptions.getEnableEdgeDB());
-    return getResponse(response);
+    getResponse(response);
   }
 
   private <T> T getResponse(Call<T> call) throws DVCException {
