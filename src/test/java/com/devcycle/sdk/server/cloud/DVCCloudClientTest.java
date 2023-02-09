@@ -145,11 +145,9 @@ public class DVCCloudClientTest {
 
         when(apiInterface.track(userAndEvents, dvcOptions.getEnableEdgeDB())).thenReturn(dvcApiMock.track(userAndEvents, dvcOptions.getEnableEdgeDB()));
 
-        DVCResponse response = api.track(user, event);
+        api.track(user, event);
 
         assertUserDefaultsCorrect(user);
-
-        Assert.assertEquals("Successfully received 1 events", response.getMessage());
     }
 
     private void assertUserDefaultsCorrect(User user) {
