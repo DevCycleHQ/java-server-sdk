@@ -167,7 +167,7 @@ public final class DVCLocalClient {
 
   /**
    * Gracefully close the client
-   * 
+   *
    */
   public void close() {
     if (!isInitialized) {
