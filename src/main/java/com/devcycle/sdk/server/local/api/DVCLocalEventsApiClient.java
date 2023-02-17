@@ -37,9 +37,9 @@ public final class DVCLocalEventsApiClient {
                 .addConverterFactory(JacksonConverterFactory.create());
     }
 
-    public DVCLocalEventsApiClient(String serverKey, DVCLocalOptions options) {
+    public DVCLocalEventsApiClient(String sdkKey, DVCLocalOptions options) {
         this(options);
-        okBuilder.addInterceptor(new AuthorizationHeaderInterceptor(serverKey));
+        okBuilder.addInterceptor(new AuthorizationHeaderInterceptor(sdkKey));
     }
 
     public IDVCApi initialize() {

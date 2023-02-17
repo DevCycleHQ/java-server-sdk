@@ -31,14 +31,14 @@ public final class EnvironmentConfigManager {
   private ProjectConfig config;
   private String configETag = "";
 
-  private String serverKey;
+  private String sdkKey;
   private int pollingIntervalMS;
 
-  public EnvironmentConfigManager(String serverKey, LocalBucketing localBucketing, DVCLocalOptions options) {
-    this.serverKey = serverKey;
+  public EnvironmentConfigManager(String sdkKey, LocalBucketing localBucketing, DVCLocalOptions options) {
+    this.sdkKey = sdkKey;
     this.localBucketing = localBucketing;
 
-    configApiClient = new DVCLocalApiClient(serverKey, options).initialize();
+    configApiClient = new DVCLocalApiClient(sdkKey, options).initialize();
 
     int configPollingIntervalMS = options.getConfigPollingIntervalMS();
     pollingIntervalMS = configPollingIntervalMS >= MIN_INTERVALS_MS ? configPollingIntervalMS
@@ -66,7 +66,7 @@ public final class EnvironmentConfigManager {
   }
 
   private ProjectConfig getConfig() throws DVCException, JsonProcessingException {
-    Call<ProjectConfig> config = this.configApiClient.getConfig(this.serverKey, this.configETag);
+    Call<ProjectConfig> config = this.configApiClient.getConfig(this.sdkKey, this.configETag);
 
     this.config = getConfigResponse(config);
     return this.config;
@@ -91,7 +91,7 @@ public final class EnvironmentConfigManager {
       ProjectConfig config = response.body();
       try {
         ObjectMapper mapper = new ObjectMapper();
-        localBucketing.storeConfig(serverKey, mapper.writeValueAsString(config));
+        localBucketing.storeConfig(sdkKey, mapper.writeValueAsString(config));
       } catch (JsonProcessingException e) {
         if (this.config != null) {
           System.out.printf("Unable to parse config with etag: %s. Using cache, etag %s%n", currentETag, this.configETag);

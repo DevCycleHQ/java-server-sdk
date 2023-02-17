@@ -48,7 +48,7 @@ public class MyClass {
     private DVCCloudClient dvcCloudClient;
 
     public MyClass() {
-        dvcCloudClient = new DVCCloudClient("your_server_key");
+        dvcCloudClient = new DVCCloudClient("YOUR_DVC_SERVER_SDK_KEY");
     }
 }
 ```
@@ -62,7 +62,7 @@ public class MyClass {
     private DVCLocalClient dvcLocalClient;
     
     public MyClass() {
-        dvcLocalClient = new DVCLocalClient("your_server_key");
+        dvcLocalClient = new DVCLocalClient("YOUR_DVC_SERVER_SDK_KEY");
     }
 }
 ```

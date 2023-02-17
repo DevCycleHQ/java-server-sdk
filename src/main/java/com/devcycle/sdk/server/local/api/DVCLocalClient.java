@@ -17,21 +17,21 @@ public final class DVCLocalClient {
 
   private EnvironmentConfigManager configManager;
 
-  private final String serverKey;
+  private final String sdkKey;
 
   private EventQueueManager eventQueueManager;
 
-  public DVCLocalClient(String serverKey) {
-    this(serverKey, DVCLocalOptions.builder().build());
+  public DVCLocalClient(String sdkKey) {
+    this(sdkKey, DVCLocalOptions.builder().build());
   }
 
-  public DVCLocalClient(String serverKey, DVCLocalOptions dvcOptions) {
+  public DVCLocalClient(String sdkKey, DVCLocalOptions dvcOptions) {
     localBucketing.setPlatformData(PlatformData.builder().build().toString());
 
-    configManager = new EnvironmentConfigManager(serverKey, localBucketing, dvcOptions);
-    this.serverKey = serverKey;
+    configManager = new EnvironmentConfigManager(sdkKey, localBucketing, dvcOptions);
+    this.sdkKey = sdkKey;
     try {
-      eventQueueManager = new EventQueueManager(serverKey, localBucketing, dvcOptions);
+      eventQueueManager = new EventQueueManager(sdkKey, localBucketing, dvcOptions);
     } catch (Exception e) {
       System.out.printf("Error creating event queue due to error: %s%n", e.getMessage());
     }
@@ -47,7 +47,7 @@ public final class DVCLocalClient {
     BucketedUserConfig bucketedUserConfig = null;
 
     try {
-      bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, user);
+      bucketedUserConfig = localBucketing.generateBucketedConfig(sdkKey, user);
     } catch (JsonProcessingException e) {
       System.out.printf("Unable to parse JSON for allFeatures due to error: %s%n", e.getMessage());
       return Collections.emptyMap();
@@ -87,7 +87,7 @@ public final class DVCLocalClient {
             .build();
 
     try {
-      BucketedUserConfig bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, user);
+      BucketedUserConfig bucketedUserConfig = localBucketing.generateBucketedConfig(sdkKey, user);
       if (bucketedUserConfig.variables.containsKey(key)) {
         Variable<T> variable = bucketedUserConfig.variables.get(key);
         variable.setIsDefaulted(false);
@@ -119,7 +119,7 @@ public final class DVCLocalClient {
 
     BucketedUserConfig bucketedUserConfig = null;
     try {
-      bucketedUserConfig = localBucketing.generateBucketedConfig(serverKey, user);
+      bucketedUserConfig = localBucketing.generateBucketedConfig(sdkKey, user);
     } catch (JsonProcessingException e) {
       System.out.printf("Unable to parse JSON for allVariables due to error: %s%n", e.getMessage());
       return Collections.emptyMap();

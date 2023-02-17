@@ -24,8 +24,8 @@ public class HelloWorld {
         .eventFlushIntervalMS(5000)
         .build();
 
-    public HelloWorld(@Qualifier("devcycleServerKey") String serverKey) {
-        dvcClient = new DVCLocalClient(serverKey, dvcLocalOptions);
+    public HelloWorld(@Qualifier("devcycleSDKKey") String sdkKey) {
+        dvcClient = new DVCLocalClient(sdkKey, dvcLocalOptions);
     }
 
     @Value("${spring.application.name}")

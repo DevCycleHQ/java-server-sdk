@@ -12,10 +12,10 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "devcycle")
 public class HelloWorldConfiguration {
 
-    private String serverKey;
+    private String sdkKey;
 
-    @Bean("devcycleServerKey")
-    public String getServerKey() {
-        return serverKey;
+    @Bean("devcycleSDKKey")
+    public String getSdkKey() {
+        return sdkKey;
     }
 }

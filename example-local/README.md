@@ -9,4 +9,4 @@ being used
 
 Rerun the example after creating a feature and a variable and that will be shown 
 
-replace application.properties devcycle.serverKey with your server SDK key
+replace application.properties devcycle.sdkKey with your server SDK key

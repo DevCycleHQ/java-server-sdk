@@ -46,7 +46,7 @@ public final class DVCLocalApiClient {
         .addConverterFactory(JacksonConverterFactory.create());
   }
 
-  public DVCLocalApiClient(String serverKey, DVCLocalOptions options) {
+  public DVCLocalApiClient(String sdkKey, DVCLocalOptions options) {
     this(options);
   }
 
