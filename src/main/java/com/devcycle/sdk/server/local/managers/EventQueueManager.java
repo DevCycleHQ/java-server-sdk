@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class EventQueueManager {
 
     private LocalBucketing localBucketing;
-    private final String serverKey;
+    private final String sdkKey;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private IDVCApi eventsApiClient;
     private int eventFlushIntervalMS;
@@ -28,18 +28,18 @@ public class EventQueueManager {
     private int flushEventQueueSize;
     private int maxEventQueueSize;
 
-    public EventQueueManager(String serverKey, LocalBucketing localBucketing, DVCLocalOptions options) throws Exception {
+    public EventQueueManager(String sdkKey, LocalBucketing localBucketing, DVCLocalOptions options) throws Exception {
         this.localBucketing = localBucketing;
-        this.serverKey = serverKey;
+        this.sdkKey = sdkKey;
         eventFlushIntervalMS = options.getEventFlushIntervalMS();
         flushEventQueueSize = options.getFlushEventQueueSize();
         maxEventQueueSize = options.getMaxEventQueueSize();
 
-        eventsApiClient = new DVCLocalEventsApiClient(serverKey, options).initialize();
+        eventsApiClient = new DVCLocalEventsApiClient(sdkKey, options).initialize();
 
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
-        this.localBucketing.initEventQueue(serverKey, OBJECT_MAPPER.writeValueAsString(options));
+        this.localBucketing.initEventQueue(sdkKey, OBJECT_MAPPER.writeValueAsString(options));
 
         setupScheduler();
     }
@@ -64,13 +64,13 @@ public class EventQueueManager {
     public void flushEvents() throws Exception {
         if (isFlushingEvents) return;
 
-        if (serverKey == null || serverKey.equals("")) {
+        if (sdkKey == null || sdkKey.equals("")) {
             throw new Exception("DevCycle is not yet initialized to publish events.");
         }
 
         FlushPayload[] flushPayloads = new FlushPayload[0];
         try {
-            flushPayloads = this.localBucketing.flushEventQueue(this.serverKey);
+            flushPayloads = this.localBucketing.flushEventQueue(this.sdkKey);
         } catch (Exception e) {
             System.out.printf("DVC Error Flushing Events: %s%n", e.getMessage());
         }
@@ -82,7 +82,7 @@ public class EventQueueManager {
         isFlushingEvents = true;
         for (FlushPayload payload: flushPayloads) {
             eventCount += payload.eventCount;
-            publishEvents(this.serverKey, payload);
+            publishEvents(this.sdkKey, payload);
         }
         isFlushingEvents = false;
         System.out.printf("DVC Flush %d AS Events, for %d Users%n", eventCount, flushPayloads.length);
@@ -97,7 +97,7 @@ public class EventQueueManager {
             return;
         }
 
-        this.localBucketing.queueEvent(this.serverKey, OBJECT_MAPPER.writeValueAsString(user), OBJECT_MAPPER.writeValueAsString(event));
+        this.localBucketing.queueEvent(this.sdkKey, OBJECT_MAPPER.writeValueAsString(user), OBJECT_MAPPER.writeValueAsString(event));
     }
 
     /**
@@ -111,13 +111,13 @@ public class EventQueueManager {
         }
 
         if (bucketedConfig != null) {
-            this.localBucketing.queueAggregateEvent(this.serverKey, OBJECT_MAPPER.writeValueAsString(event), OBJECT_MAPPER.writeValueAsString(bucketedConfig.variableVariationMap));
+            this.localBucketing.queueAggregateEvent(this.sdkKey, OBJECT_MAPPER.writeValueAsString(event), OBJECT_MAPPER.writeValueAsString(bucketedConfig.variableVariationMap));
         } else {
-            this.localBucketing.queueAggregateEvent(this.serverKey, OBJECT_MAPPER.writeValueAsString(event), "{}");
+            this.localBucketing.queueAggregateEvent(this.sdkKey, OBJECT_MAPPER.writeValueAsString(event), "{}");
         }
     }
 
-    private void publishEvents(String serverKey, FlushPayload flushPayload) throws InterruptedException {
+    private void publishEvents(String sdkKey, FlushPayload flushPayload) throws InterruptedException {
         Thread publishEventsThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -125,10 +125,10 @@ public class EventQueueManager {
                 int responseCode = getResponse(response);
 
                 if (responseCode == 201) {
-                    localBucketing.onPayloadSuccess(serverKey, flushPayload.payloadId);
+                    localBucketing.onPayloadSuccess(sdkKey, flushPayload.payloadId);
                 } else {
                     System.out.printf("DVC Error Publishing Events: %d%n", responseCode);
-                    localBucketing.onPayloadFailure(serverKey, flushPayload.payloadId, responseCode >= 500);
+                    localBucketing.onPayloadFailure(sdkKey, flushPayload.payloadId, responseCode >= 500);
                 }
             }
         });
@@ -158,7 +158,7 @@ public class EventQueueManager {
      * Flushes events if event queue size is equal or greater to flushEventQueueSize
      */
     private boolean checkEventQueueSize() throws Exception {
-        int queueSize = localBucketing.getEventQueueSize(serverKey);
+        int queueSize = localBucketing.getEventQueueSize(sdkKey);
 
         if (queueSize >= flushEventQueueSize) {
             if (!isFlushingEvents) {

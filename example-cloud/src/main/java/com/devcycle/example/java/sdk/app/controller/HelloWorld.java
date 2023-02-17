@@ -20,8 +20,8 @@ public class HelloWorld {
 
     private DVCCloudOptions dvcCloudOptions = DVCCloudOptions.builder().enableEdgeDB(false).build();
 
-    public HelloWorld(@Qualifier("devcycleServerKey") String serverKey) {
-        dvcCloud = new DVCCloudClient(serverKey, dvcCloudOptions);
+    public HelloWorld(@Qualifier("devcycleSDKKey") String sdkKey) {
+        dvcCloud = new DVCCloudClient(sdkKey, dvcCloudOptions);
     }
 
     @Value("${spring.application.name}")

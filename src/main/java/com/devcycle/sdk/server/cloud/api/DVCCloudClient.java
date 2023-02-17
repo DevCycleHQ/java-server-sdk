@@ -21,13 +21,13 @@ public final class DVCCloudClient {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  public DVCCloudClient(String serverKey) {
-    this(serverKey, DVCCloudOptions.builder().build());
+  public DVCCloudClient(String sdkKey) {
+    this(sdkKey, DVCCloudOptions.builder().build());
   }
 
-  public DVCCloudClient(String serverKey, DVCCloudOptions options) {
+  public DVCCloudClient(String sdkKey, DVCCloudOptions options) {
     this.dvcOptions = options;
-    api = new DVCCloudApiClient(serverKey, options).initialize();
+    api = new DVCCloudApiClient(sdkKey, options).initialize();
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
   }
 

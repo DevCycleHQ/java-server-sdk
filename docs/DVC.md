@@ -22,7 +22,7 @@ public class MyClass {
     private DVCClient dvcClient;
     
     public MyClass() {
-        dvcClient = new DVCClient("your_server_key");
+        dvcClient = new DVCClient("YOUR_DVC_SERVER_SDK_KEY");
     }
     
     public void allFeatures() {
@@ -61,7 +61,7 @@ public class MyClass {
     private DVCClient dvcClient;
 
     public MyClass() {
-        dvcClient = new DVCClient("your_server_key");
+        dvcClient = new DVCClient("YOUR_DVC_SERVER_SDK_KEY");
     }
 
     public void setFlag() {
@@ -109,7 +109,7 @@ public class MyClass {
     private DVCClient dvcClient;
 
     public MyClass() {
-        dvcClient = new DVCClient("your_server_key");
+        dvcClient = new DVCClient("YOUR_DVC_SERVER_SDK_KEY");
     }
 
     public void allVariables() {
@@ -148,7 +148,7 @@ public class MyClass {
     private DVCClient dvcClient;
 
     public MyClass() {
-        dvcClient = new DVCClient("your_server_key");
+        dvcClient = new DVCClient("YOUR_DVC_SERVER_SDK_KEY");
     }
 
     public void addAnEvent() {
