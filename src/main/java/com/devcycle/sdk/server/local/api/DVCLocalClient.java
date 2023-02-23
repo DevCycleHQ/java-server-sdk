@@ -154,8 +154,8 @@ public final class DVCLocalClient {
   public void track(User user, Event event) {
     validateUser(user);
 
-    if (event == null || event.getType().equals("")) {
-      throw new IllegalArgumentException("Invalid Event");
+    if (event.getType() == null || event.getType().equals("")) {
+      throw new IllegalArgumentException("Invalid Event. Missing parameter: type");
     }
 
     try {
