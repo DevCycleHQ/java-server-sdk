@@ -103,11 +103,11 @@ public final class DVCCloudClient {
    * @param user  (required)
    * @param event  (required)
    */
-  public void track(User user, Event event) throws DVCException {
+  public void track(User user, Event event) throws DVCException, IllegalArgumentException {
     validateUser(user);
 
-    if (event == null || event.getType().equals("")) {
-      throw new IllegalArgumentException("Invalid Event");
+    if (event.getType() == null || event.getType().equals("")) {
+      throw new IllegalArgumentException("Invalid Event. Missing parameter: type");
     }
 
     UserAndEvents userAndEvents = UserAndEvents.builder()
