@@ -1,0 +1,17 @@
+name: Run Test Harness
+
+on:
+  pull_request:
+    branches: [main]
+
+
+jobs:
+  harness-tests:
+    name: Harness Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: DevCycleHQ/test-harness@main
+        with:
+          sdks-to-test: java
+          sdk-github-sha: ${{ env.GITHUB_SHA }}
+          github-token: ${{ secrets.TEST_HARNESS_GH_SECRET }}
