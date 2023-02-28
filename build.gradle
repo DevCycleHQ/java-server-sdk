@@ -24,7 +24,7 @@ java {
 }
 
 signing {
-    sign configurations.archives
+    sign publishing.publications
 }
 
 group = "com.devcycle"
