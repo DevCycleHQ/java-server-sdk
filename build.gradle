@@ -119,11 +119,11 @@ build {
 
 ext {
     retrofit_version = "2.9.0"
-    jackson_version = "2.13.3"
+    jackson_version = "2.14.2"
     swagger_annotations_version = "2.2.0"
     lombok_version = "1.18.24"
     okhttp_version = "4.9.3"
-    wasmtime_version = "0.11.0"
+    wasmtime_version = "0.14.0"
 
     junit_version = "4.13.2"
     mockito_core_version = "4.6.1"
