@@ -13,5 +13,5 @@ jobs:
       - uses: DevCycleHQ/test-harness@main
         with:
           sdks-to-test: java
-          sdk-github-sha: ${{ env.GITHUB_SHA }}
+          sdk-github-sha: ${{github.event.pull_request.head.sha}}
           github-token: ${{ secrets.TEST_HARNESS_GH_SECRET }}
