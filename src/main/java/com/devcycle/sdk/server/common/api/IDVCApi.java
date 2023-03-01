@@ -40,7 +40,7 @@ public interface IDVCApi {
    */
   @Headers({"Content-Type:application/json"})
   @POST("v1/variables")
-  Call<Map<String, Variable>> getVariables(@Body User user, @Query("enableEdgeDB") Boolean enableEdgeDB);
+  Call<Map<String, BaseVariable>> getVariables(@Body User user, @Query("enableEdgeDB") Boolean enableEdgeDB);
 
   /**
    * Post events to DevCycle for user

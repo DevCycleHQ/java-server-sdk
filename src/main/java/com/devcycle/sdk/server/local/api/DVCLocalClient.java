@@ -1,6 +1,7 @@
 package com.devcycle.sdk.server.local.api;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.devcycle.sdk.server.common.model.*;
@@ -79,11 +80,11 @@ public final class DVCLocalClient {
     validateUser(user);
 
     if (key == null || key.equals("")) {
-      throw new IllegalArgumentException("key cannot be null or empty");
+      throw new IllegalArgumentException("Missing parameter: key");
     }
 
     if (defaultValue == null) {
-      throw new IllegalArgumentException("defaultValue cannot be null");
+      throw new IllegalArgumentException("Missing parameter: defaultValue");
     }
 
     if (!configManager.isConfigInitialized()) {
@@ -106,7 +107,17 @@ public final class DVCLocalClient {
     try {
       BucketedUserConfig bucketedUserConfig = localBucketing.generateBucketedConfig(sdkKey, user);
       if (bucketedUserConfig.variables.containsKey(key)) {
-        Variable<T> variable = bucketedUserConfig.variables.get(key);
+        BaseVariable baseVariable = bucketedUserConfig.variables.get(key);
+        Variable<T> variable = (Variable<T>) Variable.builder()
+          .key(key)
+          .type(baseVariable.getType())
+          .value(baseVariable.getValue())
+          .defaultValue(defaultValue)
+          .isDefaulted(false)
+          .build();
+        if (variable.getType() != variableType) {
+          throw new IllegalArgumentException("Variable type mismatch, returning default value");
+        }
         variable.setDefaultValue(defaultValue);
         variable.setIsDefaulted(false);
         eventQueueManager.queueAggregateEvent(Event.builder().type("aggVariableEvaluated").target(key).build(), bucketedUserConfig);
@@ -132,8 +143,12 @@ public final class DVCLocalClient {
    * 
    * @param user (required)
    */
-  public Map<String, Variable> allVariables(User user) {
+  public Map<String, BaseVariable> allVariables(User user) {
     validateUser(user);
+
+    if (!isInitialized) {
+      return Collections.emptyMap();
+    }
 
     BucketedUserConfig bucketedUserConfig = null;
     try {

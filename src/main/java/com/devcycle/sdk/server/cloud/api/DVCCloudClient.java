@@ -13,6 +13,7 @@ import retrofit2.Response;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 public final class DVCCloudClient {
@@ -54,15 +55,17 @@ public final class DVCCloudClient {
    * @return Variable
    */
   @SuppressWarnings("unchecked")
-  public <T> Variable<T> variable(User user, String key, T defaultValue) {
+  public <T> Variable<T> variable(User user, String key, T defaultValue) throws DVCException {
     validateUser(user);
 
     if (key == null || key.equals("")) {
-      throw new IllegalArgumentException("key cannot be null or empty");
+      ErrorResponse errorResponse = new ErrorResponse(500, "Missing parameter: key", null);
+      throw new DVCException(HttpResponseCode.byCode(500), errorResponse);
     }
 
     if (defaultValue == null) {
-      throw new IllegalArgumentException("defaultValue cannot be null");
+      ErrorResponse errorResponse = new ErrorResponse(500, "Missing parameter: defaultValue", null);
+      throw new DVCException(HttpResponseCode.byCode(500), errorResponse);
     }
 
     TypeEnum variableType = TypeEnum.fromClass(defaultValue.getClass());
@@ -71,6 +74,9 @@ public final class DVCCloudClient {
     try {
       Call<Variable> response = api.getVariableByKey(user, key, dvcOptions.getEnableEdgeDB());
       variable = getResponse(response);
+      if (variable.getType() != variableType) {
+        throw new IllegalArgumentException("Variable type mismatch, returning default value");
+      }
       variable.setIsDefaulted(false);
     } catch (Exception exception) {
       variable = (Variable<T>) Variable.builder()
@@ -88,13 +94,21 @@ public final class DVCCloudClient {
    * Get all variables by key for user data
    * 
    * @param user  (required)
-   * @return Map&gt;String, Variable&lt;
+   * @return Map&gt;String, BaseVariable&lt;
    */
-  public Map<String, Variable> allVariables(User user) throws DVCException {
+  public Map<String, BaseVariable> allVariables(User user) throws DVCException {
     validateUser(user);
 
-    Call<Map<String, Variable>> response = api.getVariables(user, dvcOptions.getEnableEdgeDB());
-    return getResponse(response);
+    Call<Map<String, BaseVariable>> response = api.getVariables(user, dvcOptions.getEnableEdgeDB());
+    try {
+      Map<String, BaseVariable> variablesResponse = getResponse(response);
+      return variablesResponse;
+    } catch (DVCException exception) {
+      if (exception.getHttpResponseCode() == HttpResponseCode.SERVER_ERROR) {
+        return new HashMap<>();
+      }
+      throw exception;
+    }
   }
 
   /**
@@ -126,10 +140,13 @@ public final class DVCCloudClient {
     try {
       response = call.execute();
     } catch (IOException e) {
+      System.out.println("get exception");
+      System.out.println(e.toString());
       errorResponse.setMessage(e.getMessage());
       throw new DVCException(HttpResponseCode.byCode(500), errorResponse);
     }
 
+    System.out.println(response);
     HttpResponseCode httpResponseCode = HttpResponseCode.byCode(response.code());
     errorResponse.setMessage("Unknown error");
 

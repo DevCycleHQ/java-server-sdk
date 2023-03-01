@@ -13,6 +13,7 @@ import com.devcycle.sdk.server.common.model.Feature;
 import com.devcycle.sdk.server.common.model.PlatformData;
 import com.devcycle.sdk.server.common.model.User;
 import com.devcycle.sdk.server.common.model.Variable;
+import com.devcycle.sdk.server.common.model.BaseVariable;
 import com.devcycle.sdk.server.helpers.WhiteBox;
 import com.devcycle.sdk.server.local.api.DVCLocalClient;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
@@ -38,6 +39,7 @@ public class DVCLocalClientTest {
         WhiteBox.setInternalState(client, "localBucketing", localBucketing);
         WhiteBox.setInternalState(client, "eventQueueManager", eventQueueManager);
     }
+
     @Test
     public void variableTest() {
         User user = getUser();
@@ -61,7 +63,7 @@ public class DVCLocalClientTest {
     @Test
     public void allVariablesTest() {
         User user = getUser();
-        Map<String, Variable> variables = client.allVariables(user);
+        Map<String, BaseVariable> variables = client.allVariables(user);
         Assert.assertEquals(variables.get("string-var").getId(), "63125320a4719939fd57cb2b");
         Assert.assertEquals(variables.get("a-cool-new-feature").getId(), "62fbf6566f1ba302829f9e34");
         Assert.assertEquals(variables.size(), 2);
