@@ -140,13 +140,10 @@ public final class DVCCloudClient {
     try {
       response = call.execute();
     } catch (IOException e) {
-      System.out.println("get exception");
-      System.out.println(e.toString());
       errorResponse.setMessage(e.getMessage());
       throw new DVCException(HttpResponseCode.byCode(500), errorResponse);
     }
 
-    System.out.println(response);
     HttpResponseCode httpResponseCode = HttpResponseCode.byCode(response.code());
     errorResponse.setMessage("Unknown error");
 
