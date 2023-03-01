@@ -1,7 +1,7 @@
 package com.devcycle.sdk.server.local.model;
 
 import com.devcycle.sdk.server.common.model.Feature;
-import com.devcycle.sdk.server.common.model.Variable;
+import com.devcycle.sdk.server.common.model.BaseVariable;
 
 import java.util.List;
 import java.util.Map;
@@ -11,8 +11,7 @@ public class BucketedUserConfig {
     public Environment environment;
     public Map<String, Feature> features;
     public Map<String, String> featureVariationMap;
-    public Map<String, Variable> internalVariables;
-    public Map<String, Variable> variables;
+    public Map<String, BaseVariable> variables;
     public List<Double> knownVariableKeys;
     public Map<String, FeatureVariation> variableVariationMap;
 }

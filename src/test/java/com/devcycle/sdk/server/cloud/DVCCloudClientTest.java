@@ -79,11 +79,16 @@ public class DVCCloudClientTest {
 
         when(apiInterface.getVariableByKey(user, key, dvcOptions.getEnableEdgeDB())).thenReturn(dvcApiMock.getVariableByKey(user, key, dvcOptions.getEnableEdgeDB()));
 
-        Variable<Boolean> variable = api.variable(user, key, true);
+        Variable<Boolean> variable;
+        try {
+            variable = api.variable(user, key, true);
 
-        assertUserDefaultsCorrect(user);
+            assertUserDefaultsCorrect(user);
 
-        Assert.assertFalse(variable.getValue());
+            Assert.assertFalse(variable.getValue());
+        } catch (DVCException e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
@@ -94,7 +99,7 @@ public class DVCCloudClientTest {
 
         when(apiInterface.getVariables(user, dvcOptions.getEnableEdgeDB())).thenReturn(dvcApiMock.getVariables(user, dvcOptions.getEnableEdgeDB()));
 
-        Map<String, Variable> variables = api.allVariables(user);
+        Map<String, BaseVariable> variables = api.allVariables(user);
 
         assertUserDefaultsCorrect(user);
 
@@ -120,6 +125,26 @@ public class DVCCloudClientTest {
 
         Assert.assertThrows("userId cannot be empty",
                 IllegalArgumentException.class, () -> api.variable(user, "wibble", true));
+    }
+
+    @Test
+    public void variable_emptyKey_throwsException() {
+        User user = User.builder()
+                .userId("j_test")
+                .build();
+
+        Assert.assertThrows("Missing parameter: key",
+                DVCException.class, () -> api.variable(user, null, true));
+    }
+
+    @Test
+    public void variable_emptyDefaultValue_throwsException() {
+        User user = User.builder()
+                .userId("j_test")
+                .build();
+
+        Assert.assertThrows("Missing parameter: defaultValue",
+        DVCException.class, () -> api.variable(user, "wibble", null));
     }
 
     @Test

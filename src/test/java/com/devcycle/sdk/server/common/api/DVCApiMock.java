@@ -21,7 +21,7 @@ public class DVCApiMock implements IDVCApi {
     }
 
     @Override
-    public Call<Map<String, Variable>> getVariables(User user, Boolean enabledEdgeDB) {
+    public Call<Map<String, BaseVariable>> getVariables(User user, Boolean enabledEdgeDB) {
         return TestResponse.getVariables();
     }
 
