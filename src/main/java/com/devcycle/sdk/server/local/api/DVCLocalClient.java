@@ -101,10 +101,6 @@ public final class DVCLocalClient {
       throw new IllegalArgumentException("Missing parameter: defaultValue");
     }
 
-    if (!configManager.isConfigInitialized()) {
-      System.out.println("Variable called before DVCClient has initialized, returning default value");
-    }
-
     TypeEnum variableType = TypeEnum.fromClass(defaultValue.getClass());
     Variable<T> defaultVariable = (Variable<T>) Variable.builder()
             .key(key)
@@ -114,40 +110,41 @@ public final class DVCLocalClient {
             .isDefaulted(true)
             .build();
 
-    if (!isInitialized) {
+    if (!configManager.isConfigInitialized() || !isInitialized) {
+      System.out.println("Variable called before DVCClient has initialized, returning default value");
+      try {
+        eventQueueManager.queueAggregateEvent(Event.builder().type("aggVariableDefaulted").target(key).build(), null);
+      } catch (Exception e) {
+        System.out.printf("Unable to parse aggVariableDefaulted event for Variable %s due to error: %s", key, e.toString());
+      }
       return defaultVariable;
     }
 
     try {
-      BucketedUserConfig bucketedUserConfig = localBucketing.generateBucketedConfig(sdkKey, user);
-      if (bucketedUserConfig.variables.containsKey(key)) {
-        BaseVariable baseVariable = bucketedUserConfig.variables.get(key);
+      String variableJSON = localBucketing.getVariable(sdkKey, user, key, variableType, true);
+      if (variableJSON == null || variableJSON.isEmpty()) {
+        return defaultVariable;
+      } else {
+        ObjectMapper mapper = new ObjectMapper();
+        Variable baseVariable = mapper.readValue(variableJSON, Variable.class);
+
         Variable<T> variable = (Variable<T>) Variable.builder()
-          .key(key)
-          .type(baseVariable.getType())
-          .value(baseVariable.getValue())
-          .defaultValue(defaultValue)
-          .isDefaulted(false)
-          .build();
+                .key(key)
+                .type(baseVariable.getType())
+                .value(baseVariable.getValue())
+                .defaultValue(defaultValue)
+                .isDefaulted(false)
+                .build();
         if (variable.getType() != variableType) {
-          throw new IllegalArgumentException("Variable type mismatch, returning default value");
+          System.out.printf("Variable type mismatch, returning default value");
+          return variable;
         }
         variable.setDefaultValue(defaultValue);
         variable.setIsDefaulted(false);
-        eventQueueManager.queueAggregateEvent(Event.builder().type("aggVariableEvaluated").target(key).build(), bucketedUserConfig);
         return variable;
-      } else {
-        eventQueueManager.queueAggregateEvent(Event.builder().type("aggVariableDefaulted").target(key).build(), bucketedUserConfig);
-        return defaultVariable;
       }
     } catch (Exception e) {
-      System.out.printf("Unable to parse JSON for Variable %s due to error: %s", key, e.toString());
-    }
-
-    try {
-      eventQueueManager.queueAggregateEvent(Event.builder().type("aggVariableDefaulted").target(key).build(), null);
-    } catch (Exception e) {
-      System.out.printf("Unable to parse aggVariableDefaulted event for Variable %s due to error: %s", key, e.toString());
+      System.out.printf("Unable to parse load Variable %s due to error: %s", key, e);
     }
     return defaultVariable;
   }

@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.common.model.Variable;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.devcycle.sdk.server.local.model.FlushPayload;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -30,6 +31,8 @@ public class LocalBucketing {
 
     private Set<Integer> pinnedAddresses;
     private HashMap<String, Integer> sdkKeyAddresses;
+
+    private HashMap<Variable.TypeEnum, Integer> variableTypeMap = new HashMap<Variable.TypeEnum, Integer>();
 
     public LocalBucketing() {
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -53,6 +56,12 @@ public class LocalBucketing {
 
         Memory mem = linker.get(store, "", "memory").get().memory();
         memRef.set(mem);
+
+        // WASM time seems problematic for getting global values so we'll just hardcode them
+        variableTypeMap.put(Variable.TypeEnum.BOOLEAN, 0);
+        variableTypeMap.put(Variable.TypeEnum.NUMBER, 1);
+        variableTypeMap.put(Variable.TypeEnum.STRING, 2);
+        variableTypeMap.put(Variable.TypeEnum.JSON, 3);
     }
 
     private Collection<Extern> setImportsOnLinker() {
@@ -174,6 +183,26 @@ public class LocalBucketing {
         ObjectMapper objectMapper = new ObjectMapper();
         BucketedUserConfig config = objectMapper.readValue(bucketedConfigString, BucketedUserConfig.class);
         return config;
+    }
+
+    public String getVariable(String sdkKey, User user, String key, Variable.TypeEnum variableTypeEnum, boolean shouldTrackEvent) throws JsonProcessingException {
+        // need some kind of mutex?
+        String userString = OBJECT_MAPPER.writeValueAsString(user);
+
+        int wasmVariableType = this.variableTypeMap.get(variableTypeEnum);
+
+        unpinAll();
+        int sdkKeyAddress = getSDKKeyAddress(sdkKey);
+        int userAddress = newWasmString(userString);
+        int keyAddress = newWasmString(key);
+
+        Func getVariablePtr = linker.get(store, "", "variableForUser").get().func();
+        WasmFunctions.Function5<Integer, Integer, Integer, Integer, Integer, Integer    > variableForUser = WasmFunctions.func(
+                store, getVariablePtr, I32, I32, I32, I32, I32, I32);
+
+        int resultAddress = variableForUser.call(sdkKeyAddress, userAddress, keyAddress, wasmVariableType, shouldTrackEvent ? 1 : 0);
+        String variableString = readWasmString(resultAddress);
+        return variableString;
     }
 
     public void initEventQueue(String sdkKey, String options) {
