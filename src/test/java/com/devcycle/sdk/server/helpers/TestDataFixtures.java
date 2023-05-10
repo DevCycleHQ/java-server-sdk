@@ -6,10 +6,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 public class TestDataFixtures {
-    public static final String SMALL_CONFIG = loadConfigData("fixture_small_config.json");
-    public static final String LARGE_CONFIG = loadConfigData("fixture_large_config.json");
-    public static final String SPECIAL_CHARACTERS_CONFIG = loadConfigData("fixture_small_config_special_characters.json");
-
     /**
      * Loads the config data from the file in the resources folder
      * @param fileName name of the file to load
@@ -30,5 +26,18 @@ public class TestDataFixtures {
             e.printStackTrace();
         }
         return configData;
+    }
+
+
+    public static String SmallConfig() {
+        return loadConfigData("fixture_small_config.json");
+    }
+
+    public static String LargeConfig() {
+        return loadConfigData("fixture_large_config.json");
+    }
+
+    public static String SmallConfigWithSpecialCharacters() {
+        return loadConfigData("fixture_small_config_special_characters.json");
     }
 }

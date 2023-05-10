@@ -24,7 +24,7 @@ public class DVCLocalClientTest {
 
     @BeforeClass
     public static void setup() throws Exception {
-        localConfigServer = new LocalConfigServer(TestDataFixtures.SMALL_CONFIG);
+        localConfigServer = new LocalConfigServer(TestDataFixtures.SmallConfig());
         localConfigServer.start();
 
         DVCLocalOptions options = DVCLocalOptions.builder().configCdnBaseUrl("http://localhost:8000/").configPollingIntervalMS(60000).build();
@@ -39,6 +39,7 @@ public class DVCLocalClientTest {
 
     @AfterClass
     public static void cleanup() throws Exception {
+        client.close();
         localConfigServer.stop();
     }
 

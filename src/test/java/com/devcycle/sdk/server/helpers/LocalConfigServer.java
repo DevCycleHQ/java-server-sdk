@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.io.*;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 
 public class LocalConfigServer {
     private HttpServer server;
@@ -19,9 +20,10 @@ public class LocalConfigServer {
     }
 
     public void handleConfigRequest(HttpExchange exchange) throws IOException {
-        exchange.sendResponseHeaders(200, configData.length());
+        byte[] responseData = configData.getBytes(StandardCharsets.UTF_8);
+        exchange.sendResponseHeaders(200, responseData.length);
         OutputStream outputStream = exchange.getResponseBody();
-        outputStream.write(configData.getBytes());
+        outputStream.write(responseData);
         outputStream.flush();
         outputStream.close();
     }

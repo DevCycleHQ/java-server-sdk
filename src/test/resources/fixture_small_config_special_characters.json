@@ -1,85 +1,115 @@
 {
   "project": {
+    "_id": "61f97628ff4afcb6d057dbf0",
+    "key": "emma-project",
+    "a0_organization": "org_tPyJN5dvNNirKar7",
     "settings": {
       "edgeDB": {
         "enabled": false
       },
       "optIn": {
         "enabled": true,
-        "title": "Beta Feature Access",
-        "description": "Get early access to new features below",
-        "imageURL": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR68cgQT_BTgnhWTdfjUXSN8zM9Vpxgq82dhw&usqp=CAU",
+        "title": "EarlyAccess",
+        "description": "Getearlyaccesstobetafeaturesbelow!",
+        "imageURL": "",
         "colors": {
-          "primary": "#0042f9",
-          "secondary": "#facc15"
+          "primary": "#531cd9",
+          "secondary": "#16dec0"
         }
       }
-    },
-    "a0_organization": "org_NszUFyWBFy7cr95J",
-    "_id": "6216420c2ea68943c8833c09",
-    "key": "default"
+    }
   },
   "environment": {
-    "_id": "6216420c2ea68943c8833c0b",
+    "_id": "61f97628ff4afcb6d057dbf2",
     "key": "development"
   },
   "features": [
     {
-      "_id": "6216422850294da359385e8b",
-      "key": "test",
+      "_id": "62fbf6566f1ba302829f9e32",
+      "key": "a-cool-new-feature",
       "type": "release",
       "variations": [
         {
+          "key": "variation-on",
+          "name": "VariationOn",
           "variables": [
             {
-              "_var": "6216422850294da359385e8d",
-              "value": "öé \uD83D\uDC0D \u00A5"
+              "_var": "62fbf6566f1ba302829f9e34",
+              "value": true
+            },
+            {
+              "_var": "63125320a4719939fd57cb2b",
+              "value": "ä variationOff"
             }
           ],
-          "name": "Variation On",
-          "key": "variation-on",
-          "_id": "6216422850294da359385e8f"
+          "_id": "62fbf6566f1ba302829f9e38"
         },
         {
+          "key": "variation-off",
+          "name": "VariationOff",
           "variables": [
             {
-              "_var": "6216422850294da359385e8d",
-              "value": "ä"
+              "_var": "62fbf6566f1ba302829f9e34",
+              "value": false
+            },
+            {
+              "_var": "63125320a4719939fd57cb2b",
+              "value": "ß variationOn"
             }
           ],
-          "name": "Variation Off",
-          "key": "variation-off",
-          "_id": "6216422850294da359385e90"
+          "_id": "62fbf6566f1ba302829f9e39"
         }
       ],
       "configuration": {
-        "_id": "621642332ea68943c8833c4a",
+        "_id": "62fbf6576f1ba302829f9e4d",
         "targets": [
           {
-            "distribution": [
-              {
-                "percentage": 0.5,
-                "_variation": "6216422850294da359385e8f"
-              },
-              {
-                "percentage": 0.5,
-                "_variation": "6216422850294da359385e90"
-              }
-            ],
             "_audience": {
-              "_id": "621642332ea68943c8833c4b",
+              "_id": "63125321d31c601f992288b6",
               "filters": {
-                "operator": "and",
                 "filters": [
                   {
-                    "values": [],
-                    "type": "all",
+                    "type": "user",
+                    "subType": "email",
+                    "comparator": "=",
+                    "values": [
+                      "giveMeVariationOff@email.com"
+                    ],
                     "filters": []
                   }
-                ]
+                ],
+                "operator": "and"
               }
             },
-            "_id": "621642332ea68943c8833c4d"
+            "distribution": [
+              {
+                "_variation": "62fbf6566f1ba302829f9e38",
+                "percentage": 1
+              }
+            ],
+            "_id": "63125321d31c601f992288bb"
+          },
+          {
+            "_audience": {
+              "_id": "63125321d31c601f992288b7",
+              "filters": {
+                "filters": [
+                  {
+                    "type": "all",
+                    "values": [],
+                    "filters": []
+                  }
+                ],
+                "operator": "and"
+              }
+            },
+            "distribution": [
+              {
+                "_variation": "62fbf6566f1ba302829f9e39",
+                "percentage": 1
+              }
+            ],
+            "_id": "63125321d31c601f992288bc"
           }
         ],
         "forcedUsers": {}
@@ -88,12 +118,18 @@
   ],
   "variables": [
     {
-      "_id": "6216422850294da359385e8d",
-      "key": "test",
+      "_id": "62fbf6566f1ba302829f9e34",
+      "key": "a-cool-new-feature",
+      "type": "Boolean"
+    },
+    {
+      "_id": "63125320a4719939fd57cb2b",
+      "key": "string-var",
       "type": "String"
     }
   ],
   "variableHashes": {
-    "test": 2447239932
+    "a-cool-new-feature": 1868656757,
+    "string-var": 2413071944
   }
 }
