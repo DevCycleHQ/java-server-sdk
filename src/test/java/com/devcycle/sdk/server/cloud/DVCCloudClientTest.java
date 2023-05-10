@@ -92,6 +92,27 @@ public class DVCCloudClientTest {
     }
 
     @Test
+    public void getVariableValueByKeyTest() {
+        User user = User.builder()
+                .userId("j_test")
+                .build();
+
+        String key = "show-quickstart";
+
+        when(apiInterface.getVariableByKey(user, key, dvcOptions.getEnableEdgeDB())).thenReturn(dvcApiMock.getVariableByKey(user, key, dvcOptions.getEnableEdgeDB()));
+
+        try {
+            boolean value = api.variableValue(user, key, true);
+
+            assertUserDefaultsCorrect(user);
+
+            Assert.assertFalse(value);
+        } catch (DVCException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
     public void getVariablesTest() throws DVCException {
         User user = User.builder()
                 .userId("j_test")

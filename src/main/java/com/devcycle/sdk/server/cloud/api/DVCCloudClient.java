@@ -47,12 +47,27 @@ public final class DVCCloudClient {
   }
 
   /**
+   * Get variable value by key for user data
+   *
+   * @param user (required)
+   * @param key  Feature key (required)
+   * @param defaultValue Default value to use if the variable could not be fetched
+   *                     (required)
+   * @return Variable value
+   * @throws DVCException If there are any uses with the data provided
+   */
+  public <T> T variableValue(User user, String key, T defaultValue)  throws DVCException {
+    return variable(user, key, defaultValue).getValue();
+  }
+
+  /**
    * Get variable by key for user data
    * 
    * @param user  (required)
    * @param key Variable key (required)
    * @param defaultValue Default value to use if the variable could not be fetched (required)
    * @return Variable
+   * @throws DVCException If there are any uses with the data provided
    */
   @SuppressWarnings("unchecked")
   public <T> Variable<T> variable(User user, String key, T defaultValue) throws DVCException {

@@ -68,6 +68,19 @@ public final class DVCLocalClient {
   }
 
   /**
+   * Get variable value by key for user data
+   *
+   * @param user (required)
+   * @param key  Feature key (required)
+   * @param defaultValue Default value to use if the variable could not be fetched
+   *                     (required)
+   * @return Variable value
+   */
+  public <T> T variableValue(User user, String key, T defaultValue) {
+    return variable(user, key, defaultValue).getValue();
+  }
+
+  /**
    * Get variable by key for user data
    * 
    * @param user         (required)
