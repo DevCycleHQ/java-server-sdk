@@ -41,15 +41,26 @@ public class HelloWorld {
     }
 
     @GetMapping("/local/activateFlag")
-    public String homePageActivatedFlag(Model model) {
-        Variable<String> updateHomePage = dvcClient.variable(getUser(), "string-var", "default string");
-
-        String variationValue = updateHomePage.getValue();
-
-        // if the variable "activate-flag" doesn't exist isDefaulted will be true
-        model.addAttribute("isDefaultValue", updateHomePage.getIsDefaulted());
-        model.addAttribute("variationValue", variationValue);
+    public String homePageActivatedFlagValue(Model model) {
+        String variableKey = "string-var";
+        // if the variable "string-var" doesn't exist or is not applicable for the user, the default value will be returned
+        String updateHomePage = dvcClient.variableValue(getUser(), variableKey, "default string");
+        model.addAttribute("variableKey", variableKey);
+        model.addAttribute("variationValue", updateHomePage);
         return "fragments/flagData :: value ";
+    }
+
+    @GetMapping("/local/activateFlagDetails")
+    public String homePageActivatedFlagDetails(Model model) {
+        String variableKey = "string-var";
+        Variable<String> updateHomePageVariable = dvcClient.variable(getUser(), variableKey, "default string");
+
+        // if the variable "string-var" doesn't exist isDefaulted will be true
+
+        model.addAttribute("isDefaultValue", updateHomePageVariable.getIsDefaulted());
+        model.addAttribute("variableKey", variableKey);
+        model.addAttribute("variationValue", updateHomePageVariable.getValue());
+        return "fragments/flagDataDetails :: value ";
     }
 
     @GetMapping("/local/track")
