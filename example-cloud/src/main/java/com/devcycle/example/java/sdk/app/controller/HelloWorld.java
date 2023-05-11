@@ -36,28 +36,48 @@ public class HelloWorld {
         return "home";
     }
 
+
     @GetMapping("/cloud/activateFlag")
-    public String homePageActivatedFlag(Model model) {
-        Variable<String> updateHomePage = dvcCloud.variable(getUser(), "string-var", "default string");
-
-        String variationValue = updateHomePage.getValue();
-
-        // if the variable "activate-flag" doesn't exist isDefaulted will be true
-        model.addAttribute("isDefaultValue", updateHomePage.getIsDefaulted());
-        model.addAttribute("variationValue", variationValue);
+    public String homePageActivatedFlagValue(Model model) {
+        String variableKey = "string-var";
+        // if the variable "string-var" doesn't exist or is not applicable for the user, the default value will be returned
+        try {
+            String updateHomePageValue = dvcCloud.variableValue(getUser(), variableKey, "default string");
+            model.addAttribute("variableKey", variableKey);
+            model.addAttribute("variationValue", updateHomePageValue);
+        }catch (DVCException e){
+            System.out.println("DVCException: " + e.getMessage());
+        }
         return "fragments/flagData :: value ";
+    }
+
+    @GetMapping("/cloud/activateFlagDetails")
+    public String homePageActivatedFlagDetails(Model model) {
+        String variableKey = "string-var";
+        try{
+            Variable<String> updateHomePageVariable = dvcCloud.variable(getUser(), variableKey, "default string");
+
+            // if the variable "string-var" doesn't exist isDefaulted will be true
+            model.addAttribute("isDefaultValue", updateHomePageVariable.getIsDefaulted());
+            model.addAttribute("variableKey", variableKey);
+            model.addAttribute("variationValue", updateHomePageVariable.getValue());
+        }catch (DVCException e){
+            System.out.println("DVCException: " + e.getMessage());
+        }
+        return "fragments/flagDataDetails :: value ";
     }
 
     @GetMapping("/cloud/track")
     public String trackCloud(Model model) {
-        DVCResponse response = null;
+        String response = "";
         try {
-            response = dvcCloud.track(getUser(), Event.builder().type("java-cloud-custom").build());
+            dvcCloud.track(getUser(), Event.builder().type("java-cloud-custom").build());
+            response = "java-cloud-custom tracked!";
         } catch(DVCException e) {
-            System.out.println("Error tracking custom event: " + e.getMessage());
+            response = "Error tracking custom event: " + e.getMessage();
         }
         model.addAttribute("trackSuccessMessage", "Cloud custom event tracked!");
-        model.addAttribute("trackResponse", response.getMessage());
+        model.addAttribute("trackResponse", response);
         return "fragments/trackData :: value ";
     }
 

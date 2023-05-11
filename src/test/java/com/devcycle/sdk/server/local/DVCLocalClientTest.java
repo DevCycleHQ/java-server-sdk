@@ -52,6 +52,15 @@ public class DVCLocalClientTest {
         Assert.assertEquals("variationOn", var.getValue());
     }
 
+    public void variableValueTest() {
+        User user = getUser();
+        user.setEmail("giveMeVariationOff@email.com");
+        Assert.assertEquals("variationOff", client.variableValue(user, "string-var", "default string"));
+
+        user.setEmail("giveMeVariationOn@email.com");
+        Assert.assertEquals("variationOn", client.variableValue(user, "string-var", "default string"));
+    }
+
     @Test
     public void allFeaturesTest() {
         User user = getUser();

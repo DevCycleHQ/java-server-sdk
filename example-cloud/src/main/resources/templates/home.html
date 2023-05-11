@@ -23,8 +23,11 @@
                 <p class="lead mb-4">Simple Spring Boot example to show a default value before creating a feature,
                     fetching a variable, and tracking custom events via the DevCycle SDK</p>
                 <div class="gap-2 d-sm-flex justify-content-sm-center pb-2">
+                    <button type="button" class="btn btn-primary btn-lg px-4 gap-3" th:onclick="getValue()">
+                        Cloud - Get Value
+                    </button>
                     <button type="button" class="btn btn-primary btn-lg px-4 gap-3" th:onclick="getVariable()">
-                        Cloud - Get Variable
+                        Cloud - Get Variable Details
                     </button>
                     <button type="button" class="btn btn-primary btn-lg px-4 gap-3" th:onclick="trackCloud()">
                         Cloud - Track
@@ -43,8 +46,18 @@
         integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
         crossorigin="anonymous"></script>
     <script>
-        const getVariable = () => {
+        const getValue = () => {
             fetch('cloud/activateFlag').then(function (response) {
+                return response.text();
+            }).then(function (html) {
+                document.getElementById("variablePlaceholder").innerHTML = html;
+            }).catch(function (err) {
+                console.warn('Something went wrong.', err);
+            });
+        }
+
+        const getVariable = () => {
+            fetch('cloud/activateFlagDetails').then(function (response) {
                 return response.text();
             }).then(function (html) {
                 document.getElementById("variablePlaceholder").innerHTML = html;
