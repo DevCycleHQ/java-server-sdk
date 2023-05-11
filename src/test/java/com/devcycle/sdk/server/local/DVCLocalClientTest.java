@@ -1,5 +1,6 @@
 package com.devcycle.sdk.server.local;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -76,6 +77,16 @@ public class DVCLocalClientTest {
         Assert.assertEquals(variables.get("string-var").getId(), "63125320a4719939fd57cb2b");
         Assert.assertEquals(variables.get("a-cool-new-feature").getId(), "62fbf6566f1ba302829f9e34");
         Assert.assertEquals(variables.size(), 2);
+    }
+
+    @Test
+    public void setClientCustomDataWithBadMap(){
+        // should be a no-op
+        client.setClientCustomData(null);
+
+        // should be a no-op
+        Map<String, Object> testData = new HashMap();
+        client.setClientCustomData(testData);
     }
 
     private User getUser() {

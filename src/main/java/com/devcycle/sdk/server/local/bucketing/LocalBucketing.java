@@ -147,6 +147,16 @@ public class LocalBucketing {
         fn.accept(platformDataAddress);
     }
 
+    public void setClientCustomData(String sdkKey, String customData) {
+        unpinAll();
+        int sdkKeyAddress = getSDKKeyAddress(sdkKey);
+        int customDataAddress = newWasmString(customData);
+
+        Func setCustomClientDataPtr = linker.get(store, "", "setClientCustomData").get().func();
+        WasmFunctions.Consumer2<Integer, Integer> fn = WasmFunctions.consumer(store, setCustomClientDataPtr, I32, I32);
+        fn.accept(sdkKeyAddress, customDataAddress);
+    }
+
     public BucketedUserConfig generateBucketedConfig(String sdkKey, User user) throws JsonProcessingException {
         unpinAll();
         String userString = OBJECT_MAPPER.writeValueAsString(user);

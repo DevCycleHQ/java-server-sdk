@@ -12,6 +12,7 @@ import com.devcycle.sdk.server.local.managers.EventQueueManager;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public final class DVCLocalClient {
 
@@ -190,6 +191,24 @@ public final class DVCLocalClient {
       eventQueueManager.queueEvent(user, event);
     } catch (Exception e) {
       System.out.printf("Failed to queue event due to error: %s%n", e.getMessage());
+    }
+  }
+
+  public void setClientCustomData(Map<String,Object> customData) {
+    if (!isInitialized || !configManager.isConfigInitialized())
+    {
+     System.out.println("SetClientCustomData called before DVCClient has initialized");
+     return;
+    }
+
+    if (customData != null && !customData.isEmpty()) {
+      try {
+        ObjectMapper mapper = new ObjectMapper();
+        String customDataJSON = mapper.writeValueAsString(customData);
+        localBucketing.setClientCustomData(this.sdkKey, customDataJSON);
+      } catch(Exception e) {
+        System.out.printf("Failed to set custom data: %s%n", e.getMessage());
+      }
     }
   }
 
