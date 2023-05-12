@@ -34,6 +34,9 @@ public class LocalBucketing {
 
     private HashMap<Variable.TypeEnum, Integer> variableTypeMap = new HashMap<Variable.TypeEnum, Integer>();
 
+    private final int WASM_OBJECT_ID_STRING = 1;
+    private final int WASM_OBJECT_ID_UINT8ARRAY = 9;
+
     public LocalBucketing() {
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
@@ -126,6 +129,95 @@ public class LocalBucketing {
         return result;
     }
 
+    public static byte[] writeInt32LittleEndian(int value) {
+        byte[] encodedValue = new byte[Integer.SIZE / Byte.SIZE];
+        encodedValue[3] = (byte) (value >> Byte.SIZE * 3);
+        encodedValue[2] = (byte) (value >> Byte.SIZE * 2);
+        encodedValue[1] = (byte) (value >> Byte.SIZE);
+        encodedValue[0] = (byte) value;
+        return encodedValue;
+    }
+
+    public static int readInt32LittleEndian(byte[] encodedValue) {
+        return (encodedValue[3] & 0xff << Byte.SIZE * 3)
+                | ((encodedValue[2] & 0xff) << Byte.SIZE * 2)
+                | ((encodedValue[1] & 0xff) << Byte.SIZE)
+                | (encodedValue[0] & 0xff);
+    }
+
+    private int newUint8ArrayParameter(byte[] paramData)
+    {
+        int length = paramData.length;
+
+        Func __newPtr = linker.get(store, "", "__new").get().func(); // get pointer to __new function
+        WasmFunctions.Function2<Integer, Integer, Integer> __new = WasmFunctions.func(
+                store, __newPtr, I32, I32, I32); // load __new function
+
+        int headerAddr = __new.call(12, WASM_OBJECT_ID_UINT8ARRAY);
+        try
+        {
+            pinParameter(headerAddr);
+            int dataBufferAddr = __new.call(length, WASM_OBJECT_ID_STRING);
+
+            byte[] headerData = new byte[12];
+            byte[] bufferAddrBytes = writeInt32LittleEndian(dataBufferAddr);
+            byte[] lengthBytes = writeInt32LittleEndian(length << 0);
+            // Into the header need to write 12 bytes
+            for(int i = 0; i < 4; i++)
+            {
+                // 0-3 = buffer address,little endian
+                headerData[i] = bufferAddrBytes[i];
+                // 4-7 = buffer address again, little endian
+                headerData[i + 4] = bufferAddrBytes[i];
+                // 8-11 = length, little endian, aligned 0
+                headerData[i + 8] = lengthBytes[i];
+            }
+
+            ByteBuffer buf = memRef.get().buffer(store);
+
+            // write the header to the WASM memory
+            for (int i = 0; i < headerData.length; i++) {
+                buf.put(headerAddr + i, headerData[i]); // write each byte of string starting at address
+            }
+
+            // write the param data into WASM memory
+            for(int i = 0; i < length; i++)
+            {
+                buf.put(dataBufferAddr + i, paramData[i]);
+            }
+        }
+        finally
+        {
+            unpinParameter(headerAddr);
+        }
+        return headerAddr;
+    }
+
+    private byte[] readFromWasmMemory(int address, int length)
+    {
+        ByteBuffer buf = memRef.get().buffer(store);
+        byte[] data = new byte[length];
+        for(int i = 0; i < length; i++)
+        {
+            data[i] = buf.get(address + i);
+        }
+        return data;
+    }
+
+    private byte[] readAssemblyScriptUint8Array(int address)
+    {
+        // The header is 12 bytes long, need to pull out the location of the array's data buffer
+        // and the length of the data buffer
+        byte[] bufferDataAddressBytes = readFromWasmMemory(address, 4);
+        int bufferAddress = readInt32LittleEndian(bufferDataAddressBytes);
+
+        byte[] lengthAddressBytes = readFromWasmMemory(address + 8, 4);
+        int dataLength = readInt32LittleEndian(lengthAddressBytes);
+
+        byte[] bufferData = readFromWasmMemory(bufferAddress, dataLength);
+        return bufferData;
+    }
+
     private static long getUnsignedInt(byte[] data) {
         long result = 0;
 
@@ -135,7 +227,6 @@ public class LocalBucketing {
 
         return result;
     }
-
 
     public void storeConfig(String sdkKey, String config) {
         unpinAll();
