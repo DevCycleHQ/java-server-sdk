@@ -1,20 +1,23 @@
 package com.devcycle.sdk.server.local;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import com.devcycle.sdk.server.common.model.*;
+import com.devcycle.sdk.server.common.model.BaseVariable;
+import com.devcycle.sdk.server.common.model.Feature;
+import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.common.model.Variable;
 import com.devcycle.sdk.server.helpers.LocalConfigServer;
 import com.devcycle.sdk.server.helpers.TestDataFixtures;
-import org.junit.*;
+import com.devcycle.sdk.server.local.api.DVCLocalClient;
+import com.devcycle.sdk.server.local.model.DVCLocalOptions;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import com.devcycle.sdk.server.local.api.DVCLocalClient;
-import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
-import com.devcycle.sdk.server.local.managers.EventQueueManager;
-import com.devcycle.sdk.server.local.model.DVCLocalOptions;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DVCLocalClientTest {
@@ -48,13 +51,74 @@ public class DVCLocalClientTest {
         User user = getUser();
         user.setEmail("giveMeVariationOff@email.com");
         Variable<String> var = client.variable(user, "string-var", "default string");
+        Assert.assertNotNull(var);
         Assert.assertEquals("variationOff", var.getValue());
 
         user.setEmail("giveMeVariationOn@email.com");
         var = client.variable(user, "string-var", "default string");
+        Assert.assertNotNull(var);
         Assert.assertEquals("variationOn", var.getValue());
     }
+    @Test
+    public void variableTestNotInitialized(){
+        // NOTE  - this test will generate some additional logging noise from the EventQueue
+        // because it isn't initialized properly before the first call to variable()
+        DVCLocalClient client = new DVCLocalClient(apiKey);
+        Variable<String> var = client.variable(getUser(), "string-var", "default string");
+        Assert.assertNotNull(var);
+        Assert.assertTrue(var.getIsDefaulted());
+        Assert.assertEquals("default string", var.getValue());
+    }
 
+    @Test
+    public void variableTestUnknownVariableKey(){
+        Variable<Boolean> var = client.variable(getUser(), "some-var-that-doesnt-exist", true);
+        Assert.assertNotNull(var);
+        Assert.assertTrue(var.getIsDefaulted());
+        Assert.assertEquals(true, var.getValue());
+    }
+
+    @Test
+    public void variableTestTypeMismatch(){
+        Variable<Boolean> var = client.variable(getUser(), "string-var", true);
+        Assert.assertNotNull(var);
+        Assert.assertTrue(var.getIsDefaulted());
+        Assert.assertEquals(true, var.getValue());
+    }
+
+    @Test
+    public void variableTestNoDefault() {
+        User user = getUser();
+        try {
+            Variable<String> var = client.variable(user, "string-var", null);
+            Assert.fail("Expected IllegalArgumentException for null default value");
+        }catch(IllegalArgumentException e) {
+            // expected
+        }
+    }
+
+    @Test
+    public void variableTestNullUser() {
+        try{
+            client.variable(null, "string-var", "default string");
+            Assert.fail("Expected IllegalArgumentException for null user");
+        }catch(IllegalArgumentException e) {
+            // expected
+        }
+    }
+
+    @Test
+    public void variableTestBadUserID() {
+        User badUser = User.builder().userId("").build();
+        try {
+            client.variable(badUser, "string-var", "default string");
+            Assert.fail("Expected IllegalArgumentException for empty userID");
+        }catch(IllegalArgumentException e) {
+            // expected
+        }
+    }
+
+    @Test
     public void variableValueTest() {
         User user = getUser();
         user.setEmail("giveMeVariationOff@email.com");
