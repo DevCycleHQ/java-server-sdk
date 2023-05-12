@@ -94,4 +94,25 @@ public class LocalBucketingTest {
                 .userId("j_test")
                 .build();
     }
+
+    @Test
+    public void testWriteInt32LittleEndian() {
+        int value = 0;
+        byte[] expected = new byte[]{0, 0, 0, 0};
+        byte[] result = localBucketing.intToBytesLittleEndian(value);
+        Assert.assertArrayEquals(expected, result);
+
+         value = 123456789;
+        expected = new byte[]{ (byte) 0x15, (byte) 0xCD, (byte) 0x5B, (byte) 0x07 };
+        result = localBucketing.intToBytesLittleEndian(value);
+        Assert.assertArrayEquals(expected, result);
+    }
+    @Test
+    public void testReadInt32LittleEndian() {
+        byte[] encodedValue = { (byte) 0x15, (byte) 0xCD, (byte) 0x5B, (byte) 0x07 };
+        int expected = 123456789;
+        System.out.println(Integer.toHexString(expected));
+        int result = localBucketing.bytesToIntLittleEndian(encodedValue);
+        Assert.assertEquals(expected, result);
+    }
 }

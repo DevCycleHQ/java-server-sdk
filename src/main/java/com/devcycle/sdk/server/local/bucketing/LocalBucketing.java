@@ -129,20 +129,23 @@ public class LocalBucketing {
         return result;
     }
 
-    public static byte[] writeInt32LittleEndian(int value) {
-        byte[] encodedValue = new byte[Integer.SIZE / Byte.SIZE];
-        encodedValue[3] = (byte) (value >> Byte.SIZE * 3);
-        encodedValue[2] = (byte) (value >> Byte.SIZE * 2);
-        encodedValue[1] = (byte) (value >> Byte.SIZE);
+    public static byte[] intToBytesLittleEndian(int value) {
+        byte[] encodedValue = new byte[4];
+        encodedValue[3] = (byte) (value >> 8 * 3);
+        encodedValue[2] = (byte) (value >> 8 * 2);
+        encodedValue[1] = (byte) (value >> 8);
         encodedValue[0] = (byte) value;
         return encodedValue;
     }
 
-    public static int readInt32LittleEndian(byte[] encodedValue) {
-        return (encodedValue[3] & 0xff << Byte.SIZE * 3)
-                | ((encodedValue[2] & 0xff) << Byte.SIZE * 2)
-                | ((encodedValue[1] & 0xff) << Byte.SIZE)
-                | (encodedValue[0] & 0xff);
+    public static int bytesToIntLittleEndian(byte[] bytes) {
+        int i = 4;
+        int value = bytes[--i];
+        while (--i >= 0) {
+            value <<= 8;
+            value |= bytes[i] & 0xFF;
+        }
+        return value;
     }
 
     private int newUint8ArrayParameter(byte[] paramData)
@@ -160,8 +163,8 @@ public class LocalBucketing {
             int dataBufferAddr = __new.call(length, WASM_OBJECT_ID_STRING);
 
             byte[] headerData = new byte[12];
-            byte[] bufferAddrBytes = writeInt32LittleEndian(dataBufferAddr);
-            byte[] lengthBytes = writeInt32LittleEndian(length << 0);
+            byte[] bufferAddrBytes = intToBytesLittleEndian(dataBufferAddr);
+            byte[] lengthBytes = intToBytesLittleEndian(length << 0);
             // Into the header need to write 12 bytes
             for(int i = 0; i < 4; i++)
             {
@@ -209,10 +212,10 @@ public class LocalBucketing {
         // The header is 12 bytes long, need to pull out the location of the array's data buffer
         // and the length of the data buffer
         byte[] bufferDataAddressBytes = readFromWasmMemory(address, 4);
-        int bufferAddress = readInt32LittleEndian(bufferDataAddressBytes);
+        int bufferAddress = bytesToIntLittleEndian(bufferDataAddressBytes);
 
         byte[] lengthAddressBytes = readFromWasmMemory(address + 8, 4);
-        int dataLength = readInt32LittleEndian(lengthAddressBytes);
+        int dataLength = bytesToIntLittleEndian(lengthAddressBytes);
 
         byte[] bufferData = readFromWasmMemory(bufferAddress, dataLength);
         return bufferData;
