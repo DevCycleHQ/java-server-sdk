@@ -201,6 +201,9 @@ public class LocalBucketing {
                 store, getVariablePtr, I32, I32, I32, I32, I32, I32);
 
         int resultAddress = variableForUser.call(sdkKeyAddress, userAddress, keyAddress, wasmVariableType, shouldTrackEvent ? 1 : 0);
+        if (resultAddress == 0){
+            return null;
+        }
         String variableString = readWasmString(resultAddress);
         return variableString;
     }

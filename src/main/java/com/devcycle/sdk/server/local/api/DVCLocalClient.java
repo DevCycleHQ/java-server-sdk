@@ -119,9 +119,9 @@ public final class DVCLocalClient {
       }
       return defaultVariable;
     }
-
+    String variableJSON = null;
     try {
-      String variableJSON = localBucketing.getVariable(sdkKey, user, key, variableType, true);
+      variableJSON = localBucketing.getVariable(sdkKey, user, key, variableType, true);
       if (variableJSON == null || variableJSON.isEmpty()) {
         return defaultVariable;
       } else {
@@ -137,12 +137,14 @@ public final class DVCLocalClient {
                 .build();
         if (variable.getType() != variableType) {
           System.out.printf("Variable type mismatch, returning default value");
-          return variable;
+          return defaultVariable;
         }
         variable.setDefaultValue(defaultValue);
         variable.setIsDefaulted(false);
         return variable;
       }
+    } catch(JsonProcessingException jpe){
+      System.out.printf("Unable to parse load Variable %s due to JSON error: err=%s, data=", key, jpe.getMessage(), variableJSON);
     } catch (Exception e) {
       System.out.printf("Unable to parse load Variable %s due to error: %s", key, e);
     }
@@ -217,8 +219,10 @@ public final class DVCLocalClient {
     if (!isInitialized) {
       return;
     }
-    configManager.cleanup();
-    eventQueueManager.cleanup();
+    if (configManager != null)
+      configManager.cleanup();
+    if(eventQueueManager != null)
+      eventQueueManager.cleanup();
   }
 
   private void validateUser(User user) {
