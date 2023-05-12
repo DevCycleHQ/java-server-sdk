@@ -144,9 +144,9 @@ public final class DVCLocalClient {
         return variable;
       }
     } catch(JsonProcessingException jpe){
-      System.out.printf("Unable to parse load Variable %s due to JSON error: err=%s, data=", key, jpe.getMessage(), variableJSON);
+      System.out.printf("Unable to parse Variable %s due to JSON error: err=%s, data=", key, jpe.getMessage(), variableJSON);
     } catch (Exception e) {
-      System.out.printf("Unable to parse load Variable %s due to error: %s", key, e);
+      System.out.printf("Unable to evaluate Variable %s due to error: %s", key, e);
     }
     return defaultVariable;
   }
@@ -219,10 +219,12 @@ public final class DVCLocalClient {
     if (!isInitialized) {
       return;
     }
-    if (configManager != null)
+    if (configManager != null) {
       configManager.cleanup();
-    if(eventQueueManager != null)
+    }
+    if (eventQueueManager != null) {
       eventQueueManager.cleanup();
+    }
   }
 
   private void validateUser(User user) {

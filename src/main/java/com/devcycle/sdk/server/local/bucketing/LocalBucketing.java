@@ -197,7 +197,7 @@ public class LocalBucketing {
         int keyAddress = newWasmString(key);
 
         Func getVariablePtr = linker.get(store, "", "variableForUser").get().func();
-        WasmFunctions.Function5<Integer, Integer, Integer, Integer, Integer, Integer    > variableForUser = WasmFunctions.func(
+        WasmFunctions.Function5<Integer, Integer, Integer, Integer, Integer, Integer> variableForUser = WasmFunctions.func(
                 store, getVariablePtr, I32, I32, I32, I32, I32, I32);
 
         int resultAddress = variableForUser.call(sdkKeyAddress, userAddress, keyAddress, wasmVariableType, shouldTrackEvent ? 1 : 0);
