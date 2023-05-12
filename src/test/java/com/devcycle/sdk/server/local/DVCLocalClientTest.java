@@ -63,8 +63,8 @@ public class DVCLocalClientTest {
     public void variableTestNotInitialized(){
         // NOTE  - this test will generate some additional logging noise from the EventQueue
         // because it isn't initialized properly before the first call to variable()
-        DVCLocalClient client = new DVCLocalClient(apiKey);
-        Variable<String> var = client.variable(getUser(), "string-var", "default string");
+        DVCLocalClient newClient = new DVCLocalClient(apiKey);
+        Variable<String> var = newClient.variable(getUser(), "string-var", "default string");
         Assert.assertNotNull(var);
         Assert.assertTrue(var.getIsDefaulted());
         Assert.assertEquals("default string", var.getValue());
