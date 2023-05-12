@@ -1,5 +1,7 @@
 package com.devcycle.sdk.server.local;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.junit.Assert;
@@ -32,6 +34,21 @@ public class LocalBucketingTest {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         localBucketing.setPlatformData(getUser().getPlatformData().toString());
         localBucketing.storeConfig(apiKey, testConfigString);
+    }
+
+    @Test
+    public void testSetClientCustomData() {
+        Map<String,Object> testData = new HashMap();
+        testData.put("stringProp", "test");
+        testData.put("intProp", 1);
+        testData.put("booleanProp", true);
+
+        try {
+            String customData = mapper.writeValueAsString(testData);
+            localBucketing.setClientCustomData(apiKey, customData);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
