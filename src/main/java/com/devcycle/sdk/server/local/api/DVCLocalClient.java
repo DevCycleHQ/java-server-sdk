@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public final class DVCLocalClient {
 
-  private static LocalBucketing localBucketing = new LocalBucketing();
+  private LocalBucketing localBucketing = new LocalBucketing();
 
   private EnvironmentConfigManager configManager;
 
