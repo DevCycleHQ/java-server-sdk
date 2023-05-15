@@ -8,6 +8,15 @@ This version of the DevCycle SDK works with Java 8 and above.
 
 Using the Java SDK library requires [Maven](https://maven.apache.org/) or [Gradle](https://gradle.org/) >= 5.6.4 to be installed.
 
+An x86_64 JDK is required for Local Bucketing with the DevCycle Java SDK. Currently Supported Platforms are:
+
+
+| OS | Arch |
+| --- | --- |
+| Linux (ELF) | x86_64 |
+| Mac OS | x86_64 |
+| Windows | x86_64 |
+
 ## Installation
 
 ### Maven
@@ -18,7 +27,7 @@ You can use the SDK in your Maven project by adding the following to your *pom.x
 <dependency>
     <groupId>com.devcycle</groupId>
     <artifactId>java-server-sdk</artifactId>
-    <version>1.3.0</version>
+    <version>1.4.0</version>
     <scope>compile</scope>
 </dependency>
 ```
@@ -27,7 +36,7 @@ You can use the SDK in your Maven project by adding the following to your *pom.x
 Alternatively you can use the SDK in your Gradle project by adding the following to *build.gradle*:
 
 ```yaml
-implementation("com.devcycle:java-server-sdk:1.3.0")
+implementation("com.devcycle:java-server-sdk:1.4.0")
 ```
 
 ## DNS Caching
