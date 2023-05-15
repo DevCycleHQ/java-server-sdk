@@ -1,44 +1,53 @@
 package com.devcycle.sdk.server.local;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
+import com.devcycle.sdk.server.common.model.BaseVariable;
+import com.devcycle.sdk.server.common.model.Feature;
+import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.common.model.Variable;
+import com.devcycle.sdk.server.helpers.LocalConfigServer;
+import com.devcycle.sdk.server.helpers.TestDataFixtures;
+import com.devcycle.sdk.server.local.api.DVCLocalClient;
+import com.devcycle.sdk.server.local.model.DVCLocalOptions;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import com.devcycle.sdk.server.common.model.Feature;
-import com.devcycle.sdk.server.common.model.PlatformData;
-import com.devcycle.sdk.server.common.model.User;
-import com.devcycle.sdk.server.common.model.Variable;
-import com.devcycle.sdk.server.common.model.BaseVariable;
-import com.devcycle.sdk.server.helpers.WhiteBox;
-import com.devcycle.sdk.server.local.api.DVCLocalClient;
-import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
-import com.devcycle.sdk.server.local.managers.EventQueueManager;
-import com.devcycle.sdk.server.local.model.DVCLocalOptions;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DVCLocalClientTest {
-
     private static DVCLocalClient client;
-    static final String testConfigString = "{\"project\":{\"_id\":\"61f97628ff4afcb6d057dbf0\",\"key\":\"emma-project\",\"a0_organization\":\"org_tPyJN5dvNNirKar7\",\"settings\":{\"edgeDB\":{\"enabled\":false},\"optIn\":{\"enabled\":true,\"title\":\"EarlyAccess\",\"description\":\"Getearlyaccesstobetafeaturesbelow!\",\"imageURL\":\"\",\"colors\":{\"primary\":\"#531cd9\",\"secondary\":\"#16dec0\"}}}},\"environment\":{\"_id\":\"61f97628ff4afcb6d057dbf2\",\"key\":\"development\"},\"features\":[{\"_id\":\"62fbf6566f1ba302829f9e32\",\"key\":\"a-cool-new-feature\",\"type\":\"release\",\"variations\":[{\"key\":\"variation-on\",\"name\":\"VariationOn\",\"variables\":[{\"_var\":\"62fbf6566f1ba302829f9e34\",\"value\":true},{\"_var\":\"63125320a4719939fd57cb2b\",\"value\":\"variationOff\"}],\"_id\":\"62fbf6566f1ba302829f9e38\"},{\"key\":\"variation-off\",\"name\":\"VariationOff\",\"variables\":[{\"_var\":\"62fbf6566f1ba302829f9e34\",\"value\":false},{\"_var\":\"63125320a4719939fd57cb2b\",\"value\":\"variationOn\"}],\"_id\":\"62fbf6566f1ba302829f9e39\"}],\"configuration\":{\"_id\":\"62fbf6576f1ba302829f9e4d\",\"targets\":[{\"_audience\":{\"_id\":\"63125321d31c601f992288b6\",\"filters\":{\"filters\":[{\"type\":\"user\",\"subType\":\"email\",\"comparator\":\"=\",\"values\":[\"giveMeVariationOff@email.com\"],\"filters\":[]}],\"operator\":\"and\"}},\"distribution\":[{\"_variation\":\"62fbf6566f1ba302829f9e38\",\"percentage\":1}],\"_id\":\"63125321d31c601f992288bb\"},{\"_audience\":{\"_id\":\"63125321d31c601f992288b7\",\"filters\":{\"filters\":[{\"type\":\"all\",\"values\":[],\"filters\":[]}],\"operator\":\"and\"}},\"distribution\":[{\"_variation\":\"62fbf6566f1ba302829f9e39\",\"percentage\":1}],\"_id\":\"63125321d31c601f992288bc\"}],\"forcedUsers\":{}}}],\"variables\":[{\"_id\":\"62fbf6566f1ba302829f9e34\",\"key\":\"a-cool-new-feature\",\"type\":\"Boolean\"},{\"_id\":\"63125320a4719939fd57cb2b\",\"key\":\"string-var\",\"type\":\"String\"}],\"variableHashes\":{\"a-cool-new-feature\":1868656757,\"string-var\":2413071944}}";
+    private static LocalConfigServer localConfigServer;
     static final String apiKey = String.format("server-%s", UUID.randomUUID());
-    private static LocalBucketing localBucketing;
-    private static EventQueueManager eventQueueManager;
 
     @BeforeClass
     public static void setup() throws Exception {
-        client = new DVCLocalClient(apiKey);
-        localBucketing = new LocalBucketing();
-        localBucketing.storeConfig(apiKey, testConfigString);
-        localBucketing.setPlatformData(PlatformData.builder().build().toString());
-        eventQueueManager = new EventQueueManager(apiKey, localBucketing, DVCLocalOptions.builder().build());
-        WhiteBox.setInternalState(client, "localBucketing", localBucketing);
-        WhiteBox.setInternalState(client, "eventQueueManager", eventQueueManager);
+        // spin up a lightweight http server to serve the config and properly initialize the client
+        localConfigServer = new LocalConfigServer(TestDataFixtures.SmallConfig());
+        localConfigServer.start();
+
+        DVCLocalOptions options = DVCLocalOptions.builder()
+                .configCdnBaseUrl("http://localhost:8000/")
+                .configPollingIntervalMS(60000)
+                .build();
+        client = new DVCLocalClient(apiKey, options);
+        try {
+            // wait one second for the config to be loaded by the client
+            Thread.sleep(1000);
+        }catch (Exception e) {
+            System.out.println("Failed to sleep: " + e.getMessage());
+        }
+    }
+
+    @AfterClass
+    public static void cleanup() throws Exception {
+        client.close();
+        localConfigServer.stop();
     }
 
     @Test
@@ -46,13 +55,74 @@ public class DVCLocalClientTest {
         User user = getUser();
         user.setEmail("giveMeVariationOff@email.com");
         Variable<String> var = client.variable(user, "string-var", "default string");
+        Assert.assertNotNull(var);
         Assert.assertEquals("variationOff", var.getValue());
 
         user.setEmail("giveMeVariationOn@email.com");
         var = client.variable(user, "string-var", "default string");
+        Assert.assertNotNull(var);
         Assert.assertEquals("variationOn", var.getValue());
     }
+    @Test
+    public void variableTestNotInitialized(){
+        // NOTE  - this test will generate some additional logging noise from the EventQueue
+        // because it isn't initialized properly before the first call to variable()
+        DVCLocalClient newClient = new DVCLocalClient(apiKey);
+        Variable<String> var = newClient.variable(getUser(), "string-var", "default string");
+        Assert.assertNotNull(var);
+        Assert.assertTrue(var.getIsDefaulted());
+        Assert.assertEquals("default string", var.getValue());
+    }
 
+    @Test
+    public void variableTestUnknownVariableKey(){
+        Variable<Boolean> var = client.variable(getUser(), "some-var-that-doesnt-exist", true);
+        Assert.assertNotNull(var);
+        Assert.assertTrue(var.getIsDefaulted());
+        Assert.assertEquals(true, var.getValue());
+    }
+
+    @Test
+    public void variableTestTypeMismatch(){
+        Variable<Boolean> var = client.variable(getUser(), "string-var", true);
+        Assert.assertNotNull(var);
+        Assert.assertTrue(var.getIsDefaulted());
+        Assert.assertEquals(true, var.getValue());
+    }
+
+    @Test
+    public void variableTestNoDefault() {
+        User user = getUser();
+        try {
+            Variable<String> var = client.variable(user, "string-var", null);
+            Assert.fail("Expected IllegalArgumentException for null default value");
+        }catch(IllegalArgumentException e) {
+            // expected
+        }
+    }
+
+    @Test
+    public void variableTestNullUser() {
+        try{
+            client.variable(null, "string-var", "default string");
+            Assert.fail("Expected IllegalArgumentException for null user");
+        }catch(IllegalArgumentException e) {
+            // expected
+        }
+    }
+
+    @Test
+    public void variableTestBadUserID() {
+        User badUser = User.builder().userId("").build();
+        try {
+            client.variable(badUser, "string-var", "default string");
+            Assert.fail("Expected IllegalArgumentException for empty userID");
+        }catch(IllegalArgumentException e) {
+            // expected
+        }
+    }
+
+    @Test
     public void variableValueTest() {
         User user = getUser();
         user.setEmail("giveMeVariationOff@email.com");
