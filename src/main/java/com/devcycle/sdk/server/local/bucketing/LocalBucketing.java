@@ -203,27 +203,17 @@ public class LocalBucketing {
         return bufferData;
     }
 
-
     public void storeConfig(String sdkKey, String config) {
         unpinAll();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
-        int configAddress = newWasmString(config);
+        int configAddress = newUint8ArrayParameter(config.getBytes(StandardCharsets.UTF_8));
 
-        Func setConfigDataPtr = linker.get(store, "", "setConfigData").get().func();
+        Func setConfigDataPtr = linker.get(store, "", "setConfigDataUTF8").get().func();
         WasmFunctions.Consumer2<Integer, Integer> fn = WasmFunctions.consumer(store, setConfigDataPtr, I32, I32);
         fn.accept(sdkKeyAddress, configAddress);
     }
 
     public void setPlatformData(String platformData) {
-        unpinAll();
-        int platformDataAddress = newWasmString(platformData);
-
-        Func setPlatformDataPtr = linker.get(store, "", "setPlatformData").get().func();
-        WasmFunctions.Consumer1<Integer> fn = WasmFunctions.consumer(store, setPlatformDataPtr, I32);
-        fn.accept(platformDataAddress);
-    }
-
-    public void setPlatformDataUTF8(String platformData) {
         unpinAll();
         int platformDataAddress = newUint8ArrayParameter(platformData.getBytes(StandardCharsets.UTF_8));
         Func setPlatformDataPtr = linker.get(store, "", "setPlatformDataUTF8").get().func();
@@ -234,9 +224,8 @@ public class LocalBucketing {
     public void setClientCustomData(String sdkKey, String customData) {
         unpinAll();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
-        int customDataAddress = newWasmString(customData);
-
-        Func setCustomClientDataPtr = linker.get(store, "", "setClientCustomData").get().func();
+        int customDataAddress = newUint8ArrayParameter(customData.getBytes(StandardCharsets.UTF_8));;
+        Func setCustomClientDataPtr = linker.get(store, "", "setClientCustomDataUTF8").get().func();
         WasmFunctions.Consumer2<Integer, Integer> fn = WasmFunctions.consumer(store, setCustomClientDataPtr, I32, I32);
         fn.accept(sdkKeyAddress, customDataAddress);
     }
