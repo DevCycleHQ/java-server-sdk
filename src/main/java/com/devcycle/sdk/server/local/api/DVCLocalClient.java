@@ -11,8 +11,10 @@ import com.devcycle.sdk.server.local.managers.EnvironmentConfigManager;
 import com.devcycle.sdk.server.local.managers.EventQueueManager;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;
+import com.devcycle.sdk.server.local.protobuf.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 
 public final class DVCLocalClient {
 
@@ -238,5 +240,53 @@ public final class DVCLocalClient {
 
   private boolean isValidServerKey(String serverKey) {
     return serverKey.startsWith("server") || serverKey.startsWith("dvc_server");
+  }
+
+  private NullableString CreateNullableString(String value)
+  {
+    return value == null ? NullableString.newBuilder().setIsNull(true).build() : NullableString.newBuilder().setIsNull(false).setValue(value).build();
+  }
+
+  private NullableDouble CreateNullableDouble(double value)
+  {
+    return !Double.isNaN(value) ? NullableDouble.newBuilder().setIsNull(false).setValue(value).build() : NullableDouble.newBuilder().setIsNull(true).build();
+  }
+
+  private NullableCustomData CreateNullableCustomData(Map<String, Object> customData)
+  {
+    if (customData == null)
+    {
+      return NullableCustomData.newBuilder().setIsNull(true).build();
+    }
+    else
+    {
+      Map<String,CustomDataValue> values = new HashMap();
+
+      for(Map.Entry<String,Object> entry :  customData.entrySet())
+      {
+        if(entry.getValue() == null)
+        {
+          values.put(entry.getKey(), CustomDataValue.newBuilder().setType(CustomDataType.Null).build());
+
+        }
+        else if (entry.getValue() instanceof String)
+        {
+          String strValue = (String)entry.getValue();
+          values.put(entry.getKey(), CustomDataValue.newBuilder().setType(CustomDataType.Str).setStringValue(strValue).build());
+
+        }
+        else if (entry.getValue() instanceof Number)
+        {
+          double numValue = ((Number)entry.getValue()).doubleValue();
+          values.put(entry.getKey(), CustomDataValue.newBuilder().setType(CustomDataType.Num).setDoubleValue(numValue).build());
+        }
+        else if (entry.getValue() instanceof Boolean)
+        {
+          boolean boolValue = ((Boolean)entry.getValue()).booleanValue();
+          values.put(entry.getKey(), CustomDataValue.newBuilder().setType(CustomDataType.Bool).setBoolValue(boolValue).build());
+        }
+      }
+      return NullableCustomData.newBuilder().putAllValue(values).setIsNull(false).build();
+    }
   }
 }
