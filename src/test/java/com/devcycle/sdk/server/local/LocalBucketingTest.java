@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import com.devcycle.sdk.server.common.model.PlatformData;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,7 +48,27 @@ public class LocalBucketingTest {
             String customData = mapper.writeValueAsString(testData);
             localBucketing.setClientCustomData(apiKey, customData);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            Assert.fail("Unexpected exception: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testSetPlatformData(){
+        try {
+            PlatformData platformData = PlatformData.builder().build();
+            String platformDataJSON = mapper.writeValueAsString(platformData);
+            localBucketing.setPlatformData(platformDataJSON);
+        }catch(Exception e){
+            Assert.fail("Unexpected exception: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testStoreConfig(){
+        try {
+            localBucketing.storeConfig(apiKey, testConfigString);
+        }catch(Exception e){
+            Assert.fail("Unexpected exception: " + e.getMessage());
         }
     }
 
@@ -95,24 +116,4 @@ public class LocalBucketingTest {
                 .build();
     }
 
-    @Test
-    public void testWriteInt32LittleEndian() {
-        int value = 0;
-        byte[] expected = new byte[]{0, 0, 0, 0};
-        byte[] result = localBucketing.intToBytesLittleEndian(value);
-        Assert.assertArrayEquals(expected, result);
-
-         value = 123456789;
-        expected = new byte[]{ (byte) 0x15, (byte) 0xCD, (byte) 0x5B, (byte) 0x07 };
-        result = localBucketing.intToBytesLittleEndian(value);
-        Assert.assertArrayEquals(expected, result);
-    }
-    @Test
-    public void testReadInt32LittleEndian() {
-        byte[] encodedValue = { (byte) 0x15, (byte) 0xCD, (byte) 0x5B, (byte) 0x07 };
-        int expected = 123456789;
-        System.out.println(Integer.toHexString(expected));
-        int result = localBucketing.bytesToIntLittleEndian(encodedValue);
-        Assert.assertEquals(expected, result);
-    }
 }

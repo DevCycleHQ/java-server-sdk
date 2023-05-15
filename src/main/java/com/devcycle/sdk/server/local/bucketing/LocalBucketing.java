@@ -15,6 +15,7 @@ import com.devcycle.sdk.server.common.model.User;
 import com.devcycle.sdk.server.common.model.Variable;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.devcycle.sdk.server.local.model.FlushPayload;
+import com.devcycle.sdk.server.local.utils.ByteConversionUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -120,32 +121,13 @@ public class LocalBucketing {
         // the 4 bytes right before the object pointer store the length of the object as an unsigned int
         // see assemblyscript.org/runtime.html#memory-layout
         byte[] headerBytes = {buf.get(startAddress - 1), buf.get(startAddress - 2), buf.get(startAddress - 3), buf.get(startAddress - 4)};
-        long stringLength = getUnsignedInt(headerBytes);
+        long stringLength = ByteConversionUtils.getUnsignedInt(headerBytes);
         String result = "";
         for (int i = 0; i < stringLength; i += 2) { // +=2 because the data is formatted as WTF-16, not UTF-8
             result += (char) buf.get(startAddress + i); // read each byte of string starting at address
         }
 
         return result;
-    }
-
-    public static byte[] intToBytesLittleEndian(int value) {
-        byte[] encodedValue = new byte[4];
-        encodedValue[3] = (byte) (value >> 8 * 3);
-        encodedValue[2] = (byte) (value >> 8 * 2);
-        encodedValue[1] = (byte) (value >> 8);
-        encodedValue[0] = (byte) value;
-        return encodedValue;
-    }
-
-    public static int bytesToIntLittleEndian(byte[] bytes) {
-        int i = 4;
-        int value = bytes[--i];
-        while (--i >= 0) {
-            value <<= 8;
-            value |= bytes[i] & 0xFF;
-        }
-        return value;
     }
 
     private int newUint8ArrayParameter(byte[] paramData)
@@ -163,8 +145,8 @@ public class LocalBucketing {
             int dataBufferAddr = __new.call(length, WASM_OBJECT_ID_STRING);
 
             byte[] headerData = new byte[12];
-            byte[] bufferAddrBytes = intToBytesLittleEndian(dataBufferAddr);
-            byte[] lengthBytes = intToBytesLittleEndian(length << 0);
+            byte[] bufferAddrBytes = ByteConversionUtils.intToBytesLittleEndian(dataBufferAddr);
+            byte[] lengthBytes = ByteConversionUtils.intToBytesLittleEndian(length << 0);
             // Into the header need to write 12 bytes
             for(int i = 0; i < 4; i++)
             {
@@ -212,24 +194,15 @@ public class LocalBucketing {
         // The header is 12 bytes long, need to pull out the location of the array's data buffer
         // and the length of the data buffer
         byte[] bufferDataAddressBytes = readFromWasmMemory(address, 4);
-        int bufferAddress = bytesToIntLittleEndian(bufferDataAddressBytes);
+        int bufferAddress = ByteConversionUtils.bytesToIntLittleEndian(bufferDataAddressBytes);
 
         byte[] lengthAddressBytes = readFromWasmMemory(address + 8, 4);
-        int dataLength = bytesToIntLittleEndian(lengthAddressBytes);
+        int dataLength = ByteConversionUtils.bytesToIntLittleEndian(lengthAddressBytes);
 
         byte[] bufferData = readFromWasmMemory(bufferAddress, dataLength);
         return bufferData;
     }
 
-    private static long getUnsignedInt(byte[] data) {
-        long result = 0;
-
-        for (int i = 0; i < data.length; i++) {
-            result = (result << 8) + (data[i] & 0xFF);
-        }
-
-        return result;
-    }
 
     public void storeConfig(String sdkKey, String config) {
         unpinAll();
@@ -246,6 +219,14 @@ public class LocalBucketing {
         int platformDataAddress = newWasmString(platformData);
 
         Func setPlatformDataPtr = linker.get(store, "", "setPlatformData").get().func();
+        WasmFunctions.Consumer1<Integer> fn = WasmFunctions.consumer(store, setPlatformDataPtr, I32);
+        fn.accept(platformDataAddress);
+    }
+
+    public void setPlatformDataUTF8(String platformData) {
+        unpinAll();
+        int platformDataAddress = newUint8ArrayParameter(platformData.getBytes(StandardCharsets.UTF_8));
+        Func setPlatformDataPtr = linker.get(store, "", "setPlatformDataUTF8").get().func();
         WasmFunctions.Consumer1<Integer> fn = WasmFunctions.consumer(store, setPlatformDataPtr, I32);
         fn.accept(platformDataAddress);
     }
