@@ -14,7 +14,6 @@ import com.devcycle.sdk.server.local.model.DVCLocalOptions;
 import com.devcycle.sdk.server.local.protobuf.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 
 public final class DVCLocalClient {
 
