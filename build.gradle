@@ -6,6 +6,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'signing'
+    id "com.google.protobuf" version "0.9.3"
 }
 
 task javadocJar(type: Jar) {
@@ -109,6 +110,8 @@ ext {
 
     junit_version = "4.13.2"
     mockito_core_version = "4.6.1"
+
+    protobuf_version = "3.23.0"
 }
 
 dependencies {
@@ -127,6 +130,8 @@ dependencies {
 
     implementation ("io.github.kawamuray.wasmtime:wasmtime-java:$wasmtime_version")
 
+    implementation ("com.google.protobuf:protobuf-java:$protobuf_version")
+
     compileOnly("org.projectlombok:lombok:$lombok_version")
 
     testAnnotationProcessor("org.projectlombok:lombok:$lombok_version")
@@ -135,3 +140,4 @@ dependencies {
     testImplementation("com.squareup.retrofit2:retrofit-mock:$retrofit_version")
     testCompileOnly("org.projectlombok:lombok:$lombok_version")
 }
+
