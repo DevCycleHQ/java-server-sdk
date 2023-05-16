@@ -2,6 +2,7 @@ package com.devcycle.sdk.server.local.api;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.devcycle.sdk.server.common.model.*;
@@ -13,6 +14,7 @@ import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;
 import com.devcycle.sdk.server.local.protobuf.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public final class DVCLocalClient {
@@ -84,7 +86,7 @@ public final class DVCLocalClient {
 
   /**
    * Get variable by key for user data
-   * 
+   *
    * @param user         (required)
    * @param key          Variable key (required)
    * @param defaultValue Default value to use if the variable could not be fetched
@@ -120,37 +122,101 @@ public final class DVCLocalClient {
       }
       return defaultVariable;
     }
-    String variableJSON = null;
+
+    double appBuild = Double.NaN;
+    try{
+      appBuild = Double.parseDouble(user.getAppBuild());
+    }catch(Exception e){}
+
+    DVCUser_PB user_pb = DVCUser_PB.newBuilder()
+            .setUserId( user.getUserId())
+            .setEmail(createNullableString(user.getEmail()))
+            .setName(createNullableString(user.getName()))
+            .setLanguage(createNullableString(user.getLanguage()))
+            .setCountry(createNullableString(user.getCountry()))
+            .setAppBuild(createNullableDouble(appBuild))
+            .setAppVersion(createNullableString(user.getAppVersion()))
+            .setCustomData(createNullableCustomData(user.getCustomData()))
+            .setCustomData(createNullableCustomData(user.getPrivateCustomData()))
+            .build();
+
+    VariableType_PB pbVariableType = typeEnumToVariableTypeProtobuf(variableType);
+
+    VariableForUserParams_PB params = VariableForUserParams_PB.newBuilder()
+            .setSdkKey(sdkKey)
+            .setUser(user_pb)
+            .setVariableKey(key)
+            .setVariableType(pbVariableType)
+            .setShouldTrackEvent(true)
+            .build();
+
     try {
-      variableJSON = localBucketing.getVariable(sdkKey, user, key, variableType, true);
-      if (variableJSON == null || variableJSON.isEmpty()) {
+      byte[] paramsBuffer = params.toByteArray();
+      byte[] variableData = localBucketing.getVariableForUserProtobuf(paramsBuffer);
+
+      if (variableData == null || variableData.length == 0) {
         return defaultVariable;
       } else {
-        ObjectMapper mapper = new ObjectMapper();
-        Variable baseVariable = mapper.readValue(variableJSON, Variable.class);
 
-        Variable<T> variable = (Variable<T>) Variable.builder()
-                .key(key)
-                .type(baseVariable.getType())
-                .value(baseVariable.getValue())
-                .defaultValue(defaultValue)
-                .isDefaulted(false)
-                .build();
-        if (variable.getType() != variableType) {
+        SDKVariable_PB sdkVariable = SDKVariable_PB.parseFrom(variableData);
+
+        if(sdkVariable.getType() != pbVariableType)
+        {
           System.out.printf("Variable type mismatch, returning default value");
           return defaultVariable;
         }
-        variable.setDefaultValue(defaultValue);
-        variable.setIsDefaulted(false);
+
+        Variable<T> variable;
+        switch(sdkVariable.getType()) {
+          case Boolean:
+            variable = (Variable<T>) Variable.builder()
+                    .key(key)
+                    .type(TypeEnum.BOOLEAN)
+                    .value(sdkVariable.getBoolValue())
+                    .defaultValue(defaultValue)
+                    .isDefaulted(false)
+                    .build();
+            break;
+          case String:
+            variable = (Variable<T>) Variable.builder()
+                    .key(key)
+                    .type(TypeEnum.STRING)
+                    .value(sdkVariable.getStringValue())
+                    .defaultValue(defaultValue)
+                    .isDefaulted(false)
+                    .build();
+            break;
+          case Number:
+            variable = (Variable<T>) Variable.builder()
+                    .key(key)
+                    .type(TypeEnum.NUMBER)
+                    .value(sdkVariable.getDoubleValue())
+                    .defaultValue(defaultValue)
+                    .isDefaulted(false)
+                    .build();
+            break;
+          case JSON:
+            ObjectMapper mapper = new ObjectMapper();
+            LinkedHashMap<String,Object> jsonMap = mapper.readValue(sdkVariable.getStringValue(), new TypeReference<LinkedHashMap<String,Object>>() {});
+            variable = (Variable<T>) Variable.builder()
+                    .key(key)
+                    .type(TypeEnum.JSON)
+                    .value(jsonMap)
+                    .defaultValue(defaultValue)
+                    .isDefaulted(false)
+                    .build();
+            break;
+            default:
+                throw new IllegalArgumentException("Unknown variable type: "+sdkVariable.getType());
+        }
         return variable;
       }
-    } catch(JsonProcessingException jpe){
-      System.out.printf("Unable to parse Variable %s due to JSON error: err=%s, data=", key, jpe.getMessage(), variableJSON);
     } catch (Exception e) {
       System.out.printf("Unable to evaluate Variable %s due to error: %s", key, e);
     }
     return defaultVariable;
   }
+
 
   /**
    * Get all variables by key for user data
@@ -241,24 +307,26 @@ public final class DVCLocalClient {
     return serverKey.startsWith("server") || serverKey.startsWith("dvc_server");
   }
 
-  private NullableString CreateNullableString(String value)
+  private NullableString createNullableString(String value)
   {
     return value == null ? NullableString.newBuilder().setIsNull(true).build() : NullableString.newBuilder().setIsNull(false).setValue(value).build();
   }
 
-  private NullableDouble CreateNullableDouble(double value)
+  private NullableDouble createNullableDouble(double value)
   {
     return !Double.isNaN(value) ? NullableDouble.newBuilder().setIsNull(false).setValue(value).build() : NullableDouble.newBuilder().setIsNull(true).build();
   }
 
-  private NullableCustomData CreateNullableCustomData(Map<String, Object> customData)
+  private NullableCustomData createNullableCustomData(Object temp)
   {
-    if (customData == null)
+    if (temp == null)
     {
       return NullableCustomData.newBuilder().setIsNull(true).build();
     }
     else
     {
+      Map<String, Object> customData = (Map<String, Object>)temp;
+
       Map<String,CustomDataValue> values = new HashMap();
 
       for(Map.Entry<String,Object> entry :  customData.entrySet())
@@ -286,6 +354,23 @@ public final class DVCLocalClient {
         }
       }
       return NullableCustomData.newBuilder().putAllValue(values).setIsNull(false).build();
+    }
+  }
+
+  private VariableType_PB typeEnumToVariableTypeProtobuf(TypeEnum type)
+  {
+    switch (type)
+    {
+      case BOOLEAN:
+        return VariableType_PB.Boolean;
+      case STRING:
+        return VariableType_PB.String;
+      case NUMBER:
+        return VariableType_PB.Number;
+      case JSON:
+        return VariableType_PB.JSON;
+      default:
+        throw new IllegalArgumentException("Unknown variable type: "+type);
     }
   }
 }

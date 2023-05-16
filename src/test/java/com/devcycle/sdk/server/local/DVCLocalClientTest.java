@@ -63,6 +63,7 @@ public class DVCLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertEquals("variationOn", var.getValue());
     }
+
     @Test
     public void variableTestNotInitialized(){
         // NOTE  - this test will generate some additional logging noise from the EventQueue
@@ -72,6 +73,28 @@ public class DVCLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertTrue(var.getIsDefaulted());
         Assert.assertEquals("default string", var.getValue());
+    }
+
+    @Test
+    public void variableTestWithCustomData(){
+        User user = getUser();
+        user.setEmail("giveMeVariationOff@email.com");
+
+        Map<String,Object> customData = new HashMap();
+        customData.put("boolProp", true);
+        customData.put("intProp", 123);
+        customData.put("stringProp", "abc");
+        user.setCustomData(customData);
+
+        Map<String,Object> privateCustomData = new HashMap();
+        privateCustomData.put("boolProp", false);
+        privateCustomData.put("intProp", 789);
+        privateCustomData.put("stringProp", "xyz");
+        user.setPrivateCustomData(privateCustomData);
+
+        Variable<String> var = client.variable(user, "string-var", "default string");
+        Assert.assertNotNull(var);
+        Assert.assertEquals("variationOff", var.getValue());
     }
 
     @Test

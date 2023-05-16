@@ -272,6 +272,24 @@ public class LocalBucketing {
         return variableString;
     }
 
+    public byte[] getVariableForUserProtobuf(byte[] serializedParams){
+        int paramsAddr = newUint8ArrayParameter(serializedParams);
+
+        Func getVariablePtr = linker.get(store, "", "variableForUser_PB").get().func();
+        WasmFunctions.Function1<Integer, Integer> variableForUserPB = WasmFunctions.func(
+                store, getVariablePtr, I32, I32);
+
+        int variableAddress = variableForUserPB.call(paramsAddr);
+
+        byte[] varBytes = null;
+        if (variableAddress > 0)
+        {
+            varBytes = readAssemblyScriptUint8Array(variableAddress);
+        }
+
+        return varBytes;
+    }
+
     public void initEventQueue(String sdkKey, String options) {
         unpinAll();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
