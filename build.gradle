@@ -100,6 +100,12 @@ task downloadDVCBucketingWASM(type: Download) {
 processResources.dependsOn downloadDVCBucketingWASM
 sourcesJar.dependsOn downloadDVCBucketingWASM
 
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.0.0"
+    }
+}
+
 ext {
     retrofit_version = "2.9.0"
     jackson_version = "2.14.2"
