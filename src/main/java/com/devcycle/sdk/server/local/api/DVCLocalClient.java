@@ -309,7 +309,9 @@ public final class DVCLocalClient {
 
   private NullableString createNullableString(String value)
   {
-    return value == null ? NullableString.newBuilder().setIsNull(true).build() : NullableString.newBuilder().setIsNull(false).setValue(value).build();
+    return value == null 
+        ? NullableString.newBuilder().setIsNull(true).build() 
+        : NullableString.newBuilder().setIsNull(false).setValue(value).build();
   }
 
   private NullableDouble createNullableDouble(double value)
