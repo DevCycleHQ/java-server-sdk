@@ -1,5 +1,6 @@
 package com.devcycle.sdk.server.common.model;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -55,7 +56,7 @@ public class Variable<T> {
     }
 
     public static TypeEnum fromClass(Class<?> clazz) {
-      if (clazz == LinkedHashMap.class) {
+      if (clazz == LinkedHashMap.class || clazz == HashMap.class) {
         return JSON;
       } else if (clazz == Boolean.class) {
         return BOOLEAN;
