@@ -80,12 +80,3 @@ public class MyClass {
 
 To find usage documentation, visit our docs for [Local Bucketing](https://docs.devcycle.com/docs/sdk/server-side-sdks/java-local).
 
-## Generating Protobuf Classes
-
-The DVCLocalClient uses [Protocol Buffers](https://developers.google.com/protocol-buffers) to communicate with the WASM bucketing library. You must install `protoc` to generate the protobuf classes, see https://grpc.io/docs/protoc-installation/. 
-
-To generating the protobuf classes, run the following command:
-
-```bash
-protoc --java_out=src/main/java src/main/proto/variableForUserParams.proto
-```
