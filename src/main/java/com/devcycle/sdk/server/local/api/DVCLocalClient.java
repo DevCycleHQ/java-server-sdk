@@ -13,6 +13,7 @@ import com.devcycle.sdk.server.local.managers.EventQueueManager;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;
 import com.devcycle.sdk.server.local.protobuf.*;
+import com.devcycle.sdk.server.local.utils.ProtobufUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -123,28 +124,10 @@ public final class DVCLocalClient {
       return defaultVariable;
     }
 
-    double appBuild = Double.NaN;
-    try{
-      appBuild = Double.parseDouble(user.getAppBuild());
-    }catch(Exception e){}
-
-    DVCUser_PB user_pb = DVCUser_PB.newBuilder()
-            .setUserId( user.getUserId())
-            .setEmail(createNullableString(user.getEmail()))
-            .setName(createNullableString(user.getName()))
-            .setLanguage(createNullableString(user.getLanguage()))
-            .setCountry(createNullableString(user.getCountry()))
-            .setAppBuild(createNullableDouble(appBuild))
-            .setAppVersion(createNullableString(user.getAppVersion()))
-            .setCustomData(createNullableCustomData(user.getCustomData()))
-            .setCustomData(createNullableCustomData(user.getPrivateCustomData()))
-            .build();
-
-    VariableType_PB pbVariableType = typeEnumToVariableTypeProtobuf(variableType);
-
+    VariableType_PB pbVariableType = ProtobufUtils.convertTypeEnumToVariableType(variableType);
     VariableForUserParams_PB params = VariableForUserParams_PB.newBuilder()
             .setSdkKey(sdkKey)
-            .setUser(user_pb)
+            .setUser(ProtobufUtils.createDVCUserPB(user))
             .setVariableKey(key)
             .setVariableType(pbVariableType)
             .setShouldTrackEvent(true)
@@ -157,59 +140,12 @@ public final class DVCLocalClient {
       if (variableData == null || variableData.length == 0) {
         return defaultVariable;
       } else {
-
         SDKVariable_PB sdkVariable = SDKVariable_PB.parseFrom(variableData);
-
-        if(sdkVariable.getType() != pbVariableType)
-        {
+        if(sdkVariable.getType() != pbVariableType) {
           System.out.printf("Variable type mismatch, returning default value");
           return defaultVariable;
         }
-
-        Variable<T> variable;
-        switch(sdkVariable.getType()) {
-          case Boolean:
-            variable = (Variable<T>) Variable.builder()
-                    .key(key)
-                    .type(TypeEnum.BOOLEAN)
-                    .value(sdkVariable.getBoolValue())
-                    .defaultValue(defaultValue)
-                    .isDefaulted(false)
-                    .build();
-            break;
-          case String:
-            variable = (Variable<T>) Variable.builder()
-                    .key(key)
-                    .type(TypeEnum.STRING)
-                    .value(sdkVariable.getStringValue())
-                    .defaultValue(defaultValue)
-                    .isDefaulted(false)
-                    .build();
-            break;
-          case Number:
-            variable = (Variable<T>) Variable.builder()
-                    .key(key)
-                    .type(TypeEnum.NUMBER)
-                    .value(sdkVariable.getDoubleValue())
-                    .defaultValue(defaultValue)
-                    .isDefaulted(false)
-                    .build();
-            break;
-          case JSON:
-            ObjectMapper mapper = new ObjectMapper();
-            LinkedHashMap<String,Object> jsonMap = mapper.readValue(sdkVariable.getStringValue(), new TypeReference<LinkedHashMap<String,Object>>() {});
-            variable = (Variable<T>) Variable.builder()
-                    .key(key)
-                    .type(TypeEnum.JSON)
-                    .value(jsonMap)
-                    .defaultValue(defaultValue)
-                    .isDefaulted(false)
-                    .build();
-            break;
-            default:
-                throw new IllegalArgumentException("Unknown variable type: "+sdkVariable.getType());
-        }
-        return variable;
+        return ProtobufUtils.createVariable(sdkVariable, defaultValue);
       }
     } catch (Exception e) {
       System.out.printf("Unable to evaluate Variable %s due to error: %s", key, e);
@@ -305,74 +241,5 @@ public final class DVCLocalClient {
 
   private boolean isValidServerKey(String serverKey) {
     return serverKey.startsWith("server") || serverKey.startsWith("dvc_server");
-  }
-
-  private NullableString createNullableString(String value)
-  {
-    return value == null 
-        ? NullableString.newBuilder().setIsNull(true).build() 
-        : NullableString.newBuilder().setIsNull(false).setValue(value).build();
-  }
-
-  private NullableDouble createNullableDouble(double value)
-  {
-    return !Double.isNaN(value) ? NullableDouble.newBuilder().setIsNull(false).setValue(value).build() : NullableDouble.newBuilder().setIsNull(true).build();
-  }
-
-  private NullableCustomData createNullableCustomData(Object temp)
-  {
-    if (temp == null)
-    {
-      return NullableCustomData.newBuilder().setIsNull(true).build();
-    }
-    else
-    {
-      Map<String, Object> customData = (Map<String, Object>)temp;
-
-      Map<String,CustomDataValue> values = new HashMap();
-
-      for(Map.Entry<String,Object> entry :  customData.entrySet())
-      {
-        if(entry.getValue() == null)
-        {
-          values.put(entry.getKey(), CustomDataValue.newBuilder().setType(CustomDataType.Null).build());
-
-        }
-        else if (entry.getValue() instanceof String)
-        {
-          String strValue = (String)entry.getValue();
-          values.put(entry.getKey(), CustomDataValue.newBuilder().setType(CustomDataType.Str).setStringValue(strValue).build());
-
-        }
-        else if (entry.getValue() instanceof Number)
-        {
-          double numValue = ((Number)entry.getValue()).doubleValue();
-          values.put(entry.getKey(), CustomDataValue.newBuilder().setType(CustomDataType.Num).setDoubleValue(numValue).build());
-        }
-        else if (entry.getValue() instanceof Boolean)
-        {
-          boolean boolValue = ((Boolean)entry.getValue()).booleanValue();
-          values.put(entry.getKey(), CustomDataValue.newBuilder().setType(CustomDataType.Bool).setBoolValue(boolValue).build());
-        }
-      }
-      return NullableCustomData.newBuilder().putAllValue(values).setIsNull(false).build();
-    }
-  }
-
-  private VariableType_PB typeEnumToVariableTypeProtobuf(TypeEnum type)
-  {
-    switch (type)
-    {
-      case BOOLEAN:
-        return VariableType_PB.Boolean;
-      case STRING:
-        return VariableType_PB.String;
-      case NUMBER:
-        return VariableType_PB.Number;
-      case JSON:
-        return VariableType_PB.JSON;
-      default:
-        throw new IllegalArgumentException("Unknown variable type: "+type);
-    }
   }
 }
