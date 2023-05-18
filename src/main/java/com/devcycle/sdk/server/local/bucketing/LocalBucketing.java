@@ -203,7 +203,7 @@ public class LocalBucketing {
         return bufferData;
     }
 
-    public void storeConfig(String sdkKey, String config) {
+    public synchronized void storeConfig(String sdkKey, String config) {
         unpinAll();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int configAddress = newUint8ArrayParameter(config.getBytes(StandardCharsets.UTF_8));
@@ -213,7 +213,7 @@ public class LocalBucketing {
         fn.accept(sdkKeyAddress, configAddress);
     }
 
-    public void setPlatformData(String platformData) {
+    public synchronized void setPlatformData(String platformData) {
         unpinAll();
         int platformDataAddress = newUint8ArrayParameter(platformData.getBytes(StandardCharsets.UTF_8));
         Func setPlatformDataPtr = linker.get(store, "", "setPlatformDataUTF8").get().func();
@@ -221,7 +221,7 @@ public class LocalBucketing {
         fn.accept(platformDataAddress);
     }
 
-    public void setClientCustomData(String sdkKey, String customData) {
+    public synchronized void setClientCustomData(String sdkKey, String customData) {
         unpinAll();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int customDataAddress = newUint8ArrayParameter(customData.getBytes(StandardCharsets.UTF_8));;
@@ -230,7 +230,7 @@ public class LocalBucketing {
         fn.accept(sdkKeyAddress, customDataAddress);
     }
 
-    public BucketedUserConfig generateBucketedConfig(String sdkKey, User user) throws JsonProcessingException {
+    public synchronized BucketedUserConfig generateBucketedConfig(String sdkKey, User user) throws JsonProcessingException {
         unpinAll();
         String userString = OBJECT_MAPPER.writeValueAsString(user);
 
@@ -249,7 +249,7 @@ public class LocalBucketing {
         return config;
     }
 
-    public String getVariable(String sdkKey, User user, String key, Variable.TypeEnum variableTypeEnum, boolean shouldTrackEvent) throws JsonProcessingException {
+    public synchronized String getVariable(String sdkKey, User user, String key, Variable.TypeEnum variableTypeEnum, boolean shouldTrackEvent) throws JsonProcessingException {
         // need some kind of mutex?
         String userString = OBJECT_MAPPER.writeValueAsString(user);
 
@@ -272,7 +272,7 @@ public class LocalBucketing {
         return variableString;
     }
 
-    public byte[] getVariableForUserProtobuf(byte[] serializedParams){
+    public synchronized byte[] getVariableForUserProtobuf(byte[] serializedParams){
         int paramsAddr = newUint8ArrayParameter(serializedParams);
 
         Func getVariablePtr = linker.get(store, "", "variableForUser_PB").get().func();
@@ -290,7 +290,7 @@ public class LocalBucketing {
         return varBytes;
     }
 
-    public void initEventQueue(String sdkKey, String options) {
+    public synchronized void initEventQueue(String sdkKey, String options) {
         unpinAll();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int optionsAddress = newWasmString(options);
@@ -300,7 +300,7 @@ public class LocalBucketing {
         fn.accept(sdkKeyAddress, optionsAddress);
     }
 
-    public void queueEvent(String sdkKey, String user, String event) {
+    public synchronized void queueEvent(String sdkKey, String user, String event) {
         unpinAll();
         int sdkKeyAddress = newWasmString(sdkKey);
         int userAddress = getPinnedParameter(user);
@@ -311,7 +311,7 @@ public class LocalBucketing {
         fn.accept(sdkKeyAddress, userAddress, eventAddress);
     }
 
-    public void queueAggregateEvent(String sdkKey, String event, String variableVariationMap) {
+    public synchronized void queueAggregateEvent(String sdkKey, String event, String variableVariationMap) {
         unpinAll();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int eventAddress = getPinnedParameter(event);
@@ -322,7 +322,7 @@ public class LocalBucketing {
         fn.accept(sdkKeyAddress, eventAddress, variableVariationMapAddress);
     }
 
-    public FlushPayload[] flushEventQueue(String sdkKey) throws JsonProcessingException {
+    public synchronized FlushPayload[] flushEventQueue(String sdkKey) throws JsonProcessingException {
         unpinAll();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
 
@@ -345,7 +345,7 @@ public class LocalBucketing {
         return payloads;
     }
 
-    public void onPayloadFailure(String sdkKey, String payloadId, boolean retryable) {
+    public synchronized void onPayloadFailure(String sdkKey, String payloadId, boolean retryable) {
         unpinAll();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int payloadIdAddress = newWasmString(payloadId);
@@ -355,7 +355,7 @@ public class LocalBucketing {
         fn.accept(sdkKeyAddress, payloadIdAddress, retryable ? 1 : 0);
     }
 
-    public void onPayloadSuccess(String sdkKey, String payloadId) {
+    public synchronized void onPayloadSuccess(String sdkKey, String payloadId) {
         unpinAll();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int payloadIdAddress = newWasmString(payloadId);
@@ -365,7 +365,7 @@ public class LocalBucketing {
         fn.accept(sdkKeyAddress, payloadIdAddress);
     }
 
-    public int getEventQueueSize(String sdkKey) {
+    public synchronized int getEventQueueSize(String sdkKey) {
         unpinAll();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
 
