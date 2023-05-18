@@ -249,29 +249,6 @@ public class LocalBucketing {
         return config;
     }
 
-    public synchronized String getVariable(String sdkKey, User user, String key, Variable.TypeEnum variableTypeEnum, boolean shouldTrackEvent) throws JsonProcessingException {
-        // need some kind of mutex?
-        String userString = OBJECT_MAPPER.writeValueAsString(user);
-
-        int wasmVariableType = this.variableTypeMap.get(variableTypeEnum);
-
-        unpinAll();
-        int sdkKeyAddress = getSDKKeyAddress(sdkKey);
-        int userAddress = newWasmString(userString);
-        int keyAddress = newWasmString(key);
-
-        Func getVariablePtr = linker.get(store, "", "variableForUser").get().func();
-        WasmFunctions.Function5<Integer, Integer, Integer, Integer, Integer, Integer> variableForUser = WasmFunctions.func(
-                store, getVariablePtr, I32, I32, I32, I32, I32, I32);
-
-        int resultAddress = variableForUser.call(sdkKeyAddress, userAddress, keyAddress, wasmVariableType, shouldTrackEvent ? 1 : 0);
-        if (resultAddress == 0){
-            return null;
-        }
-        String variableString = readWasmString(resultAddress);
-        return variableString;
-    }
-
     public synchronized byte[] getVariableForUserProtobuf(byte[] serializedParams){
         int paramsAddr = newUint8ArrayParameter(serializedParams);
 
