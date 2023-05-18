@@ -2,6 +2,7 @@ package com.devcycle.sdk.server.local.api;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.devcycle.sdk.server.common.model.*;
@@ -11,7 +12,10 @@ import com.devcycle.sdk.server.local.managers.EnvironmentConfigManager;
 import com.devcycle.sdk.server.local.managers.EventQueueManager;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;
+import com.devcycle.sdk.server.local.protobuf.*;
+import com.devcycle.sdk.server.local.utils.ProtobufUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public final class DVCLocalClient {
@@ -83,7 +87,7 @@ public final class DVCLocalClient {
 
   /**
    * Get variable by key for user data
-   * 
+   *
    * @param user         (required)
    * @param key          Variable key (required)
    * @param defaultValue Default value to use if the variable could not be fetched
@@ -119,37 +123,36 @@ public final class DVCLocalClient {
       }
       return defaultVariable;
     }
-    String variableJSON = null;
+
+    VariableType_PB pbVariableType = ProtobufUtils.convertTypeEnumToVariableType(variableType);
+    VariableForUserParams_PB params = VariableForUserParams_PB.newBuilder()
+            .setSdkKey(sdkKey)
+            .setUser(ProtobufUtils.createDVCUserPB(user))
+            .setVariableKey(key)
+            .setVariableType(pbVariableType)
+            .setShouldTrackEvent(true)
+            .build();
+
     try {
-      variableJSON = localBucketing.getVariable(sdkKey, user, key, variableType, true);
-      if (variableJSON == null || variableJSON.isEmpty()) {
+      byte[] paramsBuffer = params.toByteArray();
+      byte[] variableData = localBucketing.getVariableForUserProtobuf(paramsBuffer);
+
+      if (variableData == null || variableData.length == 0) {
         return defaultVariable;
       } else {
-        ObjectMapper mapper = new ObjectMapper();
-        Variable baseVariable = mapper.readValue(variableJSON, Variable.class);
-
-        Variable<T> variable = (Variable<T>) Variable.builder()
-                .key(key)
-                .type(baseVariable.getType())
-                .value(baseVariable.getValue())
-                .defaultValue(defaultValue)
-                .isDefaulted(false)
-                .build();
-        if (variable.getType() != variableType) {
+        SDKVariable_PB sdkVariable = SDKVariable_PB.parseFrom(variableData);
+        if(sdkVariable.getType() != pbVariableType) {
           System.out.printf("Variable type mismatch, returning default value");
           return defaultVariable;
         }
-        variable.setDefaultValue(defaultValue);
-        variable.setIsDefaulted(false);
-        return variable;
+        return ProtobufUtils.createVariable(sdkVariable, defaultValue);
       }
-    } catch(JsonProcessingException jpe){
-      System.out.printf("Unable to parse Variable %s due to JSON error: err=%s, data=", key, jpe.getMessage(), variableJSON);
     } catch (Exception e) {
       System.out.printf("Unable to evaluate Variable %s due to error: %s", key, e);
     }
     return defaultVariable;
   }
+
 
   /**
    * Get all variables by key for user data

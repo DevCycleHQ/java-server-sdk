@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import com.devcycle.sdk.server.common.model.PlatformData;
+import com.devcycle.sdk.server.common.model.Variable;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,7 +49,27 @@ public class LocalBucketingTest {
             String customData = mapper.writeValueAsString(testData);
             localBucketing.setClientCustomData(apiKey, customData);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            Assert.fail("Unexpected exception: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testSetPlatformData(){
+        try {
+            PlatformData platformData = PlatformData.builder().build();
+            String platformDataJSON = mapper.writeValueAsString(platformData);
+            localBucketing.setPlatformData(platformDataJSON);
+        }catch(Exception e){
+            Assert.fail("Unexpected exception: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testStoreConfig(){
+        try {
+            localBucketing.storeConfig(apiKey, testConfigString);
+        }catch(Exception e){
+            Assert.fail("Unexpected exception: " + e.getMessage());
         }
     }
 
@@ -94,4 +116,5 @@ public class LocalBucketingTest {
                 .userId("j_test")
                 .build();
     }
+
 }

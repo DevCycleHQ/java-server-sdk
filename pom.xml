@@ -186,7 +186,16 @@
       <artifactId>wasmtime-java</artifactId>
       <version>${wasmtime-version}</version>
     </dependency>
-
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+      <version>${protobuf-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java-util</artifactId>
+      <version>${protobuf-version}</version>
+    </dependency>
     <!-- test dependencies -->
     <dependency>
       <groupId>junit</groupId>
@@ -210,6 +219,7 @@
     <retrofit-version>2.9.0</retrofit-version>
     <lombok-version>1.18.24</lombok-version>
     <wasmtime-version>0.14.0</wasmtime-version>
+    <protobuf-version>3.23.0</protobuf-version>
     <jackson-version>2.14.2</jackson-version>
     <junit-version>4.13.2</junit-version>
     <mockito-core-version>4.6.1</mockito-core-version>

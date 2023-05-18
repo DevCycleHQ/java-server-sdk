@@ -39,10 +39,22 @@
             },
             {
               "_var": "63125320a4719939fd57cb2b",
-              "value": "ä variationOff"
+              "value": "öé \uD83D\uDC0D ¥ variationOn"
+            },
+            {
+              "_var": "64372363125123fca69d3f7b",
+              "value": {
+                "displayText": "This variation is on",
+                "showDialog": true,
+                "maxUsers": 100
+              }
+            },
+            {
+              "_var": "65272363125123fca69d3a7d",
+              "value": 12345
             }
           ],
-          "_id": "62fbf6566f1ba302829f9e38"
+          "_id": "62fbf6566f1ba302829f9e39"
         },
         {
           "key": "variation-off",
@@ -54,10 +66,22 @@
             },
             {
               "_var": "63125320a4719939fd57cb2b",
-              "value": "ß variationOn"
+              "value": "öé \uD83D\uDC0D ¥ variationOff"
+            },
+            {
+              "_var": "64372363125123fca69d3f7b",
+              "value": {
+                "displayText": "This variation is off",
+                "showDialog": false,
+                "maxUsers": 0
+              }
+            },
+            {
+              "_var": "65272363125123fca69d3a7d",
+              "value": 67890
             }
           ],
-          "_id": "62fbf6566f1ba302829f9e39"
+          "_id": "62fbf6566f1ba302829f9e38"
         }
       ],
       "configuration": {
@@ -126,10 +150,22 @@
       "_id": "63125320a4719939fd57cb2b",
       "key": "string-var",
       "type": "String"
+    },
+    {
+      "_id": "64372363125123fca69d3f7b",
+      "key": "json-var",
+      "type": "JSON"
+    },
+    {
+      "_id": "65272363125123fca69d3a7d",
+      "key": "num-var",
+      "type": "Number"
     }
   ],
   "variableHashes": {
     "a-cool-new-feature": 1868656757,
-    "string-var": 2413071944
+    "string-var": 2413071944,
+    "json-var": 2763925441,
+    "num-var":  3071254410
   }
 }

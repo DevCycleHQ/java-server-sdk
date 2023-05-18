@@ -30,18 +30,23 @@ public class DVCLocalClientTest {
         // spin up a lightweight http server to serve the config and properly initialize the client
         localConfigServer = new LocalConfigServer(TestDataFixtures.SmallConfig());
         localConfigServer.start();
+        client = createClient(TestDataFixtures.SmallConfig());
+    }
 
+    private static DVCLocalClient createClient(String config){
+        localConfigServer.setConfigData(config);
         DVCLocalOptions options = DVCLocalOptions.builder()
                 .configCdnBaseUrl("http://localhost:8000/")
                 .configPollingIntervalMS(60000)
                 .build();
-        client = new DVCLocalClient(apiKey, options);
+        DVCLocalClient client = new DVCLocalClient(apiKey, options);
         try {
             // wait one second for the config to be loaded by the client
             Thread.sleep(1000);
         }catch (Exception e) {
             System.out.println("Failed to sleep: " + e.getMessage());
         }
+        return client;
     }
 
     @AfterClass
@@ -63,6 +68,48 @@ public class DVCLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertEquals("variationOn", var.getValue());
     }
+
+    @Test
+    public void variableBooleanValueTest() {
+        User user = getUser();
+        user.setEmail("giveMeVariationOn@email.com");
+        DVCLocalClient myClient = createClient(TestDataFixtures.SmallConfig());
+        Variable<Boolean> var = myClient.variable(user, "a-cool-new-feature", false);
+        Assert.assertNotNull(var);
+        Assert.assertFalse(var.getIsDefaulted());
+        Assert.assertEquals(true, var.getValue());
+    }
+
+    @Test
+    public void variableNumberValueTest() {
+        User user = getUser();
+        DVCLocalClient myClient = createClient(TestDataFixtures.SmallConfig());
+        Variable<Double> var = myClient.variable(user, "num-var", 0.0);
+        Assert.assertNotNull(var);
+        Assert.assertFalse(var.getIsDefaulted());
+        Assert.assertEquals(12345.0, var.getValue().doubleValue(), 0.0);
+    }
+
+    @Test
+    public void variableJsonValueTest() {
+        User user = getUser();
+        user.setEmail("giveMeVariationOn@email.com");
+        DVCLocalClient myClient = createClient(TestDataFixtures.SmallConfig());
+
+        Map<String,Object> defaultJSON = new HashMap();
+        defaultJSON.put("displayText", "This variation is off");
+        defaultJSON.put("showDialog", false);
+        defaultJSON.put("maxUsers", 0);
+
+        Variable<Object> var = myClient.variable(user, "json-var", defaultJSON);
+        Assert.assertNotNull(var);
+        Assert.assertFalse(var.getIsDefaulted());
+        Map<String,Object> variableData = (Map<String,Object>)var.getValue();
+        Assert.assertEquals("This variation is on", variableData.get("displayText"));
+        Assert.assertEquals(true, variableData.get("showDialog"));
+        Assert.assertEquals(100, variableData.get("maxUsers"));
+    }
+
     @Test
     public void variableTestNotInitialized(){
         // NOTE  - this test will generate some additional logging noise from the EventQueue
@@ -72,6 +119,29 @@ public class DVCLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertTrue(var.getIsDefaulted());
         Assert.assertEquals("default string", var.getValue());
+    }
+
+    @Test
+    public void variableTestWithCustomData(){
+        User user = getUser();
+        user.setEmail("giveMeVariationOn@email.com");
+
+        Map<String,Object> customData = new HashMap();
+        customData.put("boolProp", true);
+        customData.put("intProp", 123);
+        customData.put("stringProp", "abc");
+        user.setCustomData(customData);
+
+        Map<String,Object> privateCustomData = new HashMap();
+        privateCustomData.put("boolProp", false);
+        privateCustomData.put("intProp", 789);
+        privateCustomData.put("stringProp", "xyz");
+        user.setPrivateCustomData(privateCustomData);
+
+        Variable<String> var = client.variable(user, "string-var", "default string");
+        Assert.assertNotNull(var);
+        Assert.assertFalse(var.getIsDefaulted());
+        Assert.assertEquals("variationOn", var.getValue());
     }
 
     @Test
@@ -133,6 +203,18 @@ public class DVCLocalClientTest {
     }
 
     @Test
+    public void variableValueSpecialCharacters() {
+        User user = getUser();
+        DVCLocalClient myClient = createClient(TestDataFixtures.SmallConfigWithSpecialCharacters());
+
+        user.setEmail("giveMeVariationOn@email.com");
+        Assert.assertEquals("öé \uD83D\uDC0D ¥ variationOn", myClient.variableValue(user, "string-var", "default string"));
+
+        user.setEmail("giveMeVariationOff@email.com");
+        Assert.assertEquals("öé \uD83D\uDC0D ¥ variationOff", myClient.variableValue(user, "string-var", "default string"));
+    }
+
+    @Test
     public void allFeaturesTest() {
         User user = getUser();
         Map<String, Feature> features = client.allFeatures(user);
@@ -146,7 +228,9 @@ public class DVCLocalClientTest {
         Map<String, BaseVariable> variables = client.allVariables(user);
         Assert.assertEquals(variables.get("string-var").getId(), "63125320a4719939fd57cb2b");
         Assert.assertEquals(variables.get("a-cool-new-feature").getId(), "62fbf6566f1ba302829f9e34");
-        Assert.assertEquals(variables.size(), 2);
+        Assert.assertEquals(variables.get("num-var").getId(), "65272363125123fca69d3a7d");
+        Assert.assertEquals(variables.get("json-var").getId(), "64372363125123fca69d3f7b");
+        Assert.assertEquals(variables.size(), 4);
     }
 
     @Test

@@ -21,6 +21,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.extern.jackson.Jacksonized;
 
+import java.util.Map;
+
 @Data
 @Builder
 @Jacksonized
@@ -59,11 +61,11 @@ public class User {
 
   @Schema(description = "User's custom data to target the user with, data will be logged to DevCycle for use in dashboard.")
   @JsonProperty("customData")
-  private Object customData;
+  private Map<String, Object> customData;
 
   @Schema(description = "User's custom data to target the user with, data will not be logged to DevCycle only used for feature bucketing.")
   @JsonProperty("privateCustomData")
-  private Object privateCustomData;
+  private Map<String, Object> privateCustomData;
 
   @Schema(description = "Date the user was created, Unix epoch timestamp format")
   @JsonProperty("createdDate")
