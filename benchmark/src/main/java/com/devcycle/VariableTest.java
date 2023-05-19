@@ -9,7 +9,7 @@ import com.devcycle.sdk.server.local.model.DVCLocalOptions;
 import java.io.IOException;
 
 /**
- * A simple loop to test and profile vriable evaulation of the DVC CLient
+ * A simple loop to test and profile variable evaluation of the DVCClient
  */
 public class VariableTest {
     public static void main(String[] args) throws IOException {
@@ -20,13 +20,15 @@ public class VariableTest {
                 .eventFlushIntervalMS(5000)
                 .configCdnBaseUrl("http://localhost:8000/config/")
                 .eventsApiBaseUrl("http://localhost:8000/event/")
+                .disableCustomEventLogging(false)
+                .disableAutomaticEventLogging(false)
                 .build();
 
         System.out.println("Initializing DVC Client version: " + PlatformData.builder().build().getSdkVersion());
         System.out.print("Setup Client");
-        DVCLocalClient dvcClient = new DVCLocalClient("dvc_server_some_sdk_key_here", dvcLocalOptions);
+        DVCLocalClient dvcClient = new DVCLocalClient("dvc_server_some_sdk_key", dvcLocalOptions);
 
-        System.out.print("Wait config to load");
+        System.out.print("Wait for config to load");
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
@@ -34,13 +36,12 @@ public class VariableTest {
         }
 
         long startTimeNS = System.nanoTime();
-        int iterations = 10000;
+        int iterations = 100000;
         int defaultCount = 0;
         int nullVarCount = 0;
+        User user = User.builder().userId("1234567890").email("some.user@gmail.com").build();
         for(int i = 0; i < iterations; i++) {
-            User user = User.builder().userId("12345").email("chris.hoefgen@taplytics.com").build();
             Variable<Boolean> var = dvcClient.variable(user, "v-key-25", false);
-
             if( var == null) {
                 nullVarCount++;
             }
