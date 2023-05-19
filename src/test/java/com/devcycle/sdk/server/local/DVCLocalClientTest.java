@@ -41,10 +41,13 @@ public class DVCLocalClientTest {
                 .build();
         DVCLocalClient client = new DVCLocalClient(apiKey, options);
         try {
-            // wait one second for the config to be loaded by the client
-            Thread.sleep(1000);
+            while(!client.isInitialized())
+            {
+                // wait for the client to load the config and initialize
+                Thread.sleep(100);
+            }
         }catch (Exception e) {
-            System.out.println("Failed to sleep: " + e.getMessage());
+            // no-op
         }
         return client;
     }

@@ -1,10 +1,5 @@
 package com.devcycle.sdk.server.local.api;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.common.model.Variable.TypeEnum;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
@@ -12,11 +7,15 @@ import com.devcycle.sdk.server.local.managers.EnvironmentConfigManager;
 import com.devcycle.sdk.server.local.managers.EventQueueManager;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;
-import com.devcycle.sdk.server.local.protobuf.*;
+import com.devcycle.sdk.server.local.protobuf.SDKVariable_PB;
+import com.devcycle.sdk.server.local.protobuf.VariableForUserParams_PB;
+import com.devcycle.sdk.server.local.protobuf.VariableType_PB;
 import com.devcycle.sdk.server.local.utils.ProtobufUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.Collections;
+import java.util.Map;
 
 public final class DVCLocalClient {
 
@@ -28,7 +27,6 @@ public final class DVCLocalClient {
 
   private EventQueueManager eventQueueManager;
 
-  private Boolean isInitialized = false;
 
   public DVCLocalClient(String sdkKey) {
     this(sdkKey, DVCLocalOptions.builder().build());
@@ -51,7 +49,16 @@ public final class DVCLocalClient {
     } catch (Exception e) {
       System.out.printf("Error creating event queue due to error: %s%n", e.getMessage());
     }
-    isInitialized = true;
+  }
+
+  /**
+   * @return true if the DVCClient is fully initialized and has successfully loaded a configuration
+   */
+  public boolean isInitialized() {
+    if(configManager != null) {
+      return configManager.isConfigInitialized();
+    }
+    return false;
   }
 
   /**
@@ -60,6 +67,10 @@ public final class DVCLocalClient {
    * @param user (required)
    */
   public Map<String, Feature> allFeatures(User user) {
+    if(!isInitialized()) {
+      return Collections.emptyMap();
+    }
+
     validateUser(user);
     BucketedUserConfig bucketedUserConfig = null;
 
@@ -114,7 +125,7 @@ public final class DVCLocalClient {
             .isDefaulted(true)
             .build();
 
-    if (!configManager.isConfigInitialized() || !isInitialized) {
+    if (!isInitialized()) {
       System.out.println("Variable called before DVCClient has initialized, returning default value");
       try {
         eventQueueManager.queueAggregateEvent(Event.builder().type("aggVariableDefaulted").target(key).build(), null);
@@ -162,7 +173,7 @@ public final class DVCLocalClient {
   public Map<String, BaseVariable> allVariables(User user) {
     validateUser(user);
 
-    if (!isInitialized) {
+    if (!isInitialized()) {
       return Collections.emptyMap();
     }
 
@@ -197,7 +208,7 @@ public final class DVCLocalClient {
   }
 
   public void setClientCustomData(Map<String,Object> customData) {
-    if (!isInitialized || !configManager.isConfigInitialized())
+    if (!isInitialized())
     {
      System.out.println("SetClientCustomData called before DVCClient has initialized");
      return;
@@ -219,9 +230,6 @@ public final class DVCLocalClient {
    * 
    */
   public void close() {
-    if (!isInitialized) {
-      return;
-    }
     if (configManager != null) {
       configManager.cleanup();
     }
