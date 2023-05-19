@@ -25,7 +25,7 @@ A local web server (see `MockServer.java`) is created to replicate DevCycle conf
 You can run the benchmark tool by executing the following commands:
 
 ```bash
-mvn clean verify
+mvn clean install
 
 java -jar target/java-server-sdk-benchmarks.jar
 ````
@@ -62,6 +62,12 @@ Then update the `benchmark/pom.xml` to point to that JAR file but adding a `syst
     <systemPath>${project.basedir}/../build/libs/java-server-sdk-1.4.0.jar</systemPath>
 </dependency>
 ```
+
+## Profiling the SDK
+
+`VariableTest.java` is a simple test that can be used to profile the SDK. It utilizes the same structure and data as the benchmark, but without the JMH complexity. 
+
+Just execute the 
 
 ## Contributing
 

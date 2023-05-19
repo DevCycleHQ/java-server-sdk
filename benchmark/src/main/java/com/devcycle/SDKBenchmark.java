@@ -59,6 +59,9 @@ public class SDKBenchmark {
     }
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
+    @Warmup(iterations = 1)
+    @Measurement(iterations = 5)
+    @Fork(1)
     @OutputTimeUnit(TimeUnit.NANOSECONDS)
     public void variableBenchmark(BenchmarkState state) {
         User user = User.builder().userId("12345").email("some.user@gmail.com").build();
@@ -71,6 +74,9 @@ public class SDKBenchmark {
             System.err.println("Unexpected default variable");
         }
     }
+    /**
+     * Main method is used when running the benchmark manually from the IDE
+     */
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
                 .include(SDKBenchmark.class.getSimpleName())
