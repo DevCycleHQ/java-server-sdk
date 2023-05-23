@@ -25,8 +25,12 @@ public class Project {
             public String poweredByAlignment;
         }
 
+        static class SDKTypeVisibility {
+            public Boolean enabledInFeatureSettings;
+        }
+
         public EdgeDBSettings edgeDB;
         public OptInSettings optIn;
-
+        public SDKTypeVisibility sdkTypeVisibility;
     }
 }

@@ -16,6 +16,9 @@
           "primary": "#531cd9",
           "secondary": "#16dec0"
         }
+      },
+      "sdkTypeVisibility": {
+        "enabledInFeatureSettings": true
       }
     }
   },
