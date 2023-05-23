@@ -34,11 +34,11 @@ public class ProtobufUtils {
 
 
     /**
-     * Create the appropriate Variable<T> instance from the protobuf SDKVariable_PB object provided
+     * Create the appropriate Variable instance from the protobuf SDKVariable_PB object provided
      *
      * @param sdkVariable
      * @param defaultValue
-     * @return A new Variable<T> instance
+     * @return A new Variable instance
      */
     public static <T> Variable<T> createVariable(SDKVariable_PB sdkVariable, T defaultValue) throws JsonProcessingException {
         Variable<T> variable;
