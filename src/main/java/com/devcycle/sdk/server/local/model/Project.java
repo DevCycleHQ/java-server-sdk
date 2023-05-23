@@ -1,7 +1,5 @@
 package com.devcycle.sdk.server.local.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 public class Project {
     public String _id;
     public String key;

@@ -1,7 +1,17 @@
 package com.devcycle.sdk.server.local.bucketing;
 
-import static io.github.kawamuray.wasmtime.WasmValType.F64;
-import static io.github.kawamuray.wasmtime.WasmValType.I32;
+import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.common.model.Variable;
+import com.devcycle.sdk.server.local.model.BucketedUserConfig;
+import com.devcycle.sdk.server.local.model.FlushPayload;
+import com.devcycle.sdk.server.local.utils.ByteConversionUtils;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import io.github.kawamuray.wasmtime.Module;
+import io.github.kawamuray.wasmtime.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,18 +21,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.devcycle.sdk.server.common.model.User;
-import com.devcycle.sdk.server.common.model.Variable;
-import com.devcycle.sdk.server.local.model.BucketedUserConfig;
-import com.devcycle.sdk.server.local.model.FlushPayload;
-import com.devcycle.sdk.server.local.utils.ByteConversionUtils;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import com.fasterxml.jackson.databind.SerializationFeature;
-import io.github.kawamuray.wasmtime.*;
-import io.github.kawamuray.wasmtime.Module;
+import static io.github.kawamuray.wasmtime.WasmValType.F64;
+import static io.github.kawamuray.wasmtime.WasmValType.I32;
 
 public class LocalBucketing {
     Store<Void> store; // WASM compilation environment
@@ -245,6 +245,7 @@ public class LocalBucketing {
         String bucketedConfigString = readWasmString(resultAddress);
 
         ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         BucketedUserConfig config = objectMapper.readValue(bucketedConfigString, BucketedUserConfig.class);
         return config;
     }
