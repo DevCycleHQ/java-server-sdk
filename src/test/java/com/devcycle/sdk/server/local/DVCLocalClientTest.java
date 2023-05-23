@@ -41,12 +41,18 @@ public class DVCLocalClientTest {
                 .build();
         DVCLocalClient client = new DVCLocalClient(apiKey, options);
         try {
+            int loops = 0;
             while(!client.isInitialized())
             {
                 // wait for the client to load the config and initialize
                 Thread.sleep(100);
+                loops++;
+                // wait a max 10 seconds to initialize client before failing completely
+                 if(loops >= 100){
+                     throw new RuntimeException("Client failed to initialize in 10 seconds");
+                 }
             }
-        }catch (Exception e) {
+        }catch (InterruptedException e) {
             // no-op
         }
         return client;
