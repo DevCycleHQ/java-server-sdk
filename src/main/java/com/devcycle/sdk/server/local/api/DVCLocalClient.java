@@ -15,7 +15,6 @@ import com.devcycle.sdk.server.local.model.DVCLocalOptions;
 import com.devcycle.sdk.server.local.protobuf.*;
 import com.devcycle.sdk.server.local.utils.ProtobufUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public final class DVCLocalClient {
@@ -40,6 +39,10 @@ public final class DVCLocalClient {
     }
     if(!isValidServerKey(sdkKey)) {
       throw new IllegalArgumentException("Invalid sdk key provided. Please call initialize with a valid server sdk key");
+    }
+
+    if(!isValidRuntime()){
+        System.out.println("Invalid architecture. The DVCLocalClient requires a 64-bit, x86 runtime environment.");
     }
 
     localBucketing.setPlatformData(PlatformData.builder().build().toString());
@@ -241,5 +244,11 @@ public final class DVCLocalClient {
 
   private boolean isValidServerKey(String serverKey) {
     return serverKey.startsWith("server") || serverKey.startsWith("dvc_server");
+  }
+
+  private boolean isValidRuntime() {
+    String arch = System.getProperty("os.arch");
+    String model = System.getProperty("sun.arch.data.model");
+    return arch.contains("x86") && model.contains("64");
   }
 }
