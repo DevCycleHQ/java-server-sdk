@@ -1,5 +1,8 @@
 package com.devcycle.sdk.server.local.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Project {
     public String _id;
     public String key;
@@ -25,8 +28,12 @@ public class Project {
             public String poweredByAlignment;
         }
 
+        static class SDKTypeVisibility {
+            public Boolean enabledInFeatureSettings;
+        }
+
         public EdgeDBSettings edgeDB;
         public OptInSettings optIn;
-
+        public SDKTypeVisibility sdkTypeVisibility;
     }
 }
