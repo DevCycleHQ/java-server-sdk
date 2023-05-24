@@ -152,7 +152,22 @@ public class DVCLocalClientTest {
         Assert.assertFalse(var.getIsDefaulted());
         Assert.assertEquals("variationOn", var.getValue());
     }
+    @Test
+    public void variableTestBucketingWithCustomData(){
+        // Make sure we are properly sending custom data to the WASM so the user is bucketed correctly
 
+        DVCLocalClient myClient = createClient(TestDataFixtures.SmallConfigWithCustomDataBucketing());
+        User user = getUser();
+
+        Map<String,Object> customData = new HashMap();
+        customData.put("should-bucket", true);
+        user.setCustomData(customData);
+
+        Variable<String> var = myClient.variable(user, "unicode-var", "default string");
+        Assert.assertNotNull(var);
+        Assert.assertFalse(var.getIsDefaulted());
+        Assert.assertEquals("↑↑↓↓←→←→BA 🤖", var.getValue());
+    }
     @Test
     public void variableTestUnknownVariableKey(){
         Variable<Boolean> var = client.variable(getUser(), "some-var-that-doesnt-exist", true);

@@ -28,7 +28,7 @@ public class ProtobufUtils {
                 .setAppBuild(createNullableDouble(appBuild))
                 .setAppVersion(createNullableString(user.getAppVersion()))
                 .setCustomData(createNullableCustomData(user.getCustomData()))
-                .setCustomData(createNullableCustomData(user.getPrivateCustomData()))
+                .setPrivateCustomData(createNullableCustomData(user.getPrivateCustomData()))
                 .build();
     }
 
