@@ -40,4 +40,8 @@ public class TestDataFixtures {
     public static String SmallConfigWithSpecialCharacters() {
         return loadConfigData("fixture_small_config_special_characters.json");
     }
+
+    public static String SmallConfigWithCustomDataBucketing() {
+        return loadConfigData("fixture_small_config_custom_data_bucketing.json");
+    }
 }
