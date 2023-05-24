@@ -267,6 +267,23 @@ public class DVCLocalClientTest {
         client.setClientCustomData(testData);
     }
 
+    @Test
+    public void setClientCustomDataWithBucketing() {
+        DVCLocalClient myClient = createClient(TestDataFixtures.SmallConfigWithCustomDataBucketing());
+
+        // set the global custom data
+        Map<String,Object> customData = new HashMap();
+        customData.put("should-bucket", true);
+        myClient.setClientCustomData(customData);
+
+        // make sure the user get bucketed correctly based on the global custom data
+        User user = getUser();
+        Variable<String> var = myClient.variable(user, "unicode-var", "default string");
+        Assert.assertNotNull(var);
+        Assert.assertFalse(var.getIsDefaulted());
+        Assert.assertEquals("↑↑↓↓←→←→BA 🤖", var.getValue());
+    }
+
     private User getUser() {
         return User.builder()
                 .userId("j_test")
