@@ -45,17 +45,15 @@ public class EventQueueManager {
     }
 
     private void setupScheduler() {
-        Runnable getConfigRunnable = new Runnable() {
-            public void run() {
-                try {
-                    flushEvents();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        Runnable flushEventsRunnable = () -> {
+            try {
+                flushEvents();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         };
 
-        scheduler.scheduleAtFixedRate(getConfigRunnable, 0, this.eventFlushIntervalMS, TimeUnit.MILLISECONDS);
+        scheduler.scheduleAtFixedRate(flushEventsRunnable, 0, this.eventFlushIntervalMS, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -173,6 +171,7 @@ public class EventQueueManager {
     }
 
     public void cleanup() {
+        // Flush any remaining events
         try {
             flushEvents();
         } catch (Exception e) {
