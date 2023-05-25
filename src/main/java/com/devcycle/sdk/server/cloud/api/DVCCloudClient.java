@@ -153,8 +153,42 @@ public final class DVCCloudClient {
             .build();
 
     Call<DVCResponse> response = api.track(userAndEvents, dvcOptions.getEnableEdgeDB());
-    getResponse(response);
+    getResponseWithRetries(response, 5);
   }
+
+
+  private <T> T getResponseWithRetries(Call<T> call, int maxRetries) throws DVCException {
+    int attempt = 0;
+    do {
+      try {
+        return getResponse(call);
+      } catch (DVCException e) {
+        attempt++;
+
+        // if out of retries or this is an unauthorized error, throw up exception
+        if (attempt >= maxRetries || e.getHttpResponseCode() == HttpResponseCode.UNAUTHORIZED) {
+          throw e;
+        }
+
+        try {
+          // sleep for a bit before retrying
+          long waitIntervalMS = (long) (10 * Math.pow(2, attempt));
+          Thread.sleep(waitIntervalMS);
+        } catch (InterruptedException ex) {
+          // no-op
+        }
+
+        // prep the call for a retry
+        call = call.clone();
+      }
+    }while (attempt < maxRetries);
+
+    // getting here should not be possible
+    ErrorResponse errorResponse = ErrorResponse.builder().build();
+    errorResponse.setMessage("Out of retry attempts");
+    throw new DVCException(HttpResponseCode.SERVER_ERROR, errorResponse);
+  }
+
 
   private <T> T getResponse(Call<T> call) throws DVCException {
     ErrorResponse errorResponse = ErrorResponse.builder().build();
@@ -170,15 +204,15 @@ public final class DVCCloudClient {
     HttpResponseCode httpResponseCode = HttpResponseCode.byCode(response.code());
     errorResponse.setMessage("Unknown error");
 
-      if (response.errorBody() != null) {
-        try {
-          errorResponse = OBJECT_MAPPER.readValue(response.errorBody().string(), ErrorResponse.class);
-        } catch (IOException e) {
-          errorResponse.setMessage(e.getMessage());
-          throw new DVCException(httpResponseCode, errorResponse);
-        }
+    if (response.errorBody() != null) {
+      try {
+        errorResponse = OBJECT_MAPPER.readValue(response.errorBody().string(), ErrorResponse.class);
+      } catch (IOException e) {
+        errorResponse.setMessage(e.getMessage());
         throw new DVCException(httpResponseCode, errorResponse);
       }
+      throw new DVCException(httpResponseCode, errorResponse);
+    }
 
     if (response.body() == null) {
       throw new DVCException(httpResponseCode, errorResponse);
@@ -188,7 +222,7 @@ public final class DVCCloudClient {
       return response.body();
     } else {
       if (httpResponseCode == HttpResponseCode.UNAUTHORIZED) {
-        errorResponse.setMessage("API Key is unauthorized");
+        errorResponse.setMessage("Invalid sdk key");
       } else if (!response.message().equals("")) {
         try {
           errorResponse = OBJECT_MAPPER.readValue(response.message(), ErrorResponse.class);
