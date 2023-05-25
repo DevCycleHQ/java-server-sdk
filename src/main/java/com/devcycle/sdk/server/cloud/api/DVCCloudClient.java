@@ -28,6 +28,14 @@ public final class DVCCloudClient {
   }
 
   public DVCCloudClient(String sdkKey, DVCCloudOptions options) {
+    if(sdkKey == null || sdkKey.equals("")) {
+      throw new IllegalArgumentException("Missing sdk key! Call initialize with a valid sdk key");
+    }
+
+    if(!isValidServerKey(sdkKey)) {
+      throw new IllegalArgumentException("Invalid sdk key provided. Please call initialize with a valid server sdk key");
+    }
+
     this.dvcOptions = options;
     api = new DVCCloudApiClient(sdkKey, options).initialize();
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -192,6 +200,10 @@ public final class DVCCloudClient {
 
       throw new DVCException(httpResponseCode, errorResponse);
     }
+  }
+
+  private boolean isValidServerKey(String serverKey) {
+    return serverKey.startsWith("server") || serverKey.startsWith("dvc_server");
   }
 
   private void validateUser(User user) {
