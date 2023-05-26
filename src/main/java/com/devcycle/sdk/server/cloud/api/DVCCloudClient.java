@@ -8,6 +8,7 @@ import com.devcycle.sdk.server.common.model.Variable.TypeEnum;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -29,11 +30,11 @@ public final class DVCCloudClient {
 
   public DVCCloudClient(String sdkKey, DVCCloudOptions options) {
     if(sdkKey == null || sdkKey.equals("")) {
-      throw new IllegalArgumentException("Missing sdk key! Call initialize with a valid sdk key");
+      throw new IllegalArgumentException("Missing environment key! Call initialize with a valid environment key");
     }
 
     if(!isValidServerKey(sdkKey)) {
-      throw new IllegalArgumentException("Invalid sdk key provided. Please call initialize with a valid server sdk key");
+      throw new IllegalArgumentException("Invalid environment key provided. Please call initialize with a valid server environment key");
     }
 
     this.dvcOptions = options;
@@ -96,7 +97,7 @@ public final class DVCCloudClient {
 
     try {
       Call<Variable> response = api.getVariableByKey(user, key, dvcOptions.getEnableEdgeDB());
-      variable = getResponse(response);
+      variable = getResponseWithRetries(response, 5);
       if (variable.getType() != variableType) {
         throw new IllegalArgumentException("Variable type mismatch, returning default value");
       }
@@ -143,7 +144,7 @@ public final class DVCCloudClient {
   public void track(User user, Event event) throws DVCException {
     validateUser(user);
 
-    if (event == null || event.getType().equals("")) {
+    if (event == null || event.getType() == null || event.getType().equals("")) {
       throw new IllegalArgumentException("Invalid Event");
     }
 
@@ -158,6 +159,7 @@ public final class DVCCloudClient {
 
 
   private <T> T getResponseWithRetries(Call<T> call, int maxRetries) throws DVCException {
+    // attempt 0 is the initial request, attempt > 0 are all retries
     int attempt = 0;
     do {
       try {
@@ -166,12 +168,12 @@ public final class DVCCloudClient {
         attempt++;
 
         // if out of retries or this is an unauthorized error, throw up exception
-        if (attempt >= maxRetries || e.getHttpResponseCode() == HttpResponseCode.UNAUTHORIZED) {
+        if (attempt > maxRetries || !e.isRetryable()) {
           throw e;
         }
 
         try {
-          // sleep for a bit before retrying
+          // exponential backoff
           long waitIntervalMS = (long) (10 * Math.pow(2, attempt));
           Thread.sleep(waitIntervalMS);
         } catch (InterruptedException ex) {
@@ -181,9 +183,9 @@ public final class DVCCloudClient {
         // prep the call for a retry
         call = call.clone();
       }
-    }while (attempt < maxRetries);
+    }while (attempt <= maxRetries);
 
-    // getting here should not be possible
+    // getting here should not happen, but is technically possible
     ErrorResponse errorResponse = ErrorResponse.builder().build();
     errorResponse.setMessage("Out of retry attempts");
     throw new DVCException(HttpResponseCode.SERVER_ERROR, errorResponse);
@@ -196,7 +198,12 @@ public final class DVCCloudClient {
 
     try {
       response = call.execute();
+    } catch(MismatchedInputException mie) {
+      // got a badly formatted JSON response from the server
+      errorResponse.setMessage(mie.getMessage());
+      throw new DVCException(HttpResponseCode.NOT_FOUND, errorResponse);
     } catch (IOException e) {
+      // issues reaching the server or reading the response
       errorResponse.setMessage(e.getMessage());
       throw new DVCException(HttpResponseCode.byCode(500), errorResponse);
     }

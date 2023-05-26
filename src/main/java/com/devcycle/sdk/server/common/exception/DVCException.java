@@ -15,4 +15,8 @@ public class DVCException extends Exception {
         this.httpResponseCode = httpResponseCode;
         this.errorResponse = errorResponse;
     }
+
+    public boolean isRetryable() {
+        return httpResponseCode.code() >= HttpResponseCode.SERVER_ERROR.code();
+    }
 }
