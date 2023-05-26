@@ -52,7 +52,7 @@ public final class EnvironmentConfigManager {
       public void run() {
         try {
           getConfig();
-        } catch (DVCException | JsonProcessingException e) {
+        } catch (DVCException e) {
           e.printStackTrace();
         }
       }
@@ -65,14 +65,47 @@ public final class EnvironmentConfigManager {
     return config != null;
   }
 
-  private ProjectConfig getConfig() throws DVCException, JsonProcessingException {
+  private ProjectConfig getConfig() throws DVCException {
     Call<ProjectConfig> config = this.configApiClient.getConfig(this.sdkKey, this.configETag);
-
-    this.config = getConfigResponse(config);
+    System.out.println("Retrieving Config: " + this.sdkKey);
+    this.config = getResponseWithRetries(config, 1);
     return this.config;
   }
 
-  private ProjectConfig getConfigResponse(Call<ProjectConfig> call) throws DVCException, JsonProcessingException {
+  private ProjectConfig getResponseWithRetries(Call<ProjectConfig> call, int maxRetries) throws DVCException {
+    // attempt 0 is the initial request, attempt > 0 are all retries
+    int attempt = 0;
+    do {
+      try {
+        return getConfigResponse(call);
+      } catch (DVCException e) {
+        attempt++;
+
+        // if out of retries or this is an unauthorized error, throw up exception
+        if (attempt > maxRetries || !e.isRetryable()) {
+          throw e;
+        }
+
+        try {
+          // exponential backoff
+          long waitIntervalMS = (long) (10 * Math.pow(2, attempt));
+          Thread.sleep(waitIntervalMS);
+        } catch (InterruptedException ex) {
+          // no-op
+        }
+
+        // prep the call for a retry
+        call = call.clone();
+      }
+    }while (attempt <= maxRetries);
+
+    // getting here should not happen, but is technically possible
+    ErrorResponse errorResponse = ErrorResponse.builder().build();
+    errorResponse.setMessage("Out of retry attempts");
+    throw new DVCException(HttpResponseCode.SERVER_ERROR, errorResponse);
+  }
+
+  private ProjectConfig getConfigResponse(Call<ProjectConfig> call) throws DVCException {
     ErrorResponse errorResponse = ErrorResponse.builder().build();
     Response<ProjectConfig> response;
 
@@ -97,7 +130,8 @@ public final class EnvironmentConfigManager {
           System.out.printf("Unable to parse config with etag: %s. Using cache, etag %s%n", currentETag, this.configETag);
           return this.config;
         } else {
-          throw e;
+          errorResponse.setMessage(e.getMessage());
+          throw new DVCException(HttpResponseCode.SERVER_ERROR, errorResponse);
         }
       }
       this.configETag = currentETag;
