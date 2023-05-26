@@ -235,14 +235,16 @@ public class LocalBucketing {
         String userString = OBJECT_MAPPER.writeValueAsString(user);
 
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
-        int userAddress = newWasmString(userString);
+        int userAddress = newUint8ArrayParameter(userString.getBytes(StandardCharsets.UTF_8));
 
-        Func generateBucketedConfigForUserPtr = linker.get(store, "", "generateBucketedConfigForUser").get().func();
+        Func generateBucketedConfigForUserPtr = linker.get(store, "", "generateBucketedConfigForUserUTF8").get().func();
         WasmFunctions.Function2<Integer, Integer, Integer> generateBucketedConfigForUser = WasmFunctions.func(
                 store, generateBucketedConfigForUserPtr, I32, I32, I32);
 
         int resultAddress = generateBucketedConfigForUser.call(sdkKeyAddress, userAddress);
-        String bucketedConfigString = readWasmString(resultAddress);
+
+        byte[] bucketConfigBytes = readAssemblyScriptUint8Array(resultAddress);
+        String bucketedConfigString = new String(bucketConfigBytes, StandardCharsets.UTF_8);
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

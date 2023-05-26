@@ -268,7 +268,7 @@ public class DVCLocalClientTest {
     }
 
     @Test
-    public void setClientCustomDataWithBucketing() {
+    public void SetClientCustomDataWithBucketingTest() {
         DVCLocalClient myClient = createClient(TestDataFixtures.SmallConfigWithCustomDataBucketing());
 
         // set the global custom data
@@ -282,6 +282,16 @@ public class DVCLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertFalse(var.getIsDefaulted());
         Assert.assertEquals("↑↑↓↓←→←→BA 🤖", var.getValue());
+    }
+
+    @Test
+    public void allFeaturesWithSpecialCharsTest() {
+        DVCLocalClient myClient = createClient(TestDataFixtures.SmallConfigWithSpecialCharacters());
+        // make sure the user get bucketed correctly based on the global custom data
+        User user = getUser();
+        Map<String,Feature> features = myClient.allFeatures(user);
+        Assert.assertNotNull(features);
+        Assert.assertEquals(features.size(), 1);
     }
 
     private User getUser() {
