@@ -33,6 +33,7 @@ public final class EnvironmentConfigManager {
 
   private String sdkKey;
   private int pollingIntervalMS;
+  private boolean pollingEnabled = true;
 
   public EnvironmentConfigManager(String sdkKey, LocalBucketing localBucketing, DVCLocalOptions options) {
     this.sdkKey = sdkKey;
@@ -51,7 +52,9 @@ public final class EnvironmentConfigManager {
     Runnable getConfigRunnable = new Runnable() {
       public void run() {
         try {
-          getConfig();
+          if(pollingEnabled){
+            getConfig();
+          }
         } catch (DVCException e) {
           System.out.println("Failed to load config: " + e.getMessage());
         }
@@ -78,10 +81,11 @@ public final class EnvironmentConfigManager {
       try {
         return getConfigResponse(call);
       } catch (DVCException e) {
+
         attempt++;
 
         // if out of retries or this is an unauthorized error, throw up exception
-        if (attempt > maxRetries || !e.isRetryable()) {
+        if ( !e.isRetryable() || attempt > maxRetries) {
           throw e;
         }
 
@@ -96,7 +100,7 @@ public final class EnvironmentConfigManager {
         // prep the call for a retry
         call = call.clone();
       }
-    }while (attempt <= maxRetries);
+    }while (attempt <= maxRetries && pollingEnabled);
 
     // getting here should not happen, but is technically possible
     ErrorResponse errorResponse = ErrorResponse.builder().build();
@@ -114,7 +118,7 @@ public final class EnvironmentConfigManager {
       // Got a valid status code but the response body was not valid json,
       // need to ignore this attempt and let the polling retry
       errorResponse.setMessage(badJsonExc.getMessage());
-      throw new DVCException(HttpResponseCode.byCode(204), errorResponse);
+      throw new DVCException(HttpResponseCode.NO_CONTENT, errorResponse);
     } catch (IOException e) {
       errorResponse.setMessage(e.getMessage());
       throw new DVCException(HttpResponseCode.byCode(500), errorResponse);
@@ -147,6 +151,9 @@ public final class EnvironmentConfigManager {
       if (response.errorBody() != null) {
         try {
           errorResponse = OBJECT_MAPPER.readValue(response.errorBody().string(), ErrorResponse.class);
+        } catch (JsonProcessingException e) {
+          errorResponse.setMessage("Unable to parse error response: " + e.getMessage());
+          throw new DVCException(httpResponseCode, errorResponse);
         } catch (IOException e) {
           errorResponse.setMessage(e.getMessage());
           throw new DVCException(httpResponseCode, errorResponse);
@@ -154,8 +161,10 @@ public final class EnvironmentConfigManager {
         throw new DVCException(httpResponseCode, errorResponse);
       }
 
-      if (httpResponseCode == HttpResponseCode.UNAUTHORIZED) {
+      if (httpResponseCode == HttpResponseCode.UNAUTHORIZED || httpResponseCode == HttpResponseCode.FORBIDDEN) {
+        // SDK Key is no longer authorized or now blocked, stop polling for configs
         errorResponse.setMessage("API Key is unauthorized");
+        stopPolling();
       } else if (!response.message().equals("")) {
         try {
           errorResponse = OBJECT_MAPPER.readValue(response.message(), ErrorResponse.class);
@@ -169,7 +178,12 @@ public final class EnvironmentConfigManager {
     }
   }
 
-  public void cleanup() {
+  private void stopPolling() {
+    pollingEnabled = false;
     scheduler.shutdown();
+  }
+
+  public void cleanup() {
+  stopPolling();
   }
 }

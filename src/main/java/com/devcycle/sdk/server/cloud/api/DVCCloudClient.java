@@ -168,7 +168,7 @@ public final class DVCCloudClient {
         attempt++;
 
         // if out of retries or this is an unauthorized error, throw up exception
-        if (attempt > maxRetries || !e.isRetryable()) {
+        if (!e.isRetryable() || attempt > maxRetries) {
           throw e;
         }
 
