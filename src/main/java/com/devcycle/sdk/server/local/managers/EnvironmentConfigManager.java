@@ -1,10 +1,5 @@
 package com.devcycle.sdk.server.local.managers;
 
-import java.io.IOException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 import com.devcycle.sdk.server.common.api.IDVCApi;
 import com.devcycle.sdk.server.common.exception.DVCException;
 import com.devcycle.sdk.server.common.model.ErrorResponse;
@@ -13,11 +8,16 @@ import com.devcycle.sdk.server.common.model.ProjectConfig;
 import com.devcycle.sdk.server.local.api.DVCLocalApiClient;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import retrofit2.Call;
 import retrofit2.Response;
+
+import java.io.IOException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public final class EnvironmentConfigManager {
   private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -53,7 +53,7 @@ public final class EnvironmentConfigManager {
         try {
           getConfig();
         } catch (DVCException e) {
-          e.printStackTrace();
+          System.out.println("Failed to load config: " + e.getMessage());
         }
       }
     };
@@ -67,7 +67,6 @@ public final class EnvironmentConfigManager {
 
   private ProjectConfig getConfig() throws DVCException {
     Call<ProjectConfig> config = this.configApiClient.getConfig(this.sdkKey, this.configETag);
-    System.out.println("Retrieving Config: " + this.sdkKey);
     this.config = getResponseWithRetries(config, 1);
     return this.config;
   }
@@ -111,6 +110,11 @@ public final class EnvironmentConfigManager {
 
     try {
       response = call.execute();
+    } catch(JsonParseException badJsonExc) {
+      // Got a valid status code but the response body was not valid json,
+      // need to ignore this attempt and let the polling retry
+      errorResponse.setMessage(badJsonExc.getMessage());
+      throw new DVCException(HttpResponseCode.byCode(204), errorResponse);
     } catch (IOException e) {
       errorResponse.setMessage(e.getMessage());
       throw new DVCException(HttpResponseCode.byCode(500), errorResponse);
