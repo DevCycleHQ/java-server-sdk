@@ -49,7 +49,7 @@ public class EventQueueManager {
             try {
                 flushEvents();
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("Error flushing events: " + e.getMessage());
             }
         };
 
@@ -59,7 +59,7 @@ public class EventQueueManager {
     /**
      * Flush events in queue to DevCycle Events API. Requeue events if flush fails
      */
-    public void flushEvents() throws Exception {
+    public synchronized void flushEvents() throws Exception {
         if (isFlushingEvents) return;
 
         if (sdkKey == null || sdkKey.equals("")) {
@@ -116,23 +116,15 @@ public class EventQueueManager {
     }
 
     private void publishEvents(String sdkKey, FlushPayload flushPayload) throws InterruptedException {
-        Thread publishEventsThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Call<DVCResponse> response = eventsApiClient.publishEvents(EventsBatch.builder().batch(flushPayload.records).build());
-                int responseCode = getResponse(response);
+        Call<DVCResponse> response = eventsApiClient.publishEvents(EventsBatch.builder().batch(flushPayload.records).build());
+        int responseCode = getResponse(response);
 
-                if (responseCode == 201) {
-                    localBucketing.onPayloadSuccess(sdkKey, flushPayload.payloadId);
-                } else {
-                    System.out.printf("DVC Error Publishing Events: %d%n", responseCode);
-                    localBucketing.onPayloadFailure(sdkKey, flushPayload.payloadId, responseCode >= 500);
-                }
-            }
-        });
-
-        publishEventsThread.start();
-        publishEventsThread.join();
+        if (responseCode == 201) {
+            localBucketing.onPayloadSuccess(sdkKey, flushPayload.payloadId);
+        } else {
+            System.out.printf("DVC Error Publishing Events: %d%n", responseCode);
+            localBucketing.onPayloadFailure(sdkKey, flushPayload.payloadId, responseCode >= 500);
+        }
     }
 
     private int getResponse(Call call) {
