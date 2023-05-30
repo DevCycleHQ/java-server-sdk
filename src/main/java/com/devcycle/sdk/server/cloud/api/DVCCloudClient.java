@@ -201,7 +201,7 @@ public final class DVCCloudClient {
     } catch(MismatchedInputException mie) {
       // got a badly formatted JSON response from the server
       errorResponse.setMessage(mie.getMessage());
-      throw new DVCException(HttpResponseCode.NOT_FOUND, errorResponse);
+      throw new DVCException(HttpResponseCode.NO_CONTENT, errorResponse);
     } catch (IOException e) {
       // issues reaching the server or reading the response
       errorResponse.setMessage(e.getMessage());
