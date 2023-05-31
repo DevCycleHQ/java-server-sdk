@@ -100,7 +100,7 @@ public final class EnvironmentConfigManager {
         // prep the call for a retry
         call = call.clone();
       }
-    }while (attempt <= maxRetries && pollingEnabled);
+    } while (attempt <= maxRetries && pollingEnabled);
 
     // getting here should not happen, but is technically possible
     ErrorResponse errorResponse = ErrorResponse.builder().build();
