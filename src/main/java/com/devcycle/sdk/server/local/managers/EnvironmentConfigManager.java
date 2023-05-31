@@ -52,7 +52,7 @@ public final class EnvironmentConfigManager {
     Runnable getConfigRunnable = new Runnable() {
       public void run() {
         try {
-          if(pollingEnabled){
+          if (pollingEnabled) {
             getConfig();
           }
         } catch (DVCException e) {
