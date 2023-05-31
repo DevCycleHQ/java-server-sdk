@@ -229,7 +229,7 @@ public final class DVCCloudClient {
       return response.body();
     } else {
       if (httpResponseCode == HttpResponseCode.UNAUTHORIZED) {
-        errorResponse.setMessage("Invalid sdk key");
+        errorResponse.setMessage("Invalid SDK Key");
       } else if (!response.message().equals("")) {
         try {
           errorResponse = OBJECT_MAPPER.readValue(response.message(), ErrorResponse.class);
