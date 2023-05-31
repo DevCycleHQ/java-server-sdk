@@ -8,6 +8,7 @@ import com.devcycle.sdk.server.common.model.Variable.TypeEnum;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -28,6 +29,14 @@ public final class DVCCloudClient {
   }
 
   public DVCCloudClient(String sdkKey, DVCCloudOptions options) {
+    if(sdkKey == null || sdkKey.equals("")) {
+      throw new IllegalArgumentException("Missing environment key! Call initialize with a valid environment key");
+    }
+
+    if(!isValidServerKey(sdkKey)) {
+      throw new IllegalArgumentException("Invalid environment key provided. Please call initialize with a valid server environment key");
+    }
+
     this.dvcOptions = options;
     api = new DVCCloudApiClient(sdkKey, options).initialize();
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -88,7 +97,7 @@ public final class DVCCloudClient {
 
     try {
       Call<Variable> response = api.getVariableByKey(user, key, dvcOptions.getEnableEdgeDB());
-      variable = getResponse(response);
+      variable = getResponseWithRetries(response, 5);
       if (variable.getType() != variableType) {
         throw new IllegalArgumentException("Variable type mismatch, returning default value");
       }
@@ -135,7 +144,7 @@ public final class DVCCloudClient {
   public void track(User user, Event event) throws DVCException {
     validateUser(user);
 
-    if (event == null || event.getType().equals("")) {
+    if (event == null || event.getType() == null || event.getType().equals("")) {
       throw new IllegalArgumentException("Invalid Event");
     }
 
@@ -145,8 +154,43 @@ public final class DVCCloudClient {
             .build();
 
     Call<DVCResponse> response = api.track(userAndEvents, dvcOptions.getEnableEdgeDB());
-    getResponse(response);
+    getResponseWithRetries(response, 5);
   }
+
+
+  private <T> T getResponseWithRetries(Call<T> call, int maxRetries) throws DVCException {
+    // attempt 0 is the initial request, attempt > 0 are all retries
+    int attempt = 0;
+    do {
+      try {
+        return getResponse(call);
+      } catch (DVCException e) {
+        attempt++;
+
+        // if out of retries or this is an unauthorized error, throw up exception
+        if (!e.isRetryable() || attempt > maxRetries) {
+          throw e;
+        }
+
+        try {
+          // exponential backoff
+          long waitIntervalMS = (long) (10 * Math.pow(2, attempt));
+          Thread.sleep(waitIntervalMS);
+        } catch (InterruptedException ex) {
+          // no-op
+        }
+
+        // prep the call for a retry
+        call = call.clone();
+      }
+    }while (attempt <= maxRetries);
+
+    // getting here should not happen, but is technically possible
+    ErrorResponse errorResponse = ErrorResponse.builder().build();
+    errorResponse.setMessage("Out of retry attempts");
+    throw new DVCException(HttpResponseCode.SERVER_ERROR, errorResponse);
+  }
+
 
   private <T> T getResponse(Call<T> call) throws DVCException {
     ErrorResponse errorResponse = ErrorResponse.builder().build();
@@ -154,7 +198,12 @@ public final class DVCCloudClient {
 
     try {
       response = call.execute();
+    } catch(MismatchedInputException mie) {
+      // got a badly formatted JSON response from the server
+      errorResponse.setMessage(mie.getMessage());
+      throw new DVCException(HttpResponseCode.NO_CONTENT, errorResponse);
     } catch (IOException e) {
+      // issues reaching the server or reading the response
       errorResponse.setMessage(e.getMessage());
       throw new DVCException(HttpResponseCode.byCode(500), errorResponse);
     }
@@ -162,15 +211,15 @@ public final class DVCCloudClient {
     HttpResponseCode httpResponseCode = HttpResponseCode.byCode(response.code());
     errorResponse.setMessage("Unknown error");
 
-      if (response.errorBody() != null) {
-        try {
-          errorResponse = OBJECT_MAPPER.readValue(response.errorBody().string(), ErrorResponse.class);
-        } catch (IOException e) {
-          errorResponse.setMessage(e.getMessage());
-          throw new DVCException(httpResponseCode, errorResponse);
-        }
+    if (response.errorBody() != null) {
+      try {
+        errorResponse = OBJECT_MAPPER.readValue(response.errorBody().string(), ErrorResponse.class);
+      } catch (IOException e) {
+        errorResponse.setMessage(e.getMessage());
         throw new DVCException(httpResponseCode, errorResponse);
       }
+      throw new DVCException(httpResponseCode, errorResponse);
+    }
 
     if (response.body() == null) {
       throw new DVCException(httpResponseCode, errorResponse);
@@ -180,7 +229,7 @@ public final class DVCCloudClient {
       return response.body();
     } else {
       if (httpResponseCode == HttpResponseCode.UNAUTHORIZED) {
-        errorResponse.setMessage("API Key is unauthorized");
+        errorResponse.setMessage("Invalid SDK Key");
       } else if (!response.message().equals("")) {
         try {
           errorResponse = OBJECT_MAPPER.readValue(response.message(), ErrorResponse.class);
@@ -192,6 +241,10 @@ public final class DVCCloudClient {
 
       throw new DVCException(httpResponseCode, errorResponse);
     }
+  }
+
+  private boolean isValidServerKey(String serverKey) {
+    return serverKey.startsWith("server") || serverKey.startsWith("dvc_server");
   }
 
   private void validateUser(User user) {

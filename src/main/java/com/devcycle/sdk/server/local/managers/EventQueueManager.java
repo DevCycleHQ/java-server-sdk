@@ -45,23 +45,21 @@ public class EventQueueManager {
     }
 
     private void setupScheduler() {
-        Runnable getConfigRunnable = new Runnable() {
-            public void run() {
-                try {
-                    flushEvents();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        Runnable flushEventsRunnable = () -> {
+            try {
+                flushEvents();
+            } catch (Exception e) {
+                System.out.println("Error flushing events: " + e.getMessage());
             }
         };
 
-        scheduler.scheduleAtFixedRate(getConfigRunnable, 0, this.eventFlushIntervalMS, TimeUnit.MILLISECONDS);
+        scheduler.scheduleAtFixedRate(flushEventsRunnable, 0, this.eventFlushIntervalMS, TimeUnit.MILLISECONDS);
     }
 
     /**
      * Flush events in queue to DevCycle Events API. Requeue events if flush fails
      */
-    public void flushEvents() throws Exception {
+    public synchronized void flushEvents() throws Exception {
         if (isFlushingEvents) return;
 
         if (sdkKey == null || sdkKey.equals("")) {
@@ -118,23 +116,15 @@ public class EventQueueManager {
     }
 
     private void publishEvents(String sdkKey, FlushPayload flushPayload) throws InterruptedException {
-        Thread publishEventsThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Call<DVCResponse> response = eventsApiClient.publishEvents(EventsBatch.builder().batch(flushPayload.records).build());
-                int responseCode = getResponse(response);
+        Call<DVCResponse> response = eventsApiClient.publishEvents(EventsBatch.builder().batch(flushPayload.records).build());
+        int responseCode = getResponse(response);
 
-                if (responseCode == 201) {
-                    localBucketing.onPayloadSuccess(sdkKey, flushPayload.payloadId);
-                } else {
-                    System.out.printf("DVC Error Publishing Events: %d%n", responseCode);
-                    localBucketing.onPayloadFailure(sdkKey, flushPayload.payloadId, responseCode >= 500);
-                }
-            }
-        });
-
-        publishEventsThread.start();
-        publishEventsThread.join();
+        if (responseCode == 201) {
+            localBucketing.onPayloadSuccess(sdkKey, flushPayload.payloadId);
+        } else {
+            System.out.printf("DVC Error Publishing Events: %d%n", responseCode);
+            localBucketing.onPayloadFailure(sdkKey, flushPayload.payloadId, responseCode >= 500);
+        }
     }
 
     private int getResponse(Call call) {
@@ -173,6 +163,7 @@ public class EventQueueManager {
     }
 
     public void cleanup() {
+        // Flush any remaining events
         try {
             flushEvents();
         } catch (Exception e) {

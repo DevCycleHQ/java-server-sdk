@@ -13,6 +13,7 @@
 package com.devcycle.sdk.server.common.model;
 
 import com.devcycle.sdk.server.local.utils.LongTimestampDeserializer;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -70,11 +71,13 @@ public class User {
   @Schema(description = "Date the user was created, Unix epoch timestamp format")
   @JsonProperty("createdDate")
   @JsonDeserialize(using = LongTimestampDeserializer.class)
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
   private Long createdDate;
 
   @Schema(description = "Date the user was last seen, Unix epoch timestamp format")
   @JsonProperty("lastSeenDate")
   @JsonDeserialize(using = LongTimestampDeserializer.class)
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
   private Long lastSeenDate;
 
   @Schema(description = "Platform the SDK is running on")

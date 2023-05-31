@@ -34,10 +34,10 @@ public final class DVCLocalClient {
 
   public DVCLocalClient(String sdkKey, DVCLocalOptions dvcOptions) {
     if(sdkKey == null || sdkKey.equals("")) {
-      throw new IllegalArgumentException("Missing sdk key! Call initialize with a valid sdk key");
+      throw new IllegalArgumentException("Missing SDK key! Call initialize with a valid SDK key");
     }
     if(!isValidServerKey(sdkKey)) {
-      throw new IllegalArgumentException("Invalid sdk key provided. Please call initialize with a valid server sdk key");
+      throw new IllegalArgumentException("Invalid SDK key provided. Please call initialize with a valid server SDK key");
     }
 
     if(!isValidRuntime()){
