@@ -184,6 +184,6 @@ public final class EnvironmentConfigManager {
   }
 
   public void cleanup() {
-  stopPolling();
+    stopPolling();
   }
 }
