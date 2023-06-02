@@ -4,7 +4,6 @@ on:
   pull_request:
     branches: [main]
 
-
 jobs:
   harness-tests:
     name: Harness Tests
@@ -15,3 +14,4 @@ jobs:
           sdks-to-test: java
           sdk-github-sha: ${{github.event.pull_request.head.sha}}
           github-token: ${{ secrets.TEST_HARNESS_GH_SECRET }}
+
