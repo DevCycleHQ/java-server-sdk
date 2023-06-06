@@ -1,11 +1,10 @@
 package com.devcycle.sdk.server.local.model;
 
 import com.devcycle.sdk.server.common.model.IDVCOptions;
-
+import com.devcycle.sdk.server.common.logging.DVCLogger;
+import com.devcycle.sdk.server.common.logging.IDVCLogger;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.logging.Logger;
 
 @Data
 public class DVCLocalOptions implements IDVCOptions {
@@ -27,6 +26,8 @@ public class DVCLocalOptions implements IDVCOptions {
 
     private boolean disableAutomaticEventLogging = false;
 
+    private IDVCLogger customLogger = null;
+
     public int getConfigPollingIntervalMS(int configPollingIntervalMs, int configPollingIntervalMS) {
         if (configPollingIntervalMS > 0) {
             return configPollingIntervalMS;
@@ -38,8 +39,6 @@ public class DVCLocalOptions implements IDVCOptions {
     }
 
     private boolean disableCustomEventLogging = false;
-
-    private Logger logger = Logger.getLogger(DVCLocalOptions.class.getName());
 
     @Builder()
     public DVCLocalOptions(
@@ -54,7 +53,8 @@ public class DVCLocalOptions implements IDVCOptions {
             int maxEventQueueSize,
             int eventRequestChunkSize,
             boolean disableAutomaticEventLogging,
-            boolean disableCustomEventLogging
+            boolean disableCustomEventLogging,
+            IDVCLogger customLogger
     ) {
         this.configRequestTimeoutMs = configRequestTimeoutMs > 0 ? configRequestTimeoutMs : this.configRequestTimeoutMs;
         this.configPollingIntervalMS = getConfigPollingIntervalMS(configPollingIntervalMs, configPollingIntervalMS);
@@ -66,29 +66,30 @@ public class DVCLocalOptions implements IDVCOptions {
         this.eventRequestChunkSize = eventRequestChunkSize > 0 ? eventRequestChunkSize : this.eventRequestChunkSize;
         this.disableAutomaticEventLogging = disableAutomaticEventLogging;
         this.disableCustomEventLogging = disableCustomEventLogging;
+        this.customLogger = customLogger;
 
         if (this.flushEventQueueSize >= this.maxEventQueueSize) {
-            logger.warning("flushEventQueueSize: " + this.flushEventQueueSize + " must be smaller than maxEventQueueSize: " + this.maxEventQueueSize);
+            DVCLogger.warning("flushEventQueueSize: " + this.flushEventQueueSize + " must be smaller than maxEventQueueSize: " + this.maxEventQueueSize);
             this.flushEventQueueSize = this.maxEventQueueSize - 1;
         }
 
         if (this.eventRequestChunkSize > this.flushEventQueueSize) {
-            logger.warning("eventRequestChunkSize: " + this.eventRequestChunkSize + " must be smaller than flushEventQueueSize: " + this.flushEventQueueSize);
+            DVCLogger.warning("eventRequestChunkSize: " + this.eventRequestChunkSize + " must be smaller than flushEventQueueSize: " + this.flushEventQueueSize);
             this.eventRequestChunkSize = 100;
         }
 
         if (this.eventRequestChunkSize > this.maxEventQueueSize) {
-            logger.warning("eventRequestChunkSize: " + this.eventRequestChunkSize + " must be smaller than maxEventQueueSize: " + this.maxEventQueueSize);
+            DVCLogger.warning("eventRequestChunkSize: " + this.eventRequestChunkSize + " must be smaller than maxEventQueueSize: " + this.maxEventQueueSize);
             this.eventRequestChunkSize = 100;
         }
 
         if (this.flushEventQueueSize > 20000) {
-            logger.warning("flushEventQueueSize: " + this.flushEventQueueSize + " must be smaller than 20,000");
+            DVCLogger.warning("flushEventQueueSize: " + this.flushEventQueueSize + " must be smaller than 20,000");
             this.flushEventQueueSize = 20000;
         }
 
         if (this.maxEventQueueSize > 20000) {
-            logger.warning("maxEventQueueSize: " + this.maxEventQueueSize + " must be smaller than 20,000");
+            DVCLogger.warning("maxEventQueueSize: " + this.maxEventQueueSize + " must be smaller than 20,000");
             this.maxEventQueueSize = 20000;
         }
     }

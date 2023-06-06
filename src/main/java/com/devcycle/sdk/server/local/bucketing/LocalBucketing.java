@@ -1,5 +1,6 @@
 package com.devcycle.sdk.server.local.bucketing;
 
+import com.devcycle.sdk.server.common.logging.DVCLogger;
 import com.devcycle.sdk.server.common.model.User;
 import com.devcycle.sdk.server.common.model.Variable;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
@@ -80,7 +81,7 @@ public class LocalBucketing {
 
         Func consoleLogFn = WasmFunctions.wrap(store, I32, (addr) -> {
             String message = readWasmString(((Number) addr).intValue());
-            logger.log(Level.WARNING, "WASM error: " + message);
+            DVCLogger.warning("WASM error: " + message);
         });
         linker.define("env", "console.log", Extern.fromFunc(consoleLogFn));
 

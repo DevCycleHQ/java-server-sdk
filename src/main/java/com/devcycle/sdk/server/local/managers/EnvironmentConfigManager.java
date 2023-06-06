@@ -8,6 +8,7 @@ import com.devcycle.sdk.server.common.model.ProjectConfig;
 import com.devcycle.sdk.server.local.api.DVCLocalApiClient;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;
+import com.devcycle.sdk.server.common.logging.DVCLogger;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,8 +19,6 @@ import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public final class EnvironmentConfigManager {
   private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -36,8 +35,6 @@ public final class EnvironmentConfigManager {
   private String sdkKey;
   private int pollingIntervalMS;
   private boolean pollingEnabled = true;
-
-  private Logger logger = Logger.getLogger(EnvironmentConfigManager.class.getName());
 
   public EnvironmentConfigManager(String sdkKey, LocalBucketing localBucketing, DVCLocalOptions options) {
     this.sdkKey = sdkKey;
@@ -60,7 +57,7 @@ public final class EnvironmentConfigManager {
             getConfig();
           }
         } catch (DVCException e) {
-          logger.info("Failed to load config: " + e.getMessage());
+          DVCLogger.info("Failed to load config: " + e.getMessage());
         }
       }
     };
@@ -139,7 +136,7 @@ public final class EnvironmentConfigManager {
         localBucketing.storeConfig(sdkKey, mapper.writeValueAsString(config));
       } catch (JsonProcessingException e) {
         if (this.config != null) {
-          logger.log(Level.FINEST, "Unable to parse config with etag: " + currentETag + ". Using cache, etag " + this.configETag);
+          DVCLogger.debug("Unable to parse config with etag: " + currentETag + ". Using cache, etag " + this.configETag);
           return this.config;
         } else {
           errorResponse.setMessage(e.getMessage());
@@ -149,7 +146,7 @@ public final class EnvironmentConfigManager {
       this.configETag = currentETag;
       return response.body();
     } else if (httpResponseCode == HttpResponseCode.NOT_MODIFIED) {
-      logger.log(Level.FINEST, "Config not modified, using cache, etag: " + this.configETag);
+      DVCLogger.debug("Config not modified, using cache, etag: " + this.configETag);
       return this.config;
     } else {
       if (response.errorBody() != null) {
