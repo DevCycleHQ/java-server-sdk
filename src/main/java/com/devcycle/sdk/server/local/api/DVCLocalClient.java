@@ -16,6 +16,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class DVCLocalClient {
 
@@ -27,6 +29,7 @@ public final class DVCLocalClient {
 
   private EventQueueManager eventQueueManager;
 
+  private Logger logger = Logger.getLogger(DVCLocalClient.class.getName());
 
   public DVCLocalClient(String sdkKey) {
     this(sdkKey, DVCLocalOptions.builder().build());
@@ -41,7 +44,7 @@ public final class DVCLocalClient {
     }
 
     if(!isValidRuntime()){
-        System.out.println("Invalid architecture. The DVCLocalClient requires a 64-bit, x86 runtime environment.");
+      logger.warning("Invalid architecture. The DVCLocalClient requires a 64-bit, x86 runtime environment.");
     }
 
     localBucketing.setPlatformData(PlatformData.builder().build().toString());
@@ -51,7 +54,7 @@ public final class DVCLocalClient {
     try {
       eventQueueManager = new EventQueueManager(sdkKey, localBucketing, dvcOptions);
     } catch (Exception e) {
-      System.out.printf("Error creating event queue due to error: %s%n", e.getMessage());
+      logger.warning("Error creating event queue due to error: " + e.getMessage());
     }
   }
 
@@ -81,7 +84,7 @@ public final class DVCLocalClient {
     try {
       bucketedUserConfig = localBucketing.generateBucketedConfig(sdkKey, user);
     } catch (JsonProcessingException e) {
-      System.out.printf("Unable to parse JSON for allFeatures due to error: %s%n", e.getMessage());
+      logger.info("Unable to parse JSON for allFeatures due to error: " + e.getMessage());
       return Collections.emptyMap();
     }
     return bucketedUserConfig.features;
@@ -130,11 +133,11 @@ public final class DVCLocalClient {
             .build();
 
     if (!isInitialized()) {
-      System.out.println("Variable called before DVCClient has initialized, returning default value");
+      logger.info("Variable called before DVCClient has initialized, returning default value");
       try {
         eventQueueManager.queueAggregateEvent(Event.builder().type("aggVariableDefaulted").target(key).build(), null);
       } catch (Exception e) {
-        System.out.printf("Unable to parse aggVariableDefaulted event for Variable %s due to error: %s", key, e.toString());
+        logger.log(Level.WARNING,"Unable to parse aggVariableDefaulted event for Variable " + key + " due to error: " + e, e);
       }
       return defaultVariable;
     }
@@ -157,13 +160,13 @@ public final class DVCLocalClient {
       } else {
         SDKVariable_PB sdkVariable = SDKVariable_PB.parseFrom(variableData);
         if(sdkVariable.getType() != pbVariableType) {
-          System.out.printf("Variable type mismatch, returning default value");
+          logger.info("Variable type mismatch, returning default value");
           return defaultVariable;
         }
         return ProtobufUtils.createVariable(sdkVariable, defaultValue);
       }
     } catch (Exception e) {
-      System.out.printf("Unable to evaluate Variable %s due to error: %s", key, e);
+      logger.log(Level.WARNING, "Unable to evaluate Variable " + key + " due to error: " + e, e);
     }
     return defaultVariable;
   }
@@ -185,7 +188,7 @@ public final class DVCLocalClient {
     try {
       bucketedUserConfig = localBucketing.generateBucketedConfig(sdkKey, user);
     } catch (JsonProcessingException e) {
-      System.out.printf("Unable to parse JSON for allVariables due to error: %s%n", e.getMessage());
+      logger.info("Unable to parse JSON for allVariables due to error: " + e.getMessage());
       return Collections.emptyMap();
     }
     return bucketedUserConfig.variables;
@@ -207,14 +210,14 @@ public final class DVCLocalClient {
     try {
       eventQueueManager.queueEvent(user, event);
     } catch (Exception e) {
-      System.out.printf("Failed to queue event due to error: %s%n", e.getMessage());
+      logger.warning("Failed to queue event due to error: " + e.getMessage());
     }
   }
 
   public void setClientCustomData(Map<String,Object> customData) {
     if (!isInitialized())
     {
-     System.out.println("SetClientCustomData called before DVCClient has initialized");
+     logger.info("SetClientCustomData called before DVCClient has initialized");
      return;
     }
 
@@ -224,7 +227,7 @@ public final class DVCLocalClient {
         String customDataJSON = mapper.writeValueAsString(customData);
         localBucketing.setClientCustomData(this.sdkKey, customDataJSON);
       } catch(Exception e) {
-        System.out.printf("Failed to set custom data: %s%n", e.getMessage());
+        logger.log(Level.WARNING, "Failed to set custom data due to error: " + e.getMessage(), e);
       }
     }
   }

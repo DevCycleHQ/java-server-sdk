@@ -20,6 +20,8 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static io.github.kawamuray.wasmtime.WasmValType.F64;
 import static io.github.kawamuray.wasmtime.WasmValType.I32;
@@ -37,6 +39,8 @@ public class LocalBucketing {
 
     private final int WASM_OBJECT_ID_STRING = 1;
     private final int WASM_OBJECT_ID_UINT8ARRAY = 9;
+
+    private Logger logger = Logger.getLogger(LocalBucketing.class.getName());
 
     public LocalBucketing() {
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -76,7 +80,7 @@ public class LocalBucketing {
 
         Func consoleLogFn = WasmFunctions.wrap(store, I32, (addr) -> {
             String message = readWasmString(((Number) addr).intValue());
-            System.out.println(message);
+            logger.log(Level.WARNING, "WASM error: " + message);
         });
         linker.define("env", "console.log", Extern.fromFunc(consoleLogFn));
 

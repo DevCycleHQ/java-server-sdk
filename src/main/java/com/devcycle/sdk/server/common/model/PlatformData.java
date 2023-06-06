@@ -11,12 +11,15 @@ import lombok.Data;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Data
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 
 public class PlatformData {
+    private Logger logger = Logger.getLogger(PlatformData.class.getName());
     public PlatformData(String platform, String platformVersion, SdkTypeEnum sdkType, String sdkVersion, String hostname) {
         this.platform = platform;
         this.platformVersion = platformVersion;
@@ -25,7 +28,7 @@ public class PlatformData {
         try {
             this.hostname = hostname != null ? hostname : InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {
-            System.out.println("Error getting hostname: " + e.getMessage());
+            logger.info("Error getting system hostname: " + e.getMessage());
             this.hostname = "";
         }
     }
@@ -64,7 +67,7 @@ public class PlatformData {
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             platformDataString = mapper.writeValueAsString(platformData);
         } catch (JsonProcessingException e) {
-            System.out.println("Error reading platformData: " + e.getMessage());
+            logger.log(Level.FINEST, "Error reading platformData: " + e.getMessage());
         }
         return platformDataString;
     }

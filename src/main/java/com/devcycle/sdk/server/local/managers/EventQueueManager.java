@@ -15,6 +15,8 @@ import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class EventQueueManager {
 
@@ -27,6 +29,7 @@ public class EventQueueManager {
     private boolean isFlushingEvents = false;
     private int flushEventQueueSize;
     private int maxEventQueueSize;
+    private Logger logger = Logger.getLogger(EventQueueManager.class.getName());
 
     public EventQueueManager(String sdkKey, LocalBucketing localBucketing, DVCLocalOptions options) throws Exception {
         this.localBucketing = localBucketing;
@@ -49,7 +52,7 @@ public class EventQueueManager {
             try {
                 flushEvents();
             } catch (Exception e) {
-                System.out.println("Error flushing events: " + e.getMessage());
+                logger.log(Level.WARNING, "DVC Error flushing events: " + e.getMessage());
             }
         };
 
@@ -70,11 +73,12 @@ public class EventQueueManager {
         try {
             flushPayloads = this.localBucketing.flushEventQueue(this.sdkKey);
         } catch (Exception e) {
-            System.out.printf("DVC Error Flushing Events: %s%n", e.getMessage());
+            logger.log(Level.WARNING, "DVC Error flushing event payloads: " + e.getMessage());
         }
 
         if (flushPayloads.length == 0) return;
-        System.out.printf("AS Flush Payloads: %s%n", Arrays.toString(flushPayloads));
+
+        logger.log(Level.INFO, "DVC Flush Payloads: " + Arrays.toString(flushPayloads));
 
         int eventCount = 0;
         isFlushingEvents = true;
@@ -83,7 +87,7 @@ public class EventQueueManager {
             publishEvents(this.sdkKey, payload);
         }
         isFlushingEvents = false;
-        System.out.printf("DVC Flush %d AS Events, for %d Users%n", eventCount, flushPayloads.length);
+        logger.log(Level.INFO, String.format("DVC Flush %d AS Events, for %d Users", eventCount, flushPayloads.length));
     }
 
     /**
@@ -91,7 +95,7 @@ public class EventQueueManager {
      */
     public void queueEvent(User user, Event event) throws Exception {
         if (checkEventQueueSize()) {
-            System.out.printf("Max event queue size reached, dropping event: %s%n", event);
+            logger.warning("Max event queue size reached, dropping event: " + event);
             return;
         }
 
@@ -104,7 +108,7 @@ public class EventQueueManager {
      */
     public void queueAggregateEvent(Event event, BucketedUserConfig bucketedConfig) throws Exception {
         if (checkEventQueueSize()) {
-            System.out.printf("Max event queue size reached, dropping aggregate event: %s%n", event);
+            logger.warning("Max event queue size reached, dropping aggregate event: " + event);
             return;
         }
 
@@ -122,7 +126,7 @@ public class EventQueueManager {
         if (responseCode == 201) {
             localBucketing.onPayloadSuccess(sdkKey, flushPayload.payloadId);
         } else {
-            System.out.printf("DVC Error Publishing Events: %d%n", responseCode);
+            logger.warning("DVC Error Publishing Events: " + responseCode);
             localBucketing.onPayloadFailure(sdkKey, flushPayload.payloadId, responseCode >= 500);
         }
     }
@@ -133,7 +137,7 @@ public class EventQueueManager {
         try {
             response = call.execute();
         } catch (IOException e) {
-            System.out.printf("DVC Events error: %s%n", e.getMessage());
+            logger.log(Level.WARNING, "DVC Events error: " + e.getMessage(), e);
         }
 
         if (response == null) {
@@ -167,7 +171,7 @@ public class EventQueueManager {
         try {
             flushEvents();
         } catch (Exception e) {
-            System.out.printf("DVC Cleanup error: %s%n", e.getMessage());
+            logger.log(Level.WARNING, "DVC Cleanup error: " + e.getMessage(), e);
         }
         scheduler.shutdown();
     }

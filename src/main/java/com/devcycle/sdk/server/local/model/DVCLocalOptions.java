@@ -5,6 +5,8 @@ import com.devcycle.sdk.server.common.model.IDVCOptions;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.logging.Logger;
+
 @Data
 public class DVCLocalOptions implements IDVCOptions {
     private int configRequestTimeoutMs = 10000;
@@ -37,6 +39,8 @@ public class DVCLocalOptions implements IDVCOptions {
 
     private boolean disableCustomEventLogging = false;
 
+    private Logger logger = Logger.getLogger(DVCLocalOptions.class.getName());
+
     @Builder()
     public DVCLocalOptions(
             int configRequestTimeoutMs,
@@ -64,27 +68,27 @@ public class DVCLocalOptions implements IDVCOptions {
         this.disableCustomEventLogging = disableCustomEventLogging;
 
         if (this.flushEventQueueSize >= this.maxEventQueueSize) {
-            System.out.println("flushEventQueueSize: " + this.flushEventQueueSize + " must be smaller than maxEventQueueSize: " + this.maxEventQueueSize);
+            logger.warning("flushEventQueueSize: " + this.flushEventQueueSize + " must be smaller than maxEventQueueSize: " + this.maxEventQueueSize);
             this.flushEventQueueSize = this.maxEventQueueSize - 1;
         }
 
         if (this.eventRequestChunkSize > this.flushEventQueueSize) {
-            System.out.println("eventRequestChunkSize: " + this.eventRequestChunkSize + " must be smaller than flushEventQueueSize: " + this.flushEventQueueSize);
+            logger.warning("eventRequestChunkSize: " + this.eventRequestChunkSize + " must be smaller than flushEventQueueSize: " + this.flushEventQueueSize);
             this.eventRequestChunkSize = 100;
         }
 
         if (this.eventRequestChunkSize > this.maxEventQueueSize) {
-            System.out.println("eventRequestChunkSize: " + this.eventRequestChunkSize + " must be smaller than maxEventQueueSize: " + this.maxEventQueueSize);
+            logger.warning("eventRequestChunkSize: " + this.eventRequestChunkSize + " must be smaller than maxEventQueueSize: " + this.maxEventQueueSize);
             this.eventRequestChunkSize = 100;
         }
 
         if (this.flushEventQueueSize > 20000) {
-            System.out.println("flushEventQueueSize: " + this.flushEventQueueSize + " must be smaller than 20,000");
+            logger.warning("flushEventQueueSize: " + this.flushEventQueueSize + " must be smaller than 20,000");
             this.flushEventQueueSize = 20000;
         }
 
         if (this.maxEventQueueSize > 20000) {
-            System.out.println("maxEventQueueSize: " + this.maxEventQueueSize + " must be smaller than 20,000");
+            logger.warning("maxEventQueueSize: " + this.maxEventQueueSize + " must be smaller than 20,000");
             this.maxEventQueueSize = 20000;
         }
     }
