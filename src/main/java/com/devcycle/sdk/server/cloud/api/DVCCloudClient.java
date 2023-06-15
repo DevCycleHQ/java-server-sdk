@@ -3,6 +3,7 @@ package com.devcycle.sdk.server.cloud.api;
 import com.devcycle.sdk.server.cloud.model.DVCCloudOptions;
 import com.devcycle.sdk.server.common.api.IDVCApi;
 import com.devcycle.sdk.server.common.exception.DVCException;
+import com.devcycle.sdk.server.common.logging.DVCLogger;
 import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.common.model.Variable.TypeEnum;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -35,6 +36,11 @@ public final class DVCCloudClient {
 
     if(!isValidServerKey(sdkKey)) {
       throw new IllegalArgumentException("Invalid environment key provided. Please call initialize with a valid server environment key");
+    }
+
+    if(options.getCustomLogger() != null)
+    {
+        DVCLogger.setCustomLogger(options.getCustomLogger());
     }
 
     this.dvcOptions = options;
