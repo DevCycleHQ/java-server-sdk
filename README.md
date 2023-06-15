@@ -87,6 +87,8 @@ Then you can set the logger into the Java Server SDK setting the Custom Logger p
 initialize the client.
 
 ```java
+
+```java
 // Create your logging wrapper
 IDVCLogger loggingWrapper = new IDVCLogger() {
     @Override
@@ -118,3 +120,5 @@ DVCLocalClient dvcClient = new DVCLocalClient("YOUR_DVC_SERVER_SDK_KEY", options
 DVCCloudOptions options = DVCCloudOptions.builder().customLogger(loggingWrapper).build();
 DVCCloudClient dvcClient = new DVCCloudClient("YOUR_DVC_SERVER_SDK_KEY", options);
 ```
+
+You can also disable all logging by setting the custom logger to `new SimpleDVCLogger(SimpleDVCLogger.Level.OFF)`.

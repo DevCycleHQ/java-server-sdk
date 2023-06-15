@@ -9,7 +9,7 @@ public class SimpleDVCLogger implements IDVCLogger {
         INFO,
         WARNING,
         ERROR,
-        NONE,
+        OFF,
     }
     private Level level;
     public SimpleDVCLogger(Level level) {
