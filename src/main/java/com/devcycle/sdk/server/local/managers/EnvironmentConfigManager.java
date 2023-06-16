@@ -8,6 +8,7 @@ import com.devcycle.sdk.server.common.model.ProjectConfig;
 import com.devcycle.sdk.server.local.api.DVCLocalApiClient;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;
+import com.devcycle.sdk.server.common.logging.DVCLogger;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,7 +57,7 @@ public final class EnvironmentConfigManager {
             getConfig();
           }
         } catch (DVCException e) {
-          System.out.println("Failed to load config: " + e.getMessage());
+          DVCLogger.info("Failed to load config: " + e.getMessage());
         }
       }
     };
@@ -135,7 +136,7 @@ public final class EnvironmentConfigManager {
         localBucketing.storeConfig(sdkKey, mapper.writeValueAsString(config));
       } catch (JsonProcessingException e) {
         if (this.config != null) {
-          System.out.printf("Unable to parse config with etag: %s. Using cache, etag %s%n", currentETag, this.configETag);
+          DVCLogger.debug("Unable to parse config with etag: " + currentETag + ". Using cache, etag " + this.configETag);
           return this.config;
         } else {
           errorResponse.setMessage(e.getMessage());
@@ -145,7 +146,7 @@ public final class EnvironmentConfigManager {
       this.configETag = currentETag;
       return response.body();
     } else if (httpResponseCode == HttpResponseCode.NOT_MODIFIED) {
-      System.out.printf("Config not modified, using cache, etag: %s%n", this.configETag);
+      DVCLogger.debug("Config not modified, using cache, etag: " + this.configETag);
       return this.config;
     } else {
       if (response.errorBody() != null) {

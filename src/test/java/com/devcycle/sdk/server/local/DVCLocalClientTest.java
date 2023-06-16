@@ -39,6 +39,7 @@ public class DVCLocalClientTest {
                 .configCdnBaseUrl("http://localhost:8000/")
                 .configPollingIntervalMS(60000)
                 .build();
+
         DVCLocalClient client = new DVCLocalClient(apiKey, options);
         try {
             int loops = 0;

@@ -5,6 +5,7 @@ import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.local.api.DVCLocalEventsApiClient;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
 import com.devcycle.sdk.server.local.model.*;
+import com.devcycle.sdk.server.common.logging.DVCLogger;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import retrofit2.Call;
@@ -49,7 +50,7 @@ public class EventQueueManager {
             try {
                 flushEvents();
             } catch (Exception e) {
-                System.out.println("Error flushing events: " + e.getMessage());
+                DVCLogger.error( "DVC Error flushing events: " + e.getMessage(), e);
             }
         };
 
@@ -70,11 +71,12 @@ public class EventQueueManager {
         try {
             flushPayloads = this.localBucketing.flushEventQueue(this.sdkKey);
         } catch (Exception e) {
-            System.out.printf("DVC Error Flushing Events: %s%n", e.getMessage());
+            DVCLogger.error( "DVC Error flushing event payloads: " + e.getMessage(), e);
         }
 
         if (flushPayloads.length == 0) return;
-        System.out.printf("AS Flush Payloads: %s%n", Arrays.toString(flushPayloads));
+
+        DVCLogger.info("DVC Flush Payloads: " + Arrays.toString(flushPayloads));
 
         int eventCount = 0;
         isFlushingEvents = true;
@@ -83,7 +85,7 @@ public class EventQueueManager {
             publishEvents(this.sdkKey, payload);
         }
         isFlushingEvents = false;
-        System.out.printf("DVC Flush %d AS Events, for %d Users%n", eventCount, flushPayloads.length);
+        DVCLogger.info(String.format("DVC Flush %d AS Events, for %d Users", eventCount, flushPayloads.length));
     }
 
     /**
@@ -91,7 +93,7 @@ public class EventQueueManager {
      */
     public void queueEvent(User user, Event event) throws Exception {
         if (checkEventQueueSize()) {
-            System.out.printf("Max event queue size reached, dropping event: %s%n", event);
+            DVCLogger.warning("Max event queue size reached, dropping event: " + event);
             return;
         }
 
@@ -104,7 +106,7 @@ public class EventQueueManager {
      */
     public void queueAggregateEvent(Event event, BucketedUserConfig bucketedConfig) throws Exception {
         if (checkEventQueueSize()) {
-            System.out.printf("Max event queue size reached, dropping aggregate event: %s%n", event);
+            DVCLogger.warning("Max event queue size reached, dropping aggregate event: " + event);
             return;
         }
 
@@ -122,7 +124,7 @@ public class EventQueueManager {
         if (responseCode == 201) {
             localBucketing.onPayloadSuccess(sdkKey, flushPayload.payloadId);
         } else {
-            System.out.printf("DVC Error Publishing Events: %d%n", responseCode);
+            DVCLogger.warning("DVC Error Publishing Events: " + responseCode);
             localBucketing.onPayloadFailure(sdkKey, flushPayload.payloadId, responseCode >= 500);
         }
     }
@@ -133,7 +135,7 @@ public class EventQueueManager {
         try {
             response = call.execute();
         } catch (IOException e) {
-            System.out.printf("DVC Events error: %s%n", e.getMessage());
+            DVCLogger.error( "DVC Events error: " + e.getMessage(), e);
         }
 
         if (response == null) {
@@ -167,7 +169,7 @@ public class EventQueueManager {
         try {
             flushEvents();
         } catch (Exception e) {
-            System.out.printf("DVC Cleanup error: %s%n", e.getMessage());
+            DVCLogger.error("DVC Cleanup error: " + e.getMessage(), e);
         }
         scheduler.shutdown();
     }

@@ -79,3 +79,46 @@ public class MyClass {
 
 To find usage documentation, visit our docs for [Local Bucketing](https://docs.devcycle.com/docs/sdk/server-side-sdks/java-local).
 
+## Logging
+
+The DevCycle SDK logs to **stdout** by default and does not require any specific logging package. To integrate with your 
+own logging system, such as Java Logging or SLF4J, you can create a wrapper that implements the `IDVCLogger` interface. 
+Then you can set the logger into the Java Server SDK setting the Custom Logger property in the options object used to 
+initialize the client.
+
+```java
+
+```java
+// Create your logging wrapper
+IDVCLogger loggingWrapper = new IDVCLogger() {
+    @Override
+    public void debug(String message) {
+        // Your logging implementation here
+    }
+
+    @Override
+    public void info(String message) {
+        // Your logging implementation here
+    }
+
+    @Override
+    public void warn(String message) {
+        // Your logging implementation here
+    }
+
+    @Override
+    public void error(String message) {
+        // Your logging implementation here
+    }
+};
+
+// Set the logger in the options before creating the DVCLocalClient
+DVCLocalOptions options = DVCLocalOptions.builder().customLogger(loggingWrapper).build();
+DVCLocalClient dvcClient = new DVCLocalClient("YOUR_DVC_SERVER_SDK_KEY", options);
+
+// Or for DVCCloudClient
+DVCCloudOptions options = DVCCloudOptions.builder().customLogger(loggingWrapper).build();
+DVCCloudClient dvcClient = new DVCCloudClient("YOUR_DVC_SERVER_SDK_KEY", options);
+```
+
+You can also disable all logging by setting the custom logger to `new SimpleDVCLogger(SimpleDVCLogger.Level.OFF)`.
