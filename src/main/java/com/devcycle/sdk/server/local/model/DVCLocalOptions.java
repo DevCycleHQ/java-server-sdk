@@ -3,6 +3,7 @@ package com.devcycle.sdk.server.local.model;
 import com.devcycle.sdk.server.common.model.IDVCOptions;
 import com.devcycle.sdk.server.common.logging.DVCLogger;
 import com.devcycle.sdk.server.common.logging.IDVCLogger;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
 
@@ -26,6 +27,7 @@ public class DVCLocalOptions implements IDVCOptions {
 
     private boolean disableAutomaticEventLogging = false;
 
+    @JsonIgnore
     private IDVCLogger customLogger = null;
 
     public int getConfigPollingIntervalMS(int configPollingIntervalMs, int configPollingIntervalMS) {

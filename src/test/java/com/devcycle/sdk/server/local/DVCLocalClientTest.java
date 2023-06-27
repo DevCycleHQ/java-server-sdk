@@ -1,5 +1,6 @@
 package com.devcycle.sdk.server.local;
 
+import com.devcycle.sdk.server.common.logging.IDVCLogger;
 import com.devcycle.sdk.server.common.model.BaseVariable;
 import com.devcycle.sdk.server.common.model.Feature;
 import com.devcycle.sdk.server.common.model.User;
@@ -25,6 +26,33 @@ public class DVCLocalClientTest {
     private static LocalConfigServer localConfigServer;
     static final String apiKey = String.format("server-%s", UUID.randomUUID());
 
+    static IDVCLogger testLoggingWrapper = new IDVCLogger() {
+        @Override
+        public void debug(String message) {
+            System.out.println("DEBUG TEST: " + message);
+        }
+
+        @Override
+        public void info(String message) {
+            System.out.println("INFO TEST: " + message);
+        }
+
+        @Override
+        public void warning(String message) {
+            System.out.println("WARN TEST: " + message);
+        }
+
+        @Override
+        public void error(String message) {
+            System.out.println("ERROR TEST: " + message);
+        }
+
+        @Override
+        public void error(String message, Throwable throwable) {
+            System.out.println("ERROR TEST: " + message);
+        }
+    };
+
     @BeforeClass
     public static void setup() throws Exception {
         // spin up a lightweight http server to serve the config and properly initialize the client
@@ -35,9 +63,11 @@ public class DVCLocalClientTest {
 
     private static DVCLocalClient createClient(String config){
         localConfigServer.setConfigData(config);
+
         DVCLocalOptions options = DVCLocalOptions.builder()
                 .configCdnBaseUrl("http://localhost:8000/")
                 .configPollingIntervalMS(60000)
+                .customLogger(testLoggingWrapper)
                 .build();
 
         DVCLocalClient client = new DVCLocalClient(apiKey, options);

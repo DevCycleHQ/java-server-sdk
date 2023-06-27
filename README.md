@@ -8,13 +8,21 @@ This version of the DevCycle SDK works with Java 8 and above.
 
 Using the Java SDK library requires [Maven](https://maven.apache.org/) or [Gradle](https://gradle.org/) >= 7.6+ to be installed.
 
-An x86_64 JDK is required for Local Bucketing with the DevCycle Java SDK. Currently Supported Platforms are:
+An x86_64 JDK is required for Local Bucketing with the DevCycle Java SDK. 
+
+Currently Supported Platforms are:
 
 | OS | Arch |
 | --- | --- |
 | Linux (ELF) | x86_64 |
 | Mac OS | x86_64 |
 | Windows | x86_64 |
+
+In addition, the environment must support GLIBC v2.32 or higher.  You can use the following command to check your GLIBC version:
+
+```bash
+ldd --version
+``` 
 
 ## Installation
 
@@ -102,12 +110,17 @@ IDVCLogger loggingWrapper = new IDVCLogger() {
     }
 
     @Override
-    public void warn(String message) {
+    public void warning(String message) {
         // Your logging implementation here
     }
 
     @Override
     public void error(String message) {
+        // Your logging implementation here
+    }
+
+    @Override
+    public void error(String message, Throwable throwable) {
         // Your logging implementation here
     }
 };
