@@ -1,5 +1,6 @@
 package com.devcycle.sdk.server.local.model;
 
+import com.devcycle.sdk.server.common.api.IRestOptions;
 import com.devcycle.sdk.server.common.model.IDVCOptions;
 import com.devcycle.sdk.server.common.logging.DVCLogger;
 import com.devcycle.sdk.server.common.logging.IDVCLogger;
@@ -42,6 +43,9 @@ public class DVCLocalOptions implements IDVCOptions {
 
     private boolean disableCustomEventLogging = false;
 
+    @JsonIgnore
+    private IRestOptions restOptions = null;
+
     @Builder()
     public DVCLocalOptions(
             int configRequestTimeoutMs,
@@ -56,7 +60,8 @@ public class DVCLocalOptions implements IDVCOptions {
             int eventRequestChunkSize,
             boolean disableAutomaticEventLogging,
             boolean disableCustomEventLogging,
-            IDVCLogger customLogger
+            IDVCLogger customLogger,
+            IRestOptions restOptions
     ) {
         this.configRequestTimeoutMs = configRequestTimeoutMs > 0 ? configRequestTimeoutMs : this.configRequestTimeoutMs;
         this.configPollingIntervalMS = getConfigPollingIntervalMS(configPollingIntervalMs, configPollingIntervalMS);
@@ -69,6 +74,7 @@ public class DVCLocalOptions implements IDVCOptions {
         this.disableAutomaticEventLogging = disableAutomaticEventLogging;
         this.disableCustomEventLogging = disableCustomEventLogging;
         this.customLogger = customLogger;
+        this.restOptions = restOptions;
 
         if (this.flushEventQueueSize >= this.maxEventQueueSize) {
             DVCLogger.warning("flushEventQueueSize: " + this.flushEventQueueSize + " must be smaller than maxEventQueueSize: " + this.maxEventQueueSize);
