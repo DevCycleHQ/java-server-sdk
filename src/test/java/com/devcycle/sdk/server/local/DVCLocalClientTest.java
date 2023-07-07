@@ -1,5 +1,6 @@
 package com.devcycle.sdk.server.local;
 
+import com.devcycle.sdk.server.common.api.IRestOptions;
 import com.devcycle.sdk.server.common.logging.IDVCLogger;
 import com.devcycle.sdk.server.common.model.BaseVariable;
 import com.devcycle.sdk.server.common.model.Feature;
@@ -16,6 +17,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.X509TrustManager;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -53,6 +58,32 @@ public class DVCLocalClientTest {
         }
     };
 
+    static IRestOptions restOptions = new IRestOptions() {
+
+        @Override
+        public Map<String, String> getHeaders() {
+            Map<String,String> headers = new HashMap<>();
+            headers.put("Oauth-Token", "test-token");
+            headers.put("Custom-Meta-Data", "some information the developer wants send");
+            return headers;
+        }
+
+        @Override
+        public SSLSocketFactory getSocketFactory() {
+            return null;
+        }
+
+        @Override
+        public X509TrustManager getTrustManager() {
+            return null;
+        }
+
+        @Override
+        public HostnameVerifier getHostnameVerifier() {
+            return null;
+        }
+    };
+
     @BeforeClass
     public static void setup() throws Exception {
         // spin up a lightweight http server to serve the config and properly initialize the client
@@ -68,6 +99,7 @@ public class DVCLocalClientTest {
                 .configCdnBaseUrl("http://localhost:8000/")
                 .configPollingIntervalMS(60000)
                 .customLogger(testLoggingWrapper)
+                .restOptions(restOptions)
                 .build();
 
         DVCLocalClient client = new DVCLocalClient(apiKey, options);

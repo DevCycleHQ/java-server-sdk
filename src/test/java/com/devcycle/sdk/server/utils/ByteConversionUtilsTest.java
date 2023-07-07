@@ -31,8 +31,6 @@ public class ByteConversionUtilsTest {
         int expected = 123456789;
 
         int result = ByteConversionUtils.bytesToIntLittleEndian(encodedValue);
-        System.out.println(Integer.toHexString(expected));
-        System.out.println(Integer.toHexString(result));
         Assert.assertEquals(expected, result);
     }
 }

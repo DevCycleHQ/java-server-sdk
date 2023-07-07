@@ -1,6 +1,9 @@
 package com.devcycle.sdk.server.local.api;
 
+import com.devcycle.sdk.server.common.api.APIUtils;
 import com.devcycle.sdk.server.common.api.IDVCApi;
+import com.devcycle.sdk.server.common.api.IRestOptions;
+import com.devcycle.sdk.server.common.interceptor.CustomHeaderInterceptor;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -30,6 +33,8 @@ public final class DVCLocalApiClient {
 
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     okBuilder = new OkHttpClient.Builder();
+
+    APIUtils.applyRestOptions(options.getRestOptions(), okBuilder);
 
     String cdnUrlFromOptions = options.getConfigCdnBaseUrl();
     int configRequestTimeoutMs = options.getConfigRequestTimeoutMs();

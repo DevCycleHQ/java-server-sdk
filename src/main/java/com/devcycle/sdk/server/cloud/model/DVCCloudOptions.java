@@ -1,5 +1,6 @@
 package com.devcycle.sdk.server.cloud.model;
 
+import com.devcycle.sdk.server.common.api.IRestOptions;
 import com.devcycle.sdk.server.common.logging.IDVCLogger;
 import com.devcycle.sdk.server.common.model.IDVCOptions;
 
@@ -17,6 +18,9 @@ public class DVCCloudOptions {
 
     @Builder.Default
     private IDVCLogger customLogger = null;
+
+    @Builder.Default
+    private IRestOptions restOptions = null;
 
     public static class DVCCloudOptionsBuilder implements IDVCOptions { }
 }
