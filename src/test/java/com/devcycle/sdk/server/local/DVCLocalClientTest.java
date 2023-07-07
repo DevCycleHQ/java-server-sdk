@@ -80,7 +80,7 @@ public class DVCLocalClientTest {
 
         @Override
         public HostnameVerifier getHostnameVerifier() {
-            return (hostname, session) -> true;
+            return null;
         }
     };
 
