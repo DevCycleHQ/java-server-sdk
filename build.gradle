@@ -30,7 +30,7 @@ signing {
 
 group = "com.devcycle"
 archivesBaseName = "java-server-sdk"
-version = "1.6.2"
+version = "1.7.0"
 
 publishing {
     publications {
@@ -87,7 +87,7 @@ repositories {
 sourceCompatibility = JavaVersion.VERSION_1_8
 
 def wasmResourcePath = "$projectDir/src/main/resources"
-def wasmVersion = "1.6.7"
+def wasmVersion = "1.7.0"
 def wasmUrl = "https://unpkg.com/@devcycle/bucketing-assembly-script@$wasmVersion/build/bucketing-lib.release.wasm"
 task downloadDVCBucketingWASM(type: Download) {
     src wasmUrl

@@ -34,7 +34,7 @@ You can use the SDK in your Maven project by adding the following to your *pom.x
 <dependency>
     <groupId>com.devcycle</groupId>
     <artifactId>java-server-sdk</artifactId>
-    <version>1.6.2</version>
+    <version>1.7.0</version>
     <scope>compile</scope>
 </dependency>
 ```
@@ -43,7 +43,7 @@ You can use the SDK in your Maven project by adding the following to your *pom.x
 Alternatively you can use the SDK in your Gradle project by adding the following to *build.gradle*:
 
 ```yaml
-implementation("com.devcycle:java-server-sdk:1.6.2")
+implementation("com.devcycle:java-server-sdk:1.7.0")
 ```
 
 ## DNS Caching
