@@ -1,5 +1,6 @@
 package com.devcycle.sdk.server.local.api;
 
+import com.devcycle.sdk.server.common.api.APIUtils;
 import com.devcycle.sdk.server.common.api.IDVCApi;
 import com.devcycle.sdk.server.common.api.IRestOptions;
 import com.devcycle.sdk.server.common.interceptor.AuthorizationHeaderInterceptor;
@@ -29,18 +30,7 @@ public final class DVCLocalEventsApiClient {
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         okBuilder = new OkHttpClient.Builder();
 
-        IRestOptions restOptions = options.getRestOptions();
-        if(restOptions != null)
-        {
-            if(restOptions.getHostnameVerifier() != null){
-                okBuilder.hostnameVerifier(restOptions.getHostnameVerifier());
-            }
-
-            if(restOptions.getSocketFactory() != null && restOptions.getTrustManager() != null){
-                okBuilder.sslSocketFactory(restOptions.getSocketFactory(), restOptions.getTrustManager());
-            }
-            okBuilder.addInterceptor(new CustomHeaderInterceptor(restOptions));
-        }
+        APIUtils.applyRestOptions(options.getRestOptions(), okBuilder);
 
         okBuilder.addInterceptor(new AuthorizationHeaderInterceptor(sdkKey));
 
