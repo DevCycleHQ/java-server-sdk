@@ -20,8 +20,16 @@ public final class AuthorizationHeaderInterceptor implements Interceptor {
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
 
+        String headerName = AUTHORIZATION_HEADER;
+
+        // Is there already an authorization header on the request?
+        // If so, we need to rename ours to avoid conflicts
+        if(request.header(AUTHORIZATION_HEADER) != null) {
+            headerName = "DevCycle-" + AUTHORIZATION_HEADER;
+        }
+
         request = request.newBuilder()
-                .addHeader(AUTHORIZATION_HEADER, apiKey)
+                .addHeader(headerName, apiKey)
                 .build();
 
         return chain.proceed(request);
