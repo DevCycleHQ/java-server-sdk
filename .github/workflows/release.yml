@@ -29,8 +29,3 @@ jobs:
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
         run: ./gradlew publishJavaServerSDKPublicationToMavenRepository --no-daemon
-      - uses: DevCycleHQ/release-action@main
-          with:
-            draft: true
-            prerelease: true
-            github-token: ${{ secrets.GITHUB_TOKEN }}
