@@ -3,10 +3,9 @@ name: Release Java SDK
 on:
   workflow_dispatch:
 
-  permissions:
-    contents: write
-    packages: write
-
+permissions:
+  contents: write
+  packages: write
 
 jobs:
   publish:
