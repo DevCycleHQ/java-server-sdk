@@ -95,8 +95,6 @@ Then you can set the logger into the Java Server SDK setting the Custom Logger p
 initialize the client.
 
 ```java
-
-```java
 // Create your logging wrapper
 IDVCLogger loggingWrapper = new IDVCLogger() {
     @Override
