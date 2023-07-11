@@ -1,0 +1,36 @@
+name: Release Java SDK
+
+on:
+  workflow_dispatch:
+
+  permissions:
+    contents: write
+    packages: write
+
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Java 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 11
+          cache: 'gradle'
+      - name: Build with Gradle
+        run: ./gradlew build --no-daemon
+      - name: Publish package
+        env:
+          ORG_GRADLE_PROJECT_ossrhUsername: ${{ secrets.OSSRH_USERNAME }}
+          ORG_GRADLE_PROJECT_ossrhPassword: ${{ secrets.OSSRH_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
+        run: ./gradlew publishJavaServerSDKPublicationToMavenRepository --no-daemon
+      - uses: DevCycleHQ/release-action@main
+          with:
+            draft: true
+            prerelease: true
+            github-token: ${{ secrets.GITHUB_TOKEN }}
