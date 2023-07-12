@@ -10,13 +10,17 @@ import java.nio.charset.StandardCharsets;
 public class LocalConfigServer {
     private HttpServer server;
     private String configData = "";
-    public LocalConfigServer(String configData) throws IOException{
+    public LocalConfigServer(String configData, int port) throws IOException{
         this.configData = configData;
-        InetSocketAddress address = new InetSocketAddress(8000);
+        InetSocketAddress address = new InetSocketAddress(port);
         server = HttpServer.create(address, 0);
         server.createContext("/", this::handleConfigRequest);
         server.setExecutor(null); // use the default executor
         System.out.println("Starting config server on " + address);
+    }
+
+    public String getHostRootURL() {
+        return "http://localhost:" + server.getAddress().getPort() +"/";
     }
 
     public void handleConfigRequest(HttpExchange exchange) throws IOException {
