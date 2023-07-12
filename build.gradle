@@ -25,11 +25,19 @@ java {
 }
 
 signing {
-    def signingKeyId = findProperty("signingKeyId")
-    def signingKey = findProperty("signingKey")
+    def signingKey = base64Decode(findProperty("base64EncodedAsciiArmoredSigningKey"))
     def signingPassword = findProperty("signingPassword")
-    useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
+    useInMemoryPgpKeys(signingKey, signingPassword)
     sign publishing.publications
+}
+
+def base64Decode(encodedString){
+    if(encodedString != null) {
+        byte[] decoded = encodedString.decodeBase64()
+        String decode = new String(decoded)
+        return decode
+    }
+    return null;
 }
 
 group = "com.devcycle"

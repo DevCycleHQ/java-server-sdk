@@ -53,17 +53,18 @@ jobs:
           git add ./README.md
           git commit -m "Release ${TAG_VERSION}"
           git push origin main
-      - name: Build with Gradle
-        run: ./gradlew build --no-daemon
-#      - name: Publish To Sonatype
-#        env:
-#          ORG_GRADLE_PROJECT_ossrhUsername: ${{ secrets.OSSRH_USERNAME }}
-#          ORG_GRADLE_PROJECT_ossrhPassword: ${{ secrets.OSSRH_PASSWORD }}
-#          ORG_GRADLE_PROJECT_signingKeyId: ${{ secrets.SIGNING_KEY_ID }}
-#          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
-#          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
-#        run: ./gradlew publishJavaServerSDKPublicationToMavenRepository --no-daemon
-#      - name: Release SDK
-#        uses: DevCycleHQ/release-action@main
-#        with:
-#          github-token: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and Publish To Sonatype
+        env:
+          ORG_GRADLE_PROJECT_ossrhUsername: ${{ secrets.OSSRH_USERNAME }}
+          ORG_GRADLE_PROJECT_ossrhPassword: ${{ secrets.OSSRH_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_base64EncodedAsciiArmoredSigningKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
+        run: ./gradlew publishJavaServerSDKPublicationToMavenRepository --no-daemon
+      - name: Release SDK
+        uses: DevCycleHQ/release-action@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
