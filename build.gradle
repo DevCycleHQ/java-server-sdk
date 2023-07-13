@@ -7,6 +7,7 @@ plugins {
     id 'maven-publish'
     id 'signing'
     id "com.google.protobuf" version "0.9.3"
+    id "io.github.gradle-nexus.publish-plugin" version "1.3.0"
 }
 
 task javadocJar(type: Jar) {
@@ -25,9 +26,12 @@ java {
 }
 
 signing {
-    def signingKey = base64Decode(findProperty("base64EncodedAsciiArmoredSigningKey"))
+    // The signing key needs to be an ascii armored key version of the binary gpg keyfile
+    // encoded in base64 to preserver formatting when used in an environment variable
+    def signingKey = base64Decode(findProperty("signingKey"))
+    def signingKeyId = findProperty("signingKeyId")
     def signingPassword = findProperty("signingPassword")
-    useInMemoryPgpKeys(signingKey, signingPassword)
+    useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
     sign publishing.publications
 }
 
@@ -46,8 +50,9 @@ version = "1.7.1"
 
 publishing {
     publications {
-        javaServerSDK(MavenPublication) {
-            from components.java
+        mavenJava(MavenPublication) {
+            from(components.java)
+
             pom {
                 name = 'DevCycle Java Server SDK'
                 packaging = 'jar'
@@ -79,15 +84,17 @@ publishing {
             }
         }
     }
+}
+
+nexusPublishing {
+    // Utilizes the Gradle Nexus Publish Plugin: https://github.com/gradle-nexus/publish-plugin/
+    // to publish, close and release repositories to Sonatype
     repositories {
-        maven {
-            def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-            def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
-            credentials {
-                username = findProperty("ossrhUsername")
-                password = findProperty("ossrhPassword")
-            }
+        sonatype {
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            username = findProperty("sonatypeUsername")
+            password = findProperty("sonatypePassword")
         }
     }
 }
@@ -125,10 +132,8 @@ ext {
     lombok_version = "1.18.24"
     okhttp_version = "4.9.3"
     wasmtime_version = "0.15.0"
-
     junit_version = "4.13.2"
     mockito_core_version = "4.6.1"
-
     protobuf_version = "3.23.0"
 }
 
