@@ -29,25 +29,6 @@ java {
     withSourcesJar()
 }
 
-signing {
-    // The signing key needs to be an ascii armored key version of the binary gpg keyfile
-    // encoded in base64 to preserver formatting when used in an environment variable
-    def signingKey = base64Decode(findProperty("signingKey"))
-    def signingKeyId = findProperty("signingKeyId")
-    def signingPassword = findProperty("signingPassword")
-    useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
-    sign publishing.publications
-}
-
-def base64Decode(encodedString){
-    if(encodedString != null) {
-        byte[] decoded = encodedString.decodeBase64()
-        String decode = new String(decoded)
-        return decode
-    }
-    return null;
-}
-
 group = "com.devcycle"
 archivesBaseName = "java-server-sdk"
 version = "1.7.1"
@@ -90,15 +71,35 @@ publishing {
     }
 }
 
-nexusPublishing {
-    // Utilizes the Gradle Nexus Publish Plugin: https://github.com/gradle-nexus/publish-plugin/
-    // to publish, close and release repositories to Sonatype
-    repositories {
-        sonatype {
-            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-            username = findProperty("sonatypeUsername")
-            password = findProperty("sonatypePassword")
+signing {
+    // The signing key needs to be an ascii armored key version of the binary gpg keyfile
+    // encoded in base64 to preserver formatting when used in an environment variable
+    def signingKey = base64Decode(findProperty("signingKey"))
+    def signingKeyId = findProperty("signingKeyId")
+    def signingPassword = findProperty("signingPassword")
+    useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
+    sign publishing.publications
+}
+
+def base64Decode(encodedString){
+    if(encodedString != null) {
+        byte[] decoded = encodedString.decodeBase64()
+        String decode = new String(decoded)
+        return decode
+    }
+    return null;
+}
+if (project == rootProject) {
+    nexusPublishing {
+        // Utilizes the Gradle Nexus Publish Plugin: https://github.com/gradle-nexus/publish-plugin/
+        // to publish, close and release repositories to Sonatype
+        repositories {
+            sonatype {
+                nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+                snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+                username = findProperty("sonatypeUsername")
+                password = findProperty("sonatypePassword")
+            }
         }
     }
 }
