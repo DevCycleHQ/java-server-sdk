@@ -87,7 +87,7 @@ public class DVCLocalClientTest {
     @BeforeClass
     public static void setup() throws Exception {
         // spin up a lightweight http server to serve the config and properly initialize the client
-        localConfigServer = new LocalConfigServer(TestDataFixtures.SmallConfig());
+        localConfigServer = new LocalConfigServer(TestDataFixtures.SmallConfig(), 9000);
         localConfigServer.start();
         client = createClient(TestDataFixtures.SmallConfig());
     }
@@ -96,7 +96,7 @@ public class DVCLocalClientTest {
         localConfigServer.setConfigData(config);
 
         DVCLocalOptions options = DVCLocalOptions.builder()
-                .configCdnBaseUrl("http://localhost:8000/")
+                .configCdnBaseUrl(localConfigServer.getHostRootURL())
                 .configPollingIntervalMS(60000)
                 .customLogger(testLoggingWrapper)
                 .restOptions(restOptions)
