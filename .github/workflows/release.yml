@@ -106,6 +106,7 @@ jobs:
           ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
         run: ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository
+        if: inputs.prerelease != true && inputs.draft != true
 
       - name: Release SDK
         uses: DevCycleHQ/release-action/gh-release@main
