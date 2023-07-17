@@ -22,7 +22,7 @@ dependencies {
 	compileOnly('org.projectlombok:lombok:1.18.24')
 
 	// The line below makes the Example App use the production build of the Java Server SDK
-	 implementation("com.devcycle:java-server-sdk:1.7.1")
+	 implementation("com.devcycle:java-server-sdk:1.8.0")
 
 	// The line below makes the Example App use the local version of the Java Server SDK
 	// Run `./gradlew build` in the root directory (`cd .. && ./gradlew build`) to build the local version of the SDK
