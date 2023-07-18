@@ -13,6 +13,15 @@ on:
         required: true
         default: false
         type: boolean
+      version-increment-type:
+        description: 'Which part of the version to increment:'
+        required: true
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+        default: 'patch'
 
 permissions:
   contents: write
@@ -28,31 +37,23 @@ jobs:
           token: ${{ secrets.AUTOMATION_USER_TOKEN }}
           fetch-depth: 0
 
-      - name: Get latest non-prerelease release
-        id: latestrelease
-        uses: cardinalby/git-get-release-action@v1
+      - uses: DevCycleHQ/release-action/prepare-release@main
+        id: prepare-release
         with:
-          latest: true
-          prerelease: false
-          draft: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get next version
-        id: semverbump
-        uses: WyriHaximus/github-action-next-semvers@v1.2.1
-        with:
-          version: ${{ steps.latestrelease.outputs.tag_name }}
+          github-token: ${{ secrets.AUTOMATION_USER_TOKEN }}
+          prerelease: ${{ github.event.inputs.prerelease }}
+          draft: ${{ github.event.inputs.draft }}
+          version-increment-type: ${{ github.event.inputs.version-increment-type }}
 
       - name: Update Version in code
         run: |
-          sed -i "s/^version = \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/version = \"${{steps.semverbump.outputs.minor}}\"/g" build.gradle
-          sed -i "s/private String sdkVersion = \"[0-9]\+\.[0-9]\+\.[0-9]\+\";/private String sdkVersion = \"${{steps.semverbump.outputs.minor}}\";/g" src/main/java/com/devcycle/sdk/server/common/model/PlatformData.java
-          sed -i "s/java-server-sdk:[0-9]\+\.[0-9]\+\.[0-9]\+/java-server-sdk:${{steps.semverbump.outputs.minor}}/g" ./example-cloud/build.gradle
-          sed -i "s/java-server-sdk:[0-9]\+\.[0-9]\+\.[0-9]\+/java-server-sdk:${{steps.semverbump.outputs.minor}}/g" ./example-local/build.gradle
-          sed -i "s/<java\.server\.sdk\.version>[0-9]\+\.[0-9]\+\.[0-9]\+<\/java\.server\.sdk\.version>/<java.server.sdk.version>${{steps.semverbump.outputs.minor}}<\/java.server.sdk.version>/g" ./benchmark/pom.xml
-          sed -i "s/<version>[0-9]\+\.[0-9]\+\.[0-9]\+<\/version>/<version>${{steps.semverbump.outputs.minor}}<\/version>/g" ./README.md
-          sed -i "s/java-server-sdk:[0-9]\+\.[0-9]\+\.[0-9]\+/java-server-sdk:${{steps.semverbump.outputs.minor}}/g" ./README.md
+          sed -i "s/^version = \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/version = \"${{steps.prepare-release.outputs.next-release-tag}}\"/g" build.gradle
+          sed -i "s/private String sdkVersion = \"[0-9]\+\.[0-9]\+\.[0-9]\+\";/private String sdkVersion = \"${{steps.prepare-release.outputs.next-release-tag}}\";/g" src/main/java/com/devcycle/sdk/server/common/model/PlatformData.java
+          sed -i "s/java-server-sdk:[0-9]\+\.[0-9]\+\.[0-9]\+/java-server-sdk:${{steps.prepare-release.outputs.next-release-tag}}/g" ./example-cloud/build.gradle
+          sed -i "s/java-server-sdk:[0-9]\+\.[0-9]\+\.[0-9]\+/java-server-sdk:${{steps.prepare-release.outputs.next-release-tag}}/g" ./example-local/build.gradle
+          sed -i "s/<java\.server\.sdk\.version>[0-9]\+\.[0-9]\+\.[0-9]\+<\/java\.server\.sdk\.version>/<java.server.sdk.version>${{steps.prepare-release.outputs.next-release-tag}}<\/java.server.sdk.version>/g" ./benchmark/pom.xml
+          sed -i "s/<version>[0-9]\+\.[0-9]\+\.[0-9]\+<\/version>/<version>${{steps.prepare-release.outputs.next-release-tag}}<\/version>/g" ./README.md
+          sed -i "s/java-server-sdk:[0-9]\+\.[0-9]\+\.[0-9]\+/java-server-sdk:${{steps.prepare-release.outputs.next-release-tag}}/g" ./README.md
 
       - name: Commit version change
         run: |
@@ -64,20 +65,12 @@ jobs:
           git add ./example-local/build.gradle
           git add ./benchmark/pom.xml
           git add ./README.md
-          git commit -m "Release ${{steps.semverbump.outputs.minor}}"
+          git commit -m "Release ${{steps.prepare-release.outputs.next-release-tag}}"
 
       - name: Push version change
         run: |
           git push origin HEAD:main
-        if: inputs.prerelease != true && inputs.draft != true
-
-      - name: Push version change (prerelease)
-        run: |
-          git branch --force --track ${BRANCH}
-          git push origin ${BRANCH}
-        env:
-          BRANCH: prerelease-${{ steps.semverbump.outputs.minor }}
-        if: inputs.prerelease == true && inputs.draft != true
+        if: inputs.draft != true
 
       - name: Set up Java 11
         uses: actions/setup-java@v3
@@ -108,9 +101,17 @@ jobs:
         run: ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository
         if: inputs.prerelease != true && inputs.draft != true
 
-      - name: Release SDK
-        uses: DevCycleHQ/release-action/gh-release@main
+      - uses: DevCycleHQ/release-action/create-release@main
+        id: create-release
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.prepare-release.outputs.next-release-tag }}
+          target: main
           prerelease: ${{ github.event.inputs.prerelease }}
           draft: ${{ github.event.inputs.draft }}
+          changelog: ${{ steps.prepare-release.outputs.changelog }}
+
+      - name: Display link to release
+        run: |
+          echo "::notice title=Release ID::${{ steps.create-release.outputs.release-id }}"
+          echo "::notice title=Release URL::${{ steps.create-release.outputs.release-url }}"
