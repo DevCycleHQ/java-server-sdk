@@ -117,7 +117,7 @@ task downloadDVCBucketingWASM(type: Download) {
     src wasmUrl
     dest wasmResourcePath
     doLast {
-        println "Completed DVC Bucketing WASM Download to $wasmResourcePath"
+        println "Completed DevCycle Bucketing WASM Download to $wasmResourcePath"
     }
 }
 

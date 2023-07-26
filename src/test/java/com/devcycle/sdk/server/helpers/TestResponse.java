@@ -87,8 +87,8 @@ public final class TestResponse {
         return Calls.response(variable);
     }
 
-    public static Call<DVCResponse> getTrackResponse(int count) {
-        DVCResponse dvcResponse = DVCResponse.builder()
+    public static Call<DevCycleResponse> getTrackResponse(int count) {
+        DevCycleResponse dvcResponse = DevCycleResponse.builder()
                 .message(String.format("Successfully received %d events", count))
                 .build();
 

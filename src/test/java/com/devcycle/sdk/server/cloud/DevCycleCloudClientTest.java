@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
+import com.devcycle.sdk.server.cloud.api.DevCycleCloudClient;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,11 +16,10 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import com.devcycle.sdk.server.cloud.api.DVCCloudClient;
-import com.devcycle.sdk.server.cloud.model.DVCCloudOptions;
+import com.devcycle.sdk.server.cloud.model.DevCycleCloudOptions;
 import com.devcycle.sdk.server.common.api.DVCApiMock;
-import com.devcycle.sdk.server.common.api.IDVCApi;
-import com.devcycle.sdk.server.common.exception.DVCException;
+import com.devcycle.sdk.server.common.api.IDevCycleApi;
+import com.devcycle.sdk.server.common.exception.DevCycleException;
 import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.helpers.WhiteBox;
 
@@ -27,33 +27,33 @@ import com.devcycle.sdk.server.helpers.WhiteBox;
  * API tests for DevcycleApi
  */
 @RunWith(MockitoJUnitRunner.class)
-public class DVCCloudClientTest {
+public class DevCycleCloudClientTest {
 
     @Mock
-    private IDVCApi apiInterface;
+    private IDevCycleApi apiInterface;
 
-    private DVCCloudClient api;
+    private DevCycleCloudClient api;
 
     private DVCApiMock dvcApiMock;
 
-    private DVCCloudOptions dvcOptions;
+    private DevCycleCloudOptions dvcOptions;
 
     @Before
     public void setup() {
         final String apiKey = String.format("server-%s", UUID.randomUUID());
 
-        api = new DVCCloudClient(apiKey);
+        api = new DevCycleCloudClient(apiKey);
 
         WhiteBox.setInternalState(api, "api", apiInterface);
 
         dvcApiMock = new DVCApiMock();
 
-        dvcOptions = DVCCloudOptions.builder().build();
+        dvcOptions = DevCycleCloudOptions.builder().build();
     }
 
     @Test
-    public void getFeaturesTest() throws DVCException {
-        User user = User.builder()
+    public void getFeaturesTest() throws DevCycleException {
+        DevCycleUser user = DevCycleUser.builder()
                 .userId("j_test")
                 .country("US")
                 .build();
@@ -71,7 +71,7 @@ public class DVCCloudClientTest {
 
     @Test
     public void getVariableByKeyTest() {
-        User user = User.builder()
+        DevCycleUser user = DevCycleUser.builder()
                 .userId("j_test")
                 .build();
 
@@ -86,14 +86,14 @@ public class DVCCloudClientTest {
             assertUserDefaultsCorrect(user);
 
             Assert.assertFalse(variable.getValue());
-        } catch (DVCException e) {
+        } catch (DevCycleException e) {
             e.printStackTrace();
         }
     }
 
     @Test
     public void getVariableValueByKeyTest() {
-        User user = User.builder()
+        DevCycleUser user = DevCycleUser.builder()
                 .userId("j_test")
                 .build();
 
@@ -107,14 +107,14 @@ public class DVCCloudClientTest {
             assertUserDefaultsCorrect(user);
 
             Assert.assertFalse(value);
-        } catch (DVCException e) {
+        } catch (DevCycleException e) {
             e.printStackTrace();
         }
     }
 
     @Test
-    public void getVariablesTest() throws DVCException {
-        User user = User.builder()
+    public void getVariablesTest() throws DevCycleException {
+        DevCycleUser user = DevCycleUser.builder()
                 .userId("j_test")
                 .build();
 
@@ -129,7 +129,7 @@ public class DVCCloudClientTest {
 
     @Test
     public void variable_nullUser_throwsException() {
-        Assert.assertThrows("User cannot be null",
+        Assert.assertThrows("DevCycleUser cannot be null",
                 IllegalArgumentException.class,
                 () -> api.variable(null, "wibble", true));
     }
@@ -137,12 +137,12 @@ public class DVCCloudClientTest {
     @Test
     public void variable_nullUserId_throwsException() {
         Assert.assertThrows("userId is marked non-null but is null",
-                NullPointerException.class, () -> User.builder().build());
+                NullPointerException.class, () -> DevCycleUser.builder().build());
     }
 
     @Test
     public void variable_emptyUserId_throwsException() {
-        User user = User.builder().userId("").build();
+        DevCycleUser user = DevCycleUser.builder().userId("").build();
 
         Assert.assertThrows("userId cannot be empty",
                 IllegalArgumentException.class, () -> api.variable(user, "wibble", true));
@@ -150,31 +150,31 @@ public class DVCCloudClientTest {
 
     @Test
     public void variable_emptyKey_throwsException() {
-        User user = User.builder()
+        DevCycleUser user = DevCycleUser.builder()
                 .userId("j_test")
                 .build();
 
         Assert.assertThrows("Missing parameter: key",
-                DVCException.class, () -> api.variable(user, null, true));
+                DevCycleException.class, () -> api.variable(user, null, true));
     }
 
     @Test
     public void variable_emptyDefaultValue_throwsException() {
-        User user = User.builder()
+        DevCycleUser user = DevCycleUser.builder()
                 .userId("j_test")
                 .build();
 
         Assert.assertThrows("Missing parameter: defaultValue",
-        DVCException.class, () -> api.variable(user, "wibble", null));
+        DevCycleException.class, () -> api.variable(user, "wibble", null));
     }
 
     @Test
-    public void postEventsTest() throws DVCException {
-        User user = User.builder()
+    public void postEventsTest() throws DevCycleException {
+        DevCycleUser user = DevCycleUser.builder()
                 .userId("j_test")
                 .build();
 
-        Event event = Event.builder()
+        DevCycleEvent event = DevCycleEvent.builder()
                 .date(Instant.now().toEpochMilli())
                 .target("test target")
                 .type("test event")
@@ -184,7 +184,7 @@ public class DVCCloudClientTest {
                         .build())
                 .build();
 
-        UserAndEvents userAndEvents = UserAndEvents.builder()
+        DevCycleUserAndEvents userAndEvents = DevCycleUserAndEvents.builder()
                 .user(user)
                 .events(Collections.singletonList(event))
                 .build();
@@ -196,7 +196,7 @@ public class DVCCloudClientTest {
         assertUserDefaultsCorrect(user);
     }
 
-    private void assertUserDefaultsCorrect(User user) {
+    private void assertUserDefaultsCorrect(DevCycleUser user) {
         Assert.assertEquals("Java", user.getPlatform());
         Assert.assertEquals(PlatformData.SdkTypeEnum.SERVER, user.getSdkType());
         Assert.assertNotNull(user.getPlatformVersion());

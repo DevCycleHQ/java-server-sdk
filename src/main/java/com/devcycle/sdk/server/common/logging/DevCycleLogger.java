@@ -1,12 +1,12 @@
 package com.devcycle.sdk.server.common.logging;
 /**
- * DVCLogger is a simple central entrypoint for the SDK to log messages without pinning the SDK to a
+ * DevCycleLogger is a simple central entrypoint for the SDK to log messages without pinning the SDK to a
  * specific logging framework. By default it logs to stdout but can e overriden by calling setCustomLogger()
  */
-public class DVCLogger {
-    private static IDVCLogger logger = new SimpleDVCLogger(SimpleDVCLogger.Level.INFO);
-    public static void setCustomLogger(IDVCLogger logger) {
-        DVCLogger.logger = logger;
+public class DevCycleLogger {
+    private static IDevCycleLogger logger = new SimpleDevCycleLogger(SimpleDevCycleLogger.Level.INFO);
+    public static void setCustomLogger(IDevCycleLogger logger) {
+        DevCycleLogger.logger = logger;
     }
 
     public static void debug(String message) {

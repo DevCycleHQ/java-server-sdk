@@ -1,9 +1,9 @@
 package com.devcycle.sdk.server.local.model;
 
-import com.devcycle.sdk.server.common.model.Event;
-import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.common.model.DevCycleEvent;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
 
 public class EventPayload {
-    private User user;
-    private Event[] events;
+    private DevCycleUser user;
+    private DevCycleEvent[] events;
 }

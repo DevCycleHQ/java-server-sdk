@@ -1,9 +1,9 @@
 package com.devcycle;
 
-import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.common.model.Variable;
-import com.devcycle.sdk.server.local.api.DVCLocalClient;
-import com.devcycle.sdk.server.local.model.DVCLocalOptions;
+import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
+import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
 
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
@@ -19,7 +19,7 @@ public class SDKBenchmark {
     public static class BenchmarkState {
         public MockServer mockServer;
 
-        public DVCLocalClient client;
+        public DevCycleLocalClient client;
 
         @Setup(Level.Iteration)
         public void setup() {
@@ -30,7 +30,7 @@ public class SDKBenchmark {
                 e.printStackTrace();
             }
 
-            DVCLocalOptions dvcLocalOptions = DVCLocalOptions.builder()
+            DevCycleLocalOptions dvcLocalOptions = DevCycleLocalOptions.builder()
                     .configPollingIntervalMS(10000)
                     .configRequestTimeoutMs(5000)
                     .eventFlushIntervalMS(5000)
@@ -40,7 +40,7 @@ public class SDKBenchmark {
                     .eventsApiBaseUrl("http://localhost:8000/event/")
                     .build();
 
-            client = new DVCLocalClient("dvc_server_some_real_sdk_key", dvcLocalOptions);
+            client = new DevCycleLocalClient("dvc_server_some_real_sdk_key", dvcLocalOptions);
 
             try {
                 System.out.println("Waiting for DVC client to load");
@@ -64,7 +64,7 @@ public class SDKBenchmark {
     @Fork(1)
     @OutputTimeUnit(TimeUnit.NANOSECONDS)
     public void variableBenchmark(BenchmarkState state) {
-        User user = User.builder().userId("12345").email("some.user@gmail.com").build();
+        DevCycleUser user = DevCycleUser.builder().userId("12345").email("some.user@gmail.com").build();
         Variable<Boolean> var = state.client.variable(user, "v-key-25", false);
 
         if( var == null) {

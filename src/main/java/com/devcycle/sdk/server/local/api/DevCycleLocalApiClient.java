@@ -1,10 +1,8 @@
 package com.devcycle.sdk.server.local.api;
 
 import com.devcycle.sdk.server.common.api.APIUtils;
-import com.devcycle.sdk.server.common.api.IDVCApi;
-import com.devcycle.sdk.server.common.api.IRestOptions;
-import com.devcycle.sdk.server.common.interceptor.CustomHeaderInterceptor;
-import com.devcycle.sdk.server.local.model.DVCLocalOptions;
+import com.devcycle.sdk.server.common.api.IDevCycleApi;
+import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -15,7 +13,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-public final class DVCLocalApiClient {
+public final class DevCycleLocalApiClient {
 
   private final OkHttpClient.Builder okBuilder;
   private final Retrofit.Builder adapterBuilder;
@@ -29,7 +27,7 @@ public final class DVCLocalApiClient {
   private String configUrl;
   private int requestTimeoutMs;
 
-  private DVCLocalApiClient(DVCLocalOptions options) {
+  private DevCycleLocalApiClient(DevCycleLocalOptions options) {
 
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     okBuilder = new OkHttpClient.Builder();
@@ -51,15 +49,15 @@ public final class DVCLocalApiClient {
         .addConverterFactory(JacksonConverterFactory.create());
   }
 
-  public DVCLocalApiClient(String sdkKey, DVCLocalOptions options) {
+  public DevCycleLocalApiClient(String sdkKey, DevCycleLocalOptions options) {
     this(options);
   }
 
-  public IDVCApi initialize() {
+  public IDevCycleApi initialize() {
     return adapterBuilder
         .client(okBuilder.build())
         .build()
-        .create(IDVCApi.class);
+        .create(IDevCycleApi.class);
   }
 
   private Boolean checkIfStringNullOrEmpty(String stringToCheck) {

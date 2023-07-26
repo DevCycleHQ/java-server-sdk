@@ -8,25 +8,25 @@ import com.devcycle.sdk.server.local.model.EventsBatch;
 
 import retrofit2.Call;
 
-public class DVCApiMock implements IDVCApi {
+public class DVCApiMock implements IDevCycleApi {
 
     @Override
-    public Call<Map<String, Feature>> getFeatures(User user, Boolean enabledEdgeDB) {
+    public Call<Map<String, Feature>> getFeatures(DevCycleUser user, Boolean enabledEdgeDB) {
         return TestResponse.getFeatures();
     }
 
     @Override
-    public Call<Variable> getVariableByKey(User user, String key, Boolean enabledEdgeDB) {
+    public Call<Variable> getVariableByKey(DevCycleUser user, String key, Boolean enabledEdgeDB) {
         return TestResponse.getVariableByKey();
     }
 
     @Override
-    public Call<Map<String, BaseVariable>> getVariables(User user, Boolean enabledEdgeDB) {
+    public Call<Map<String, BaseVariable>> getVariables(DevCycleUser user, Boolean enabledEdgeDB) {
         return TestResponse.getVariables();
     }
 
     @Override
-    public Call<DVCResponse> track(UserAndEvents userAndEvents, Boolean enableEdgeDB) {
+    public Call<DevCycleResponse> track(DevCycleUserAndEvents userAndEvents, Boolean enableEdgeDB) {
         return TestResponse.getTrackResponse(1);
     }
 
@@ -37,7 +37,7 @@ public class DVCApiMock implements IDVCApi {
     }
 
     @Override
-    public Call<DVCResponse> publishEvents(EventsBatch eventsBatch) {
+    public Call<DevCycleResponse> publishEvents(EventsBatch eventsBatch) {
         // TODO Auto-generated method stub
         return null;
     }

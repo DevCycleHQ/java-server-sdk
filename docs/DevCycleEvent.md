@@ -1,4 +1,4 @@
-# Event
+# DevCycleEvent
 
 ## Properties
 Name | Type | Description | Notes
