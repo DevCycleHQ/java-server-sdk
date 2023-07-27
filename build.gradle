@@ -15,12 +15,12 @@ if (project == rootProject) {
 }
 
 task javadocJar(type: Jar) {
-    classifier = 'javadoc'
+    archiveClassifier.set("javadoc")
     from javadoc
 }
 
 task sourcesJar(type: Jar) {
-    classifier = 'sources'
+    archiveClassifier.set("sources")
     from sourceSets.main.allSource
 }
 
@@ -156,9 +156,9 @@ dependencies {
     api("com.fasterxml.jackson.core:jackson-databind:$jackson_version")
     implementation("io.swagger.core.v3:swagger-annotations:$swagger_annotations_version")
 
-    implementation ("io.github.kawamuray.wasmtime:wasmtime-java:$wasmtime_version")
+    implementation("io.github.kawamuray.wasmtime:wasmtime-java:$wasmtime_version")
 
-    implementation ("com.google.protobuf:protobuf-java:$protobuf_version")
+    implementation("com.google.protobuf:protobuf-java:$protobuf_version")
 
     compileOnly("org.projectlombok:lombok:$lombok_version")
 
