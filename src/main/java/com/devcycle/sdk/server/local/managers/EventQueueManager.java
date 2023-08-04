@@ -24,7 +24,7 @@ public class EventQueueManager {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private IDVCApi eventsApiClient;
     private int eventFlushIntervalMS;
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, new DaemonThreadFactory());
     private boolean isFlushingEvents = false;
     private int flushEventQueueSize;
     private int maxEventQueueSize;

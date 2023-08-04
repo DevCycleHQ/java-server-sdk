@@ -21,7 +21,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public final class EnvironmentConfigManager {
-  private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+  private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, new DaemonThreadFactory());
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final int DEFAULT_POLL_INTERVAL_MS = 30000;
   private static final int MIN_INTERVALS_MS = 1000;
