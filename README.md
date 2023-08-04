@@ -8,7 +8,7 @@ This version of the DevCycle SDK works with Java 8 and above.
 
 Using the Java SDK library requires [Maven](https://maven.apache.org/) or [Gradle](https://gradle.org/) >= 7.6+ to be installed.
 
-An x86_64 JDK is required for Local Bucketing with the DevCycle Java SDK. 
+An x86_64 or aarch64 JDK is required for Local Bucketing with the DevCycle Java SDK.
 
 Currently Supported Platforms are:
 
@@ -16,9 +16,10 @@ Currently Supported Platforms are:
 | --- | --- |
 | Linux (ELF) | x86_64 |
 | Mac OS | x86_64 |
+| Mac OS | aarch64 |
 | Windows | x86_64 |
 
-In addition, the environment must support GLIBC v2.32 or higher.  You can use the following command to check your GLIBC version:
+In addition, the environment must support GLIBC v2.16 or higher.  You can use the following command to check your GLIBC version:
 
 ```bash
 ldd --version
