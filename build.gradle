@@ -169,3 +169,16 @@ dependencies {
     testCompileOnly("org.projectlombok:lombok:$lombok_version")
 }
 
+sourceSets.main.java.srcDirs += 'examples'
+
+task runLocalExample(type: JavaExec) {
+    description = "Run the local bucketing example"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'com.devcycle.sdk.server.local.LocalExample'
+}
+
+task runCloudExample(type: JavaExec) {
+    description = "Run the cloud bucketing example"
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'com.devcycle.sdk.server.local.CloudExample'
+}
