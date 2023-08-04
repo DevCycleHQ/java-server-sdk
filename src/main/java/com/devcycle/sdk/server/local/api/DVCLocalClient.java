@@ -45,7 +45,7 @@ public final class DVCLocalClient {
     }
 
     if(!isValidRuntime()){
-      DVCLogger.warning("Invalid architecture. The DVCLocalClient requires a 64-bit, x86 runtime environment.");
+      DVCLogger.warning("The DVCLocalClient requires a 64-bit, x86 or aarch64 runtime environment. This architecture may not be supported: " + System.getProperty("os.arch") + " | " + System.getProperty("sun.arch.data.model"));
     }
 
     localBucketing.setPlatformData(PlatformData.builder().build().toString());
@@ -260,8 +260,19 @@ public final class DVCLocalClient {
   }
 
   private boolean isValidRuntime() {
-    String arch = System.getProperty("os.arch");
-    String model = System.getProperty("sun.arch.data.model");
-    return arch.contains("x86") && model.contains("64");
+    String os = System.getProperty("os.name").toLowerCase();
+    String arch = System.getProperty("os.arch").toLowerCase();
+    String model = System.getProperty("sun.arch.data.model").toLowerCase();
+    if (arch.contains("x86") && model.contains("64")) {
+      // Assume support for all x86_64 platforms
+      return true;
+    }
+    if (os.contains("mac os") || os.contains("darwin")) {
+      if (arch.equals("aarch64")) {
+        // Specific case of Apple Silicon
+        return true;
+      }
+    }
+    return false;
   }
 }
