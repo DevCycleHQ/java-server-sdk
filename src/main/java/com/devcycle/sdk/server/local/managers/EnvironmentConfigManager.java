@@ -57,7 +57,7 @@ public final class EnvironmentConfigManager {
             getConfig();
           }
         } catch (DVCException e) {
-          DVCLogger.info("Failed to load config: " + e.getMessage());
+          DVCLogger.error("Failed to load config: " + e.getMessage());
         }
       }
     };
@@ -136,7 +136,7 @@ public final class EnvironmentConfigManager {
         localBucketing.storeConfig(sdkKey, mapper.writeValueAsString(config));
       } catch (JsonProcessingException e) {
         if (this.config != null) {
-          DVCLogger.debug("Unable to parse config with etag: " + currentETag + ". Using cache, etag " + this.configETag);
+          DVCLogger.error("Unable to parse config with etag: " + currentETag + ". Using cache, etag " + this.configETag);
           return this.config;
         } else {
           errorResponse.setMessage(e.getMessage());
