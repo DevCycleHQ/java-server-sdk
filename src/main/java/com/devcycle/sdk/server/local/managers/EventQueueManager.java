@@ -76,7 +76,7 @@ public class EventQueueManager {
 
         if (flushPayloads.length == 0) return;
 
-        DVCLogger.info("DVC Flush Payloads: " + Arrays.toString(flushPayloads));
+        DVCLogger.debug("DVC Flush Payloads: " + Arrays.toString(flushPayloads));
 
         int eventCount = 0;
         isFlushingEvents = true;
@@ -85,7 +85,7 @@ public class EventQueueManager {
             publishEvents(this.sdkKey, payload);
         }
         isFlushingEvents = false;
-        DVCLogger.info(String.format("DVC Flush %d AS Events, for %d Users", eventCount, flushPayloads.length));
+        DVCLogger.debug(String.format("DVC Flush %d AS Events, for %d Users", eventCount, flushPayloads.length));
     }
 
     /**

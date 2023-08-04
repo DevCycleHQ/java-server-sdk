@@ -55,7 +55,7 @@ public final class DVCLocalClient {
     try {
       eventQueueManager = new EventQueueManager(sdkKey, localBucketing, dvcOptions);
     } catch (Exception e) {
-      DVCLogger.warning("Error creating event queue due to error: " + e.getMessage());
+      DVCLogger.error("Error creating event queue due to error: " + e.getMessage());
     }
   }
 
@@ -85,7 +85,7 @@ public final class DVCLocalClient {
     try {
       bucketedUserConfig = localBucketing.generateBucketedConfig(sdkKey, user);
     } catch (JsonProcessingException e) {
-      DVCLogger.info("Unable to parse JSON for allFeatures due to error: " + e.getMessage());
+      DVCLogger.error("Unable to parse JSON for allFeatures due to error: " + e.getMessage());
       return Collections.emptyMap();
     }
     return bucketedUserConfig.features;
@@ -161,7 +161,7 @@ public final class DVCLocalClient {
       } else {
         SDKVariable_PB sdkVariable = SDKVariable_PB.parseFrom(variableData);
         if(sdkVariable.getType() != pbVariableType) {
-          DVCLogger.info("Variable type mismatch, returning default value");
+          DVCLogger.warning("Variable type mismatch, returning default value");
           return defaultVariable;
         }
         return ProtobufUtils.createVariable(sdkVariable, defaultValue);
@@ -189,7 +189,7 @@ public final class DVCLocalClient {
     try {
       bucketedUserConfig = localBucketing.generateBucketedConfig(sdkKey, user);
     } catch (JsonProcessingException e) {
-      DVCLogger.info("Unable to parse JSON for allVariables due to error: " + e.getMessage());
+      DVCLogger.error("Unable to parse JSON for allVariables due to error: " + e.getMessage());
       return Collections.emptyMap();
     }
     return bucketedUserConfig.variables;
@@ -211,14 +211,14 @@ public final class DVCLocalClient {
     try {
       eventQueueManager.queueEvent(user, event);
     } catch (Exception e) {
-      DVCLogger.warning("Failed to queue event due to error: " + e.getMessage());
+      DVCLogger.error("Failed to queue event due to error: " + e.getMessage());
     }
   }
 
   public void setClientCustomData(Map<String,Object> customData) {
     if (!isInitialized())
     {
-      DVCLogger.info("SetClientCustomData called before DVCClient has initialized");
+      DVCLogger.error("SetClientCustomData called before DVCClient has initialized");
      return;
     }
 
