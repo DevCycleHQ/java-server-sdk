@@ -217,7 +217,7 @@ public final class DevCycleLocalClient {
 
   public void setClientCustomData(Map<String,Object> customData) {
     if (!isInitialized()) {
-      DevCycleLogger.error("SetClientCustomData called before DVCClient has initialized");
+      DevCycleLogger.error("SetClientCustomData called before DevCycleClient has initialized");
       return;
     }
 

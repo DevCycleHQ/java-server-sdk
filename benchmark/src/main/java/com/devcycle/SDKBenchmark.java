@@ -43,7 +43,7 @@ public class SDKBenchmark {
             client = new DevCycleLocalClient("dvc_server_some_real_sdk_key", dvcLocalOptions);
 
             try {
-                System.out.println("Waiting for DVC client to load");
+                System.out.println("Waiting for DevCycle client to load");
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -51,7 +51,7 @@ public class SDKBenchmark {
         }
         @TearDown(Level.Iteration)
         public void tearDown() {
-            System.out.println("Cleaning up DVC client");
+            System.out.println("Cleaning up DevCycle client");
             client.close();
             System.out.println("Stop mock HTTP server");
             mockServer.close();

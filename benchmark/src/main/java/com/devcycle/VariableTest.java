@@ -24,7 +24,7 @@ public class VariableTest {
                 .disableAutomaticEventLogging(false)
                 .build();
 
-        System.out.println("Initializing DVC Client version: " + PlatformData.builder().build().getSdkVersion());
+        System.out.println("Initializing DevCycle Client version: " + PlatformData.builder().build().getSdkVersion());
         System.out.print("Setup Client");
         DevCycleLocalClient dvcClient = new DevCycleLocalClient("dvc_server_some_sdk_key", dvcLocalOptions);
 

@@ -50,7 +50,7 @@ public class EventQueueManager {
             try {
                 flushEvents();
             } catch (Exception e) {
-                DevCycleLogger.error( "DVC Error flushing events: " + e.getMessage(), e);
+                DevCycleLogger.error( "DevCycle Error flushing events: " + e.getMessage(), e);
             }
         };
 
@@ -71,7 +71,7 @@ public class EventQueueManager {
         try {
             flushPayloads = this.localBucketing.flushEventQueue(this.sdkKey);
         } catch (Exception e) {
-            DevCycleLogger.error( "DVC Error flushing event payloads: " + e.getMessage(), e);
+            DevCycleLogger.error( "DevCycle Error flushing event payloads: " + e.getMessage(), e);
         }
 
         if (flushPayloads.length == 0) return;
@@ -89,7 +89,7 @@ public class EventQueueManager {
     }
 
     /**
-     * Queue DVCAPIEvent for publishing to DevCycle Events API.
+     * Queue DevCycleAPIEvent for publishing to DevCycle Events API.
      */
     public void queueEvent(DevCycleUser user, DevCycleEvent event) throws Exception {
         if (checkEventQueueSize()) {
@@ -124,7 +124,7 @@ public class EventQueueManager {
         if (responseCode == 201) {
             localBucketing.onPayloadSuccess(sdkKey, flushPayload.payloadId);
         } else {
-            DevCycleLogger.warning("DVC Error Publishing Events: " + responseCode);
+            DevCycleLogger.warning("DevCycle Error Publishing Events: " + responseCode);
             localBucketing.onPayloadFailure(sdkKey, flushPayload.payloadId, responseCode >= 500);
         }
     }
@@ -135,7 +135,7 @@ public class EventQueueManager {
         try {
             response = call.execute();
         } catch (IOException e) {
-            DevCycleLogger.error( "DVC Events error: " + e.getMessage(), e);
+            DevCycleLogger.error( "DevCycle Events error: " + e.getMessage(), e);
         }
 
         if (response == null) {
@@ -169,7 +169,7 @@ public class EventQueueManager {
         try {
             flushEvents();
         } catch (Exception e) {
-            DevCycleLogger.error("DVC Cleanup error: " + e.getMessage(), e);
+            DevCycleLogger.error("DevCycle Cleanup error: " + e.getMessage(), e);
         }
         scheduler.shutdown();
     }
