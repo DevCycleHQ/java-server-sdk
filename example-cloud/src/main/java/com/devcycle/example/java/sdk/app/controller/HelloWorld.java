@@ -45,7 +45,7 @@ public class HelloWorld {
             String updateHomePageValue = dvcCloud.variableValue(getUser(), variableKey, "default string");
             model.addAttribute("variableKey", variableKey);
             model.addAttribute("variationValue", updateHomePageValue);
-        }catch (DevCycleException e){
+        } catch(DevCycleException e) {
             System.out.println("DevCycleException: " + e.getMessage());
         }
         return "fragments/flagData :: value ";
@@ -54,14 +54,14 @@ public class HelloWorld {
     @GetMapping("/cloud/activateFlagDetails")
     public String homePageActivatedFlagDetails(Model model) {
         String variableKey = "string-var";
-        try{
+        try {
             Variable<String> updateHomePageVariable = dvcCloud.variable(getUser(), variableKey, "default string");
 
             // if the variable "string-var" doesn't exist isDefaulted will be true
             model.addAttribute("isDefaultValue", updateHomePageVariable.getIsDefaulted());
             model.addAttribute("variableKey", variableKey);
             model.addAttribute("variationValue", updateHomePageVariable.getValue());
-        }catch (DevCycleException e){
+        } catch(DevCycleException e) {
             System.out.println("DevCycleException: " + e.getMessage());
         }
         return "fragments/flagDataDetails :: value ";
