@@ -101,7 +101,7 @@ jobs:
         run: ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository
         if: inputs.prerelease != true && inputs.draft != true
 
-      - uses: DevCycleHQ/release-action/create-release@v2
+      - uses: DevCycleHQ/release-action/create-release@v1
         id: create-release
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
