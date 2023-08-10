@@ -1,11 +1,11 @@
 package com.devcycle.example.local.java.sdk.app.controller;
 
-import com.devcycle.sdk.server.local.api.DVCLocalClient;
-import com.devcycle.sdk.server.local.model.DVCLocalOptions;
-import com.devcycle.sdk.server.common.exception.DVCException;
-import com.devcycle.sdk.server.common.model.DVCResponse;
-import com.devcycle.sdk.server.common.model.Event;
-import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
+import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
+import com.devcycle.sdk.server.common.exception.DevCycleException;
+import com.devcycle.sdk.server.common.model.DevCycleResponse;
+import com.devcycle.sdk.server.common.model.DevCycleEvent;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.common.model.Variable;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,16 +16,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class HelloWorld {
 
-    DVCLocalClient dvcClient;
+    DevCycleLocalClient dvcClient;
 
-    private DVCLocalOptions dvcLocalOptions = DVCLocalOptions.builder()
+    private DevCycleLocalOptions dvcLocalOptions = DevCycleLocalOptions.builder()
         .configPollingIntervalMS(10000)
         .configRequestTimeoutMs(5000)
         .eventFlushIntervalMS(5000)
         .build();
 
     public HelloWorld(@Qualifier("devcycleSDKKey") String sdkKey) {
-        dvcClient = new DVCLocalClient(sdkKey, dvcLocalOptions);
+        dvcClient = new DevCycleLocalClient(sdkKey, dvcLocalOptions);
     }
 
     @Value("${spring.application.name}")
@@ -65,14 +65,14 @@ public class HelloWorld {
 
     @GetMapping("/local/track")
     public String trackLocal(Model model) {
-        dvcClient.track(getUser(), Event.builder().type("java-local-custom").build());
+        dvcClient.track(getUser(), DevCycleEvent.builder().type("java-local-custom").build());
         model.addAttribute("trackSuccessMessage", "local custom event tracked!");
         model.addAttribute("trackResponse", "java-local-custom tracked!");
         return "fragments/trackData :: value ";
     }
 
-    private User getUser() {
-        return User.builder()
+    private DevCycleUser getUser() {
+        return DevCycleUser.builder()
                 .userId("java_example_local_app")
                 .build();
     }

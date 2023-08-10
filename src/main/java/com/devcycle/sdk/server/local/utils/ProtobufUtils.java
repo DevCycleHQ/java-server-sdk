@@ -1,6 +1,6 @@
 package com.devcycle.sdk.server.local.utils;
 
-import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.common.model.Variable;
 import com.devcycle.sdk.server.local.protobuf.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -12,7 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class ProtobufUtils {
-    public static DVCUser_PB createDVCUserPB(User user) {
+    public static DVCUser_PB createDVCUserPB(DevCycleUser user) {
         double appBuild = Double.NaN;
         try {
             appBuild = Double.parseDouble(user.getAppBuild());

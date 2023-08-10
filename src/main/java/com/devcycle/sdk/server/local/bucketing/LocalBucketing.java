@@ -1,7 +1,7 @@
 package com.devcycle.sdk.server.local.bucketing;
 
-import com.devcycle.sdk.server.common.logging.DVCLogger;
-import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.common.logging.DevCycleLogger;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.common.model.Variable;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.devcycle.sdk.server.local.model.FlushPayload;
@@ -21,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static io.github.kawamuray.wasmtime.WasmValType.F64;
@@ -81,7 +80,7 @@ public class LocalBucketing {
 
         Func consoleLogFn = WasmFunctions.wrap(store, I32, (addr) -> {
             String message = readWasmString(((Number) addr).intValue());
-            DVCLogger.warning("WASM error: " + message);
+            DevCycleLogger.warning("WASM error: " + message);
         });
         linker.define("env", "console.log", Extern.fromFunc(consoleLogFn));
 
@@ -235,7 +234,7 @@ public class LocalBucketing {
         fn.accept(sdkKeyAddress, customDataAddress);
     }
 
-    public synchronized BucketedUserConfig generateBucketedConfig(String sdkKey, User user) throws JsonProcessingException {
+    public synchronized BucketedUserConfig generateBucketedConfig(String sdkKey, DevCycleUser user) throws JsonProcessingException {
         unpinAll();
         String userString = OBJECT_MAPPER.writeValueAsString(user);
 

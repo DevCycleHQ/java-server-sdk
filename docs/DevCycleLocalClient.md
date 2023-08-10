@@ -1,11 +1,11 @@
-# DVC API
+# DevCycleLocalClient
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**allFeatures**](DVC.md#allFeatures) | **POST** v1/features | Get all features for user data
-[**variable**](DVC.md#variable) | **POST** v1/variables/{key} | Get variable by key for user data
-[**allVariables**](DVC.md#allVariables) | **POST** v1/variables | Get all variables for user data
-[**track**](DVC.md#track) | **POST** v1/track | Post events to DevCycle for user
+[**allFeatures**](DevCycleLocalClient.md#allFeatures) | **POST** v1/features | Get all features for user data
+[**variable**](DevCycleLocalClient.md#variable) | **POST** v1/variables/{key} | Get variable by key for user data
+[**allVariables**](DevCycleLocalClient.md#allVariables) | **POST** v1/variables | Get all variables for user data
+[**track**](DevCycleLocalClient.md#track) | **POST** v1/track | Post events to DevCycle for user
 
 <a name="allFeatures"></a>
 # **allFeatures**
@@ -15,18 +15,18 @@ Get all features for user data
 
 ### Example
 ```java
-import com.devcycle.sdk.server.api.DVCClient;
+import com.devcycle.sdk.server.api.DevCycleLocalClient;
 
 public class MyClass {
     
-    private DVCClient dvcClient;
+    private DevCycleLocalClient dvcClient;
     
     public MyClass() {
-        dvcClient = new DVCClient("YOUR_DVC_SERVER_SDK_KEY");
+        dvcClient = new DevCycleLocalClient("DEVCYCLE_SERVER_SDK_KEY");
     }
     
     public void allFeatures() {
-        User user = User.builder()
+        DevCycleUser user = DevCycleUser.builder()
                 .userId("a_user_id")
                 .country("US")
                 .build();
@@ -40,7 +40,7 @@ public class MyClass {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **user** | [**User**](User.md)|  |
+ **user** | [**DevCycleUser**](DevCycleUser.md)|  |
 
 ### Return type
 
@@ -54,18 +54,18 @@ Get variable by key for user data
 
 ### Example
 ```java
-import com.devcycle.sdk.server.api.DVCClient;
+import com.devcycle.sdk.server.api.DevCycleLocalClient;
 
 public class MyClass {
 
-    private DVCClient dvcClient;
+    private DevCycleLocalClient dvcClient;
 
     public MyClass() {
-        dvcClient = new DVCClient("YOUR_DVC_SERVER_SDK_KEY");
+        dvcClient = new DevCycleLocalClient("DEVCYCLE_SERVER_SDK_KEY");
     }
 
     public void setFlag() {
-        User user = User.builder()
+        DevCycleUser user = DevCycleUser.builder()
                 .userId("a_user_id")
                 .country("US")
                 .build();
@@ -87,7 +87,7 @@ public class MyClass {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **user** | [**User**](User.md)|  |
+ **user** | [**DevCycleUser**](DevCycleUser.md)|  |
  **key** | **String**| Variable key |
 
 ### Return type
@@ -102,18 +102,18 @@ Get all variables for user data
 
 ### Example
 ```java
-import com.devcycle.sdk.server.api.DVCClient;
+import com.devcycle.sdk.server.api.DevCycleLocalClient;
 
 public class MyClass {
 
-    private DVCClient dvcClient;
+    private DevCycleLocalClient dvcClient;
 
     public MyClass() {
-        dvcClient = new DVCClient("YOUR_DVC_SERVER_SDK_KEY");
+        dvcClient = new DevCycleLocalClient("DEVCYCLE_SERVER_SDK_KEY");
     }
 
     public void allVariables() {
-        User user = User.builder()
+        DevCycleUser user = DevCycleUser.builder()
                 .userId("a_user_id")
                 .country("US")
                 .build();
@@ -127,7 +127,7 @@ public class MyClass {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
-**user** | [**User**](User.md)|  |
+**user** | [**DevCycleUser**](DevCycleUser.md)|  |
 
 ### Return type
 
@@ -141,30 +141,30 @@ Post events to DevCycle for user
 
 ### Example
 ```java
-import com.devcycle.sdk.server.api.DVCClient;
+import com.devcycle.sdk.server.api.DevCycleLocalClient;
 
 public class MyClass {
 
-    private DVCClient dvcClient;
+    private DevCycleLocalClient dvcClient;
 
     public MyClass() {
-        dvcClient = new DVCClient("YOUR_DVC_SERVER_SDK_KEY");
+        dvcClient = new DevCycleLocalClient("DEVCYCLE_SERVER_SDK_KEY");
     }
 
     public void addAnEvent() {
-        User user = User.builder()
+        DevCycleUser user = DevCycleUser.builder()
                 .userId("a_user_id")
                 .country("US")
                 .build();
 
-        Event event = Event.builder()
+        DevCycleEvent event = DevCycleEvent.builder()
                 .date(Instant.now().toEpochMilli())
                 .target("test target")
                 .type("test event")
                 .value(new BigDecimal(600))
                 .build();
 
-        DVCResponse response = dvcClient.track(user, event);
+        DevCycleResponse response = dvcClient.track(user, event);
     }
 }
 ```
@@ -173,9 +173,9 @@ public class MyClass {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
-**user** | [**User**](User.md)|  |
-**event** | [**Event**](Event.md)|
+**user** | [**DevCycleUser**](DevCycleUser.md)|  |
+**event** | [**DevCycleEvent**](DevCycleEvent.md)|
 
 ### Return type
 
-[**DVCResponse200**](DVCResponse.md)
+[**DVCResponse200**](DevCycleResponse.md)

@@ -26,7 +26,7 @@ dependencies {
 
 	// The line below makes the Example App use the local version of the Java Server SDK
 	// Run `./gradlew build` in the root directory (`cd .. && ./gradlew build`) to build the local version of the SDK
-	//implementation project(':java-server-sdk')
+//	implementation project(':java-server-sdk')
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

@@ -14,7 +14,6 @@ package com.devcycle.sdk.server.common.model;
 
 import com.devcycle.sdk.server.local.utils.LongTimestampDeserializer;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -30,7 +29,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class User {
+public class DevCycleUser {
   @NonNull
   @Schema(required = true, description = "Unique id to identify the user")
   @JsonProperty("user_id")

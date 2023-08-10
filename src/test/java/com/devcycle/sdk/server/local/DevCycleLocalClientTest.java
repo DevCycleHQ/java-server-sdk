@@ -1,15 +1,15 @@
 package com.devcycle.sdk.server.local;
 
 import com.devcycle.sdk.server.common.api.IRestOptions;
-import com.devcycle.sdk.server.common.logging.IDVCLogger;
+import com.devcycle.sdk.server.common.logging.IDevCycleLogger;
 import com.devcycle.sdk.server.common.model.BaseVariable;
 import com.devcycle.sdk.server.common.model.Feature;
-import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.common.model.Variable;
 import com.devcycle.sdk.server.helpers.LocalConfigServer;
 import com.devcycle.sdk.server.helpers.TestDataFixtures;
-import com.devcycle.sdk.server.local.api.DVCLocalClient;
-import com.devcycle.sdk.server.local.model.DVCLocalOptions;
+import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
+import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -18,7 +18,6 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.X509TrustManager;
 import java.util.HashMap;
@@ -26,12 +25,12 @@ import java.util.Map;
 import java.util.UUID;
 
 @RunWith(MockitoJUnitRunner.class)
-public class DVCLocalClientTest {
-    private static DVCLocalClient client;
+public class DevCycleLocalClientTest {
+    private static DevCycleLocalClient client;
     private static LocalConfigServer localConfigServer;
     static final String apiKey = String.format("server-%s", UUID.randomUUID());
 
-    static IDVCLogger testLoggingWrapper = new IDVCLogger() {
+    static IDevCycleLogger testLoggingWrapper = new IDevCycleLogger() {
         @Override
         public void debug(String message) {
             System.out.println("DEBUG TEST: " + message);
@@ -92,17 +91,17 @@ public class DVCLocalClientTest {
         client = createClient(TestDataFixtures.SmallConfig());
     }
 
-    private static DVCLocalClient createClient(String config){
+    private static DevCycleLocalClient createClient(String config){
         localConfigServer.setConfigData(config);
 
-        DVCLocalOptions options = DVCLocalOptions.builder()
+        DevCycleLocalOptions options = DevCycleLocalOptions.builder()
                 .configCdnBaseUrl(localConfigServer.getHostRootURL())
                 .configPollingIntervalMS(60000)
                 .customLogger(testLoggingWrapper)
                 .restOptions(restOptions)
                 .build();
 
-        DVCLocalClient client = new DVCLocalClient(apiKey, options);
+        DevCycleLocalClient client = new DevCycleLocalClient(apiKey, options);
         try {
             int loops = 0;
             while(!client.isInitialized())
@@ -129,7 +128,7 @@ public class DVCLocalClientTest {
 
     @Test
     public void variableTest() {
-        User user = getUser();
+        DevCycleUser user = getUser();
         user.setEmail("giveMeVariationOff@email.com");
         Variable<String> var = client.variable(user, "string-var", "default string");
         Assert.assertNotNull(var);
@@ -143,9 +142,9 @@ public class DVCLocalClientTest {
 
     @Test
     public void variableBooleanValueTest() {
-        User user = getUser();
+        DevCycleUser user = getUser();
         user.setEmail("giveMeVariationOn@email.com");
-        DVCLocalClient myClient = createClient(TestDataFixtures.SmallConfig());
+        DevCycleLocalClient myClient = createClient(TestDataFixtures.SmallConfig());
         Variable<Boolean> var = myClient.variable(user, "a-cool-new-feature", false);
         Assert.assertNotNull(var);
         Assert.assertFalse(var.getIsDefaulted());
@@ -154,8 +153,8 @@ public class DVCLocalClientTest {
 
     @Test
     public void variableNumberValueTest() {
-        User user = getUser();
-        DVCLocalClient myClient = createClient(TestDataFixtures.SmallConfig());
+        DevCycleUser user = getUser();
+        DevCycleLocalClient myClient = createClient(TestDataFixtures.SmallConfig());
         Variable<Double> var = myClient.variable(user, "num-var", 0.0);
         Assert.assertNotNull(var);
         Assert.assertFalse(var.getIsDefaulted());
@@ -164,9 +163,9 @@ public class DVCLocalClientTest {
 
     @Test
     public void variableJsonValueTest() {
-        User user = getUser();
+        DevCycleUser user = getUser();
         user.setEmail("giveMeVariationOn@email.com");
-        DVCLocalClient myClient = createClient(TestDataFixtures.SmallConfig());
+        DevCycleLocalClient myClient = createClient(TestDataFixtures.SmallConfig());
 
         Map<String,Object> defaultJSON = new HashMap();
         defaultJSON.put("displayText", "This variation is off");
@@ -186,7 +185,7 @@ public class DVCLocalClientTest {
     public void variableTestNotInitialized(){
         // NOTE  - this test will generate some additional logging noise from the EventQueue
         // because it isn't initialized properly before the first call to variable()
-        DVCLocalClient newClient = new DVCLocalClient(apiKey);
+        DevCycleLocalClient newClient = new DevCycleLocalClient(apiKey);
         Variable<String> var = newClient.variable(getUser(), "string-var", "default string");
         Assert.assertNotNull(var);
         Assert.assertTrue(var.getIsDefaulted());
@@ -195,7 +194,7 @@ public class DVCLocalClientTest {
 
     @Test
     public void variableTestWithCustomData(){
-        User user = getUser();
+        DevCycleUser user = getUser();
         user.setEmail("giveMeVariationOn@email.com");
 
         Map<String,Object> customData = new HashMap();
@@ -219,8 +218,8 @@ public class DVCLocalClientTest {
     public void variableTestBucketingWithCustomData(){
         // Make sure we are properly sending custom data to the WASM so the user is bucketed correctly
 
-        DVCLocalClient myClient = createClient(TestDataFixtures.SmallConfigWithCustomDataBucketing());
-        User user = getUser();
+        DevCycleLocalClient myClient = createClient(TestDataFixtures.SmallConfigWithCustomDataBucketing());
+        DevCycleUser user = getUser();
 
         Map<String,Object> customData = new HashMap();
         customData.put("should-bucket", true);
@@ -249,7 +248,7 @@ public class DVCLocalClientTest {
 
     @Test
     public void variableTestNoDefault() {
-        User user = getUser();
+        DevCycleUser user = getUser();
         try {
             Variable<String> var = client.variable(user, "string-var", null);
             Assert.fail("Expected IllegalArgumentException for null default value");
@@ -270,7 +269,7 @@ public class DVCLocalClientTest {
 
     @Test
     public void variableTestBadUserID() {
-        User badUser = User.builder().userId("").build();
+        DevCycleUser badUser = DevCycleUser.builder().userId("").build();
         try {
             client.variable(badUser, "string-var", "default string");
             Assert.fail("Expected IllegalArgumentException for empty userID");
@@ -281,7 +280,7 @@ public class DVCLocalClientTest {
 
     @Test
     public void variableValueTest() {
-        User user = getUser();
+        DevCycleUser user = getUser();
         user.setEmail("giveMeVariationOff@email.com");
         Assert.assertEquals("variationOff", client.variableValue(user, "string-var", "default string"));
 
@@ -291,8 +290,8 @@ public class DVCLocalClientTest {
 
     @Test
     public void variableValueSpecialCharacters() {
-        User user = getUser();
-        DVCLocalClient myClient = createClient(TestDataFixtures.SmallConfigWithSpecialCharacters());
+        DevCycleUser user = getUser();
+        DevCycleLocalClient myClient = createClient(TestDataFixtures.SmallConfigWithSpecialCharacters());
 
         user.setEmail("giveMeVariationOn@email.com");
         Assert.assertEquals("öé \uD83D\uDC0D ¥ variationOn", myClient.variableValue(user, "string-var", "default string"));
@@ -303,7 +302,7 @@ public class DVCLocalClientTest {
 
     @Test
     public void allFeaturesTest() {
-        User user = getUser();
+        DevCycleUser user = getUser();
         Map<String, Feature> features = client.allFeatures(user);
         Assert.assertEquals(features.get("a-cool-new-feature").getId(), "62fbf6566f1ba302829f9e32");
         Assert.assertEquals(features.size(), 1);
@@ -311,7 +310,7 @@ public class DVCLocalClientTest {
 
     @Test
     public void allVariablesTest() {
-        User user = getUser();
+        DevCycleUser user = getUser();
         Map<String, BaseVariable> variables = client.allVariables(user);
         Assert.assertEquals(variables.get("string-var").getId(), "63125320a4719939fd57cb2b");
         Assert.assertEquals(variables.get("a-cool-new-feature").getId(), "62fbf6566f1ba302829f9e34");
@@ -332,7 +331,7 @@ public class DVCLocalClientTest {
 
     @Test
     public void SetClientCustomDataWithBucketingTest() {
-        DVCLocalClient myClient = createClient(TestDataFixtures.SmallConfigWithCustomDataBucketing());
+        DevCycleLocalClient myClient = createClient(TestDataFixtures.SmallConfigWithCustomDataBucketing());
 
         // set the global custom data
         Map<String,Object> customData = new HashMap();
@@ -340,7 +339,7 @@ public class DVCLocalClientTest {
         myClient.setClientCustomData(customData);
 
         // make sure the user get bucketed correctly based on the global custom data
-        User user = getUser();
+        DevCycleUser user = getUser();
         Variable<String> var = myClient.variable(user, "unicode-var", "default string");
         Assert.assertNotNull(var);
         Assert.assertFalse(var.getIsDefaulted());
@@ -349,16 +348,16 @@ public class DVCLocalClientTest {
 
     @Test
     public void allFeaturesWithSpecialCharsTest() {
-        DVCLocalClient myClient = createClient(TestDataFixtures.SmallConfigWithSpecialCharacters());
+        DevCycleLocalClient myClient = createClient(TestDataFixtures.SmallConfigWithSpecialCharacters());
         // make sure the user get bucketed correctly based on the global custom data
-        User user = getUser();
+        DevCycleUser user = getUser();
         Map<String,Feature> features = myClient.allFeatures(user);
         Assert.assertNotNull(features);
         Assert.assertEquals(features.size(), 1);
     }
 
-    private User getUser() {
-        return User.builder()
+    private DevCycleUser getUser() {
+        return DevCycleUser.builder()
                 .userId("j_test")
                 .build();
     }

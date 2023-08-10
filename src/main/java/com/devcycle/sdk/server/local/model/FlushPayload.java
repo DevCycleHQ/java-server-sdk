@@ -1,6 +1,6 @@
 package com.devcycle.sdk.server.local.model;
 
-import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
 
 import java.util.Arrays;
 
@@ -27,7 +27,7 @@ public class FlushPayload {
                     '}';
         }
 
-        public User user;
+        public DevCycleUser user;
         public RequestEvent[] events;
     }
 }

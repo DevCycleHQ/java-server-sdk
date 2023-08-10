@@ -12,32 +12,20 @@
 
 package com.devcycle.sdk.server.common.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Event {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class DevCycleResponse {
 
-  @Schema(required = true, description = "Custom event type")
-  private String type;
-
-  @Schema(description = "Custom event target / subject of event. Contextual to event type")
-  private String target;
-
-  @Schema(description = "Unix epoch time the event occurred according to client")
-  private Long date;
-
-  @Schema(description = "Value for numerical events. Contextual to event type")
-  private BigDecimal value;
-
-  @Schema(description = "Extra JSON metadata for event. Contextual to event type")
-  private Object metaData;
+  @Schema(required = false, description = "Response message")
+  private String message;
 }

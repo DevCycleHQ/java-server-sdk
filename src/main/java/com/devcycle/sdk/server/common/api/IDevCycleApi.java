@@ -7,7 +7,7 @@ import retrofit2.http.*;
 
 import java.util.Map;
 
-public interface IDVCApi {
+public interface IDevCycleApi {
   /**
    * Get all features by key for user data
    *
@@ -17,7 +17,7 @@ public interface IDVCApi {
    */
   @Headers({"Content-Type:application/json"})
   @POST("v1/features")
-  Call<Map<String, Feature>> getFeatures(@Body User user, @Query("enableEdgeDB") Boolean enableEdgeDB);
+  Call<Map<String, Feature>> getFeatures(@Body DevCycleUser user, @Query("enableEdgeDB") Boolean enableEdgeDB);
 
   /**
    * Get variable by key for user data
@@ -29,7 +29,7 @@ public interface IDVCApi {
    */
   @Headers({"Content-Type:application/json"})
   @POST("v1/variables/{key}")
-  Call<Variable> getVariableByKey(@Body User user, @Path("key") String key, @Query("enableEdgeDB") Boolean enableEdgeDB);
+  Call<Variable> getVariableByKey(@Body DevCycleUser user, @Path("key") String key, @Query("enableEdgeDB") Boolean enableEdgeDB);
 
   /**
    * Get all variables by key for user data
@@ -40,18 +40,18 @@ public interface IDVCApi {
    */
   @Headers({"Content-Type:application/json"})
   @POST("v1/variables")
-  Call<Map<String, BaseVariable>> getVariables(@Body User user, @Query("enableEdgeDB") Boolean enableEdgeDB);
+  Call<Map<String, BaseVariable>> getVariables(@Body DevCycleUser user, @Query("enableEdgeDB") Boolean enableEdgeDB);
 
   /**
    * Post events to DevCycle for user
    *
    * @param userAndEvents  (required)
    * @param enableEdgeDB  (required)
-   * @return Call&lt;DVCResponse&gt;
+   * @return Call&lt;DevCycleResponse&gt;
    */
   @Headers({"Content-Type:application/json"})
   @POST("v1/track")
-  Call<DVCResponse> track(@Body UserAndEvents userAndEvents, @Query("enableEdgeDB") Boolean enableEdgeDB);
+  Call<DevCycleResponse> track(@Body DevCycleUserAndEvents userAndEvents, @Query("enableEdgeDB") Boolean enableEdgeDB);
 
   /**
    * Get DevCycle project Config
@@ -68,10 +68,10 @@ public interface IDVCApi {
    * Post events to DevCycle for user
    *
    * @param eventsBatch  (required)
-   * @return Call&lt;DVCResponse&gt;
+   * @return Call&lt;DevCycleResponse&gt;
    */
   @Headers({"Content-Type:application/json"})
   @POST("v1/events/batch")
-  Call<DVCResponse> publishEvents(@Body EventsBatch eventsBatch);
+  Call<DevCycleResponse> publishEvents(@Body EventsBatch eventsBatch);
 }
 

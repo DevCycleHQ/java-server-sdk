@@ -1,11 +1,11 @@
 package com.devcycle.example.cloud.java.sdk.app.controller;
 
-import com.devcycle.sdk.server.cloud.api.DVCCloudClient;
-import com.devcycle.sdk.server.cloud.model.DVCCloudOptions;
-import com.devcycle.sdk.server.common.exception.DVCException;
-import com.devcycle.sdk.server.common.model.DVCResponse;
-import com.devcycle.sdk.server.common.model.Event;
-import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.cloud.api.DevCycleCloudClient;
+import com.devcycle.sdk.server.cloud.model.DevCycleCloudOptions;
+import com.devcycle.sdk.server.common.exception.DevCycleException;
+import com.devcycle.sdk.server.common.model.DevCycleResponse;
+import com.devcycle.sdk.server.common.model.DevCycleEvent;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.common.model.Variable;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,12 +16,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class HelloWorld {
 
-    DVCCloudClient dvcCloud;
+    DevCycleCloudClient dvcCloud;
 
-    private DVCCloudOptions dvcCloudOptions = DVCCloudOptions.builder().enableEdgeDB(false).build();
+    private DevCycleCloudOptions dvcCloudOptions = DevCycleCloudOptions.builder().enableEdgeDB(false).build();
 
     public HelloWorld(@Qualifier("devcycleSDKKey") String sdkKey) {
-        dvcCloud = new DVCCloudClient(sdkKey, dvcCloudOptions);
+        dvcCloud = new DevCycleCloudClient(sdkKey, dvcCloudOptions);
     }
 
     @Value("${spring.application.name}")
@@ -45,8 +45,8 @@ public class HelloWorld {
             String updateHomePageValue = dvcCloud.variableValue(getUser(), variableKey, "default string");
             model.addAttribute("variableKey", variableKey);
             model.addAttribute("variationValue", updateHomePageValue);
-        }catch (DVCException e){
-            System.out.println("DVCException: " + e.getMessage());
+        } catch(DevCycleException e) {
+            System.out.println("DevCycleException: " + e.getMessage());
         }
         return "fragments/flagData :: value ";
     }
@@ -54,15 +54,15 @@ public class HelloWorld {
     @GetMapping("/cloud/activateFlagDetails")
     public String homePageActivatedFlagDetails(Model model) {
         String variableKey = "string-var";
-        try{
+        try {
             Variable<String> updateHomePageVariable = dvcCloud.variable(getUser(), variableKey, "default string");
 
             // if the variable "string-var" doesn't exist isDefaulted will be true
             model.addAttribute("isDefaultValue", updateHomePageVariable.getIsDefaulted());
             model.addAttribute("variableKey", variableKey);
             model.addAttribute("variationValue", updateHomePageVariable.getValue());
-        }catch (DVCException e){
-            System.out.println("DVCException: " + e.getMessage());
+        } catch(DevCycleException e) {
+            System.out.println("DevCycleException: " + e.getMessage());
         }
         return "fragments/flagDataDetails :: value ";
     }
@@ -71,9 +71,9 @@ public class HelloWorld {
     public String trackCloud(Model model) {
         String response = "";
         try {
-            dvcCloud.track(getUser(), Event.builder().type("java-cloud-custom").build());
+            dvcCloud.track(getUser(), DevCycleEvent.builder().type("java-cloud-custom").build());
             response = "java-cloud-custom tracked!";
-        } catch(DVCException e) {
+        } catch(DevCycleException e) {
             response = "Error tracking custom event: " + e.getMessage();
         }
         model.addAttribute("trackSuccessMessage", "Cloud custom event tracked!");
@@ -81,8 +81,8 @@ public class HelloWorld {
         return "fragments/trackData :: value ";
     }
 
-    private User getUser() {
-        return User.builder()
+    private DevCycleUser getUser() {
+        return DevCycleUser.builder()
                 .userId("java_example_cloud")
                 .build();
     }

@@ -10,3 +10,18 @@ being used
 Rerun the example after creating a feature and a variable and that will be shown 
 
 replace application.properties devcycle.sdkKey with your server SDK key
+
+## Run Example
+
+To start the application run the following command:
+
+```bash
+./gradlew buildDependents
+./gradlew bootRun
+```
+
+Then access the website at: http://localhost:8080
+
+## Run against local Java SDK
+
+See instructions in `build.gradle` for how to run against a local version of the Java SDK.

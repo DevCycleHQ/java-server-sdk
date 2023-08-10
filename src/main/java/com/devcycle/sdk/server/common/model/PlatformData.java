@@ -1,6 +1,6 @@
 package com.devcycle.sdk.server.common.model;
 
-import com.devcycle.sdk.server.common.logging.DVCLogger;
+import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -12,8 +12,6 @@ import lombok.Data;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Data
 @Builder
@@ -27,7 +25,7 @@ public class PlatformData {
         try {
             this.hostname = hostname != null ? hostname : InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {
-            DVCLogger.warning("Error getting system hostname: " + e.getMessage());
+            DevCycleLogger.warning("Error getting system hostname: " + e.getMessage());
             this.hostname = "";
         }
     }
@@ -66,7 +64,7 @@ public class PlatformData {
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             platformDataString = mapper.writeValueAsString(platformData);
         } catch (JsonProcessingException e) {
-            DVCLogger.warning("Error reading platformData: " + e.getMessage());
+            DevCycleLogger.warning("Error reading platformData: " + e.getMessage());
         }
         return platformDataString;
     }

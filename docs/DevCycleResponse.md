@@ -1,4 +1,4 @@
-# DVCResponse
+# DevCycleResponse
 
 ## Properties
 Name | Type | Description | Notes

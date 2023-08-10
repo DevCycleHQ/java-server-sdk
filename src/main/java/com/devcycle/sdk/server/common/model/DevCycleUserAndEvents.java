@@ -18,18 +18,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class UserAndEvents {
+public class DevCycleUserAndEvents {
 
-  private List<Event> events;
+  private List<DevCycleEvent> events;
 
-  private User user;
+  private DevCycleUser user;
 
-  public UserAndEvents(User user, List<Event> events) {
+  public DevCycleUserAndEvents(DevCycleUser user, List<DevCycleEvent> events) {
     this.user = user;
     this.events = events;
   }
 
-  public UserAndEvents addEventItem(Event eventItem) {
+  public DevCycleUserAndEvents addEventItem(DevCycleEvent eventItem) {
     if (this.events == null) {
       this.events = new ArrayList<>();
     }
@@ -37,29 +37,29 @@ public class UserAndEvents {
     return this;
   }
 
-  public static UserAndEvents.Builder builder() {
-    return new UserAndEvents.Builder();
+  public static DevCycleUserAndEvents.Builder builder() {
+    return new DevCycleUserAndEvents.Builder();
   }
 
   public static class Builder {
-    private User user;
-    private List<Event> events;
+    private DevCycleUser user;
+    private List<DevCycleEvent> events;
 
     Builder() {
     }
 
-    public UserAndEvents.Builder user(User user) {
+    public DevCycleUserAndEvents.Builder user(DevCycleUser user) {
       this.user = user;
       return this;
     }
 
-    public UserAndEvents.Builder events(List<Event> events) {
+    public DevCycleUserAndEvents.Builder events(List<DevCycleEvent> events) {
       this.events = events;
       return this;
     }
 
-    public UserAndEvents build() {
-      return new UserAndEvents(user, events);
+    public DevCycleUserAndEvents build() {
+      return new DevCycleUserAndEvents(user, events);
     }
   }
 }

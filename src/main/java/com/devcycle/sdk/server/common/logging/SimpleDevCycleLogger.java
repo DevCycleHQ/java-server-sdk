@@ -1,9 +1,9 @@
 package com.devcycle.sdk.server.common.logging;
 
 /**
- * Basic implementation of IDVCLogger that logs to stdout with some basic log level filtering.
+ * Basic implementation of IDevCycleLogger that logs to stdout with some basic log level filtering.
  */
-public class SimpleDVCLogger implements IDVCLogger {
+public class SimpleDevCycleLogger implements IDevCycleLogger {
     public enum Level {
         DEBUG,
         INFO,
@@ -12,7 +12,7 @@ public class SimpleDVCLogger implements IDVCLogger {
         OFF,
     }
     private Level level;
-    public SimpleDVCLogger(Level level) {
+    public SimpleDevCycleLogger(Level level) {
         this.level = level;
     }
 

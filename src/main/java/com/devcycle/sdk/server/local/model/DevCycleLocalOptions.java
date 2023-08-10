@@ -1,15 +1,15 @@
 package com.devcycle.sdk.server.local.model;
 
 import com.devcycle.sdk.server.common.api.IRestOptions;
-import com.devcycle.sdk.server.common.model.IDVCOptions;
-import com.devcycle.sdk.server.common.logging.DVCLogger;
-import com.devcycle.sdk.server.common.logging.IDVCLogger;
+import com.devcycle.sdk.server.common.model.IDevCycleOptions;
+import com.devcycle.sdk.server.common.logging.DevCycleLogger;
+import com.devcycle.sdk.server.common.logging.IDevCycleLogger;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
-public class DVCLocalOptions implements IDVCOptions {
+public class DevCycleLocalOptions implements IDevCycleOptions {
     private int configRequestTimeoutMs = 10000;
 
     private int configPollingIntervalMS = 30000;
@@ -29,7 +29,7 @@ public class DVCLocalOptions implements IDVCOptions {
     private boolean disableAutomaticEventLogging = false;
 
     @JsonIgnore
-    private IDVCLogger customLogger = null;
+    private IDevCycleLogger customLogger = null;
 
     public int getConfigPollingIntervalMS(int configPollingIntervalMs, int configPollingIntervalMS) {
         if (configPollingIntervalMS > 0) {
@@ -47,7 +47,7 @@ public class DVCLocalOptions implements IDVCOptions {
     private IRestOptions restOptions = null;
 
     @Builder()
-    public DVCLocalOptions(
+    public DevCycleLocalOptions(
             int configRequestTimeoutMs,
             @Deprecated
             int configPollingIntervalMs,
@@ -60,7 +60,7 @@ public class DVCLocalOptions implements IDVCOptions {
             int eventRequestChunkSize,
             boolean disableAutomaticEventLogging,
             boolean disableCustomEventLogging,
-            IDVCLogger customLogger,
+            IDevCycleLogger customLogger,
             IRestOptions restOptions
     ) {
         this.configRequestTimeoutMs = configRequestTimeoutMs > 0 ? configRequestTimeoutMs : this.configRequestTimeoutMs;
@@ -77,27 +77,27 @@ public class DVCLocalOptions implements IDVCOptions {
         this.restOptions = restOptions;
 
         if (this.flushEventQueueSize >= this.maxEventQueueSize) {
-            DVCLogger.warning("flushEventQueueSize: " + this.flushEventQueueSize + " must be smaller than maxEventQueueSize: " + this.maxEventQueueSize);
+            DevCycleLogger.warning("flushEventQueueSize: " + this.flushEventQueueSize + " must be smaller than maxEventQueueSize: " + this.maxEventQueueSize);
             this.flushEventQueueSize = this.maxEventQueueSize - 1;
         }
 
         if (this.eventRequestChunkSize > this.flushEventQueueSize) {
-            DVCLogger.warning("eventRequestChunkSize: " + this.eventRequestChunkSize + " must be smaller than flushEventQueueSize: " + this.flushEventQueueSize);
+            DevCycleLogger.warning("eventRequestChunkSize: " + this.eventRequestChunkSize + " must be smaller than flushEventQueueSize: " + this.flushEventQueueSize);
             this.eventRequestChunkSize = 100;
         }
 
         if (this.eventRequestChunkSize > this.maxEventQueueSize) {
-            DVCLogger.warning("eventRequestChunkSize: " + this.eventRequestChunkSize + " must be smaller than maxEventQueueSize: " + this.maxEventQueueSize);
+            DevCycleLogger.warning("eventRequestChunkSize: " + this.eventRequestChunkSize + " must be smaller than maxEventQueueSize: " + this.maxEventQueueSize);
             this.eventRequestChunkSize = 100;
         }
 
         if (this.flushEventQueueSize > 20000) {
-            DVCLogger.warning("flushEventQueueSize: " + this.flushEventQueueSize + " must be smaller than 20,000");
+            DevCycleLogger.warning("flushEventQueueSize: " + this.flushEventQueueSize + " must be smaller than 20,000");
             this.flushEventQueueSize = 20000;
         }
 
         if (this.maxEventQueueSize > 20000) {
-            DVCLogger.warning("maxEventQueueSize: " + this.maxEventQueueSize + " must be smaller than 20,000");
+            DevCycleLogger.warning("maxEventQueueSize: " + this.maxEventQueueSize + " must be smaller than 20,000");
             this.maxEventQueueSize = 20000;
         }
     }
