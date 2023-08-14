@@ -1,4 +1,4 @@
-package com.devcycle.sdk.server.local;
+package com.devcycle.examples;
 
 import com.devcycle.sdk.server.local.api.DVCLocalClient;
 import com.devcycle.sdk.server.local.model.DVCLocalOptions;

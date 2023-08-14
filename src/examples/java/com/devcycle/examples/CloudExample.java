@@ -1,4 +1,4 @@
-package com.devcycle.sdk.server.cloud;
+package com.devcycle.examples;
 
 import com.devcycle.sdk.server.cloud.api.DVCCloudClient;
 import com.devcycle.sdk.server.cloud.model.DVCCloudOptions;
