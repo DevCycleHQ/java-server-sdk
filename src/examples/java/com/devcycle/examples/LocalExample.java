@@ -1,8 +1,8 @@
 package com.devcycle.examples;
 
-import com.devcycle.sdk.server.local.api.DVCLocalClient;
-import com.devcycle.sdk.server.local.model.DVCLocalOptions;
-import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
+import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
 
 public class LocalExample {
     public static String VARIABLE_KEY = "test-boolean-variable";
@@ -15,18 +15,18 @@ public class LocalExample {
         }
 
         // Create user object
-        User user = User.builder()
+        DevCycleUser user = DevCycleUser.builder()
                 .userId("SOME_USER_ID")
                 .build();
 
         // The default value can be of type string, boolean, number, or JSON
         Boolean defaultValue = false;
 
-        DVCLocalOptions dvcOptions = DVCLocalOptions.builder().configPollingIntervalMs(60000)
+        DevCycleLocalOptions dvcOptions = DevCycleLocalOptions.builder().configPollingIntervalMs(60000)
                 .disableAutomaticEventLogging(false).disableCustomEventLogging(false).build();
 
         // Initialize DevCycle Client
-        DVCLocalClient dvcClient = new DVCLocalClient(server_sdk_key, dvcOptions);
+        DevCycleLocalClient dvcClient = new DevCycleLocalClient(server_sdk_key, dvcOptions);
 
         for (int i = 0; i < 10; i++) {
             if(dvcClient.isInitialized()) {

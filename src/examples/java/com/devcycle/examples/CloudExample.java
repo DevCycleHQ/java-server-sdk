@@ -1,9 +1,9 @@
 package com.devcycle.examples;
 
-import com.devcycle.sdk.server.cloud.api.DVCCloudClient;
-import com.devcycle.sdk.server.cloud.model.DVCCloudOptions;
-import com.devcycle.sdk.server.common.exception.DVCException;
-import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.cloud.api.DevCycleCloudClient;
+import com.devcycle.sdk.server.cloud.model.DevCycleCloudOptions;
+import com.devcycle.sdk.server.common.exception.DevCycleException;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
 
 public class CloudExample {
     public static String VARIABLE_KEY = "test-boolean-variable";
@@ -16,17 +16,17 @@ public class CloudExample {
         }
 
         // Create user object
-        User user = User.builder()
+        DevCycleUser user = DevCycleUser.builder()
                 .userId("SOME_USER_ID")
                 .build();
 
         // The default value can be of type string, boolean, number, or JSON
         Boolean defaultValue = false;
 
-        DVCCloudOptions dvcOptions = DVCCloudOptions.builder().build();
+        DevCycleCloudOptions dvcOptions = DevCycleCloudOptions.builder().build();
 
         // Initialize DevCycle Client
-        DVCCloudClient dvcClient = new DVCCloudClient(server_sdk_key, dvcOptions);
+        DevCycleCloudClient dvcClient = new DevCycleCloudClient(server_sdk_key, dvcOptions);
 
         // Fetch variable values using the identifier key, with a default value and user
         // object
@@ -34,7 +34,7 @@ public class CloudExample {
         Boolean variableValue = false;
         try {
             variableValue = dvcClient.variableValue(user, VARIABLE_KEY, defaultValue);
-        } catch(DVCException e) {
+        } catch(DevCycleException e) {
             System.err.println("Error fetching variable value: " + e.getMessage());
             System.exit(1);
         }
