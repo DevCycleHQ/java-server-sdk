@@ -23,17 +23,17 @@ public class CloudExample {
         // The default value can be of type string, boolean, number, or JSON
         Boolean defaultValue = false;
 
-        DevCycleCloudOptions dvcOptions = DevCycleCloudOptions.builder().build();
+        DevCycleCloudOptions options = DevCycleCloudOptions.builder().build();
 
         // Initialize DevCycle Client
-        DevCycleCloudClient dvcClient = new DevCycleCloudClient(server_sdk_key, dvcOptions);
+        DevCycleCloudClient client = new DevCycleCloudClient(server_sdk_key, options);
 
         // Fetch variable values using the identifier key, with a default value and user
         // object
         // The default value can be of type string, boolean, number, or JSON
         Boolean variableValue = false;
         try {
-            variableValue = dvcClient.variableValue(user, VARIABLE_KEY, defaultValue);
+            variableValue = client.variableValue(user, VARIABLE_KEY, defaultValue);
         } catch(DevCycleException e) {
             System.err.println("Error fetching variable value: " + e.getMessage());
             System.exit(1);

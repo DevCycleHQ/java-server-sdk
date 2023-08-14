@@ -22,14 +22,14 @@ public class LocalExample {
         // The default value can be of type string, boolean, number, or JSON
         Boolean defaultValue = false;
 
-        DevCycleLocalOptions dvcOptions = DevCycleLocalOptions.builder().configPollingIntervalMs(60000)
+        DevCycleLocalOptions options = DevCycleLocalOptions.builder().configPollingIntervalMs(60000)
                 .disableAutomaticEventLogging(false).disableCustomEventLogging(false).build();
 
         // Initialize DevCycle Client
-        DevCycleLocalClient dvcClient = new DevCycleLocalClient(server_sdk_key, dvcOptions);
+        DevCycleLocalClient client = new DevCycleLocalClient(server_sdk_key, options);
 
         for (int i = 0; i < 10; i++) {
-            if(dvcClient.isInitialized()) {
+            if(client.isInitialized()) {
                 break;
             }
             Thread.sleep(500);
@@ -38,7 +38,7 @@ public class LocalExample {
         // Fetch variable values using the identifier key, with a default value and user
         // object
         // The default value can be of type string, boolean, number, or JSON
-        Boolean variableValue = dvcClient.variableValue(user, VARIABLE_KEY, defaultValue);
+        Boolean variableValue = client.variableValue(user, VARIABLE_KEY, defaultValue);
 
         // Use variable value
         if (variableValue) {
