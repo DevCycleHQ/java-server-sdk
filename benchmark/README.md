@@ -4,7 +4,7 @@ This tool is used to benchmark the DevCycle Java Server SDK and is built using t
 
 ## Requirements
 
-This tool works with Java 8 and above but will require a x86_64 JDK. 
+This tool works with Java 11 and above but will require a x86_64 JDK.
 
 Currently Supported Platforms are:
 
