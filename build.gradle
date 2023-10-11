@@ -108,7 +108,8 @@ repositories {
     mavenCentral()
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
 
 def wasmResourcePath = "$projectDir/src/main/resources"
 def wasmVersion = "1.7.0"
