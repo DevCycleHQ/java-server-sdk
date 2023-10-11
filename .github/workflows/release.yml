@@ -49,8 +49,6 @@ jobs:
         run: |
           sed -i "s/^version = \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/version = \"${{steps.prepare-release.outputs.next-release-tag}}\"/g" build.gradle
           sed -i "s/private String sdkVersion = \"[0-9]\+\.[0-9]\+\.[0-9]\+\";/private String sdkVersion = \"${{steps.prepare-release.outputs.next-release-tag}}\";/g" src/main/java/com/devcycle/sdk/server/common/model/PlatformData.java
-          sed -i "s/java-server-sdk:[0-9]\+\.[0-9]\+\.[0-9]\+/java-server-sdk:${{steps.prepare-release.outputs.next-release-tag}}/g" ./example-cloud/build.gradle
-          sed -i "s/java-server-sdk:[0-9]\+\.[0-9]\+\.[0-9]\+/java-server-sdk:${{steps.prepare-release.outputs.next-release-tag}}/g" ./example-local/build.gradle
           sed -i "s/<java\.server\.sdk\.version>[0-9]\+\.[0-9]\+\.[0-9]\+<\/java\.server\.sdk\.version>/<java.server.sdk.version>${{steps.prepare-release.outputs.next-release-tag}}<\/java.server.sdk.version>/g" ./benchmark/pom.xml
           sed -i "s/<version>[0-9]\+\.[0-9]\+\.[0-9]\+<\/version>/<version>${{steps.prepare-release.outputs.next-release-tag}}<\/version>/g" ./README.md
           sed -i "s/java-server-sdk:[0-9]\+\.[0-9]\+\.[0-9]\+/java-server-sdk:${{steps.prepare-release.outputs.next-release-tag}}/g" ./README.md
