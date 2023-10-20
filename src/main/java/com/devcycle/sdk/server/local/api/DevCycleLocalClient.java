@@ -1,5 +1,6 @@
 package com.devcycle.sdk.server.local.api;
 
+import com.devcycle.sdk.server.common.api.IDevCycleClient;
 import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.common.model.Variable.TypeEnum;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
@@ -18,7 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.Map;
 
-public final class DevCycleLocalClient {
+public final class DevCycleLocalClient implements IDevCycleClient {
 
   private LocalBucketing localBucketing = new LocalBucketing();
 

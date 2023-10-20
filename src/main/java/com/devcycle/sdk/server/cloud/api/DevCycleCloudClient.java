@@ -2,6 +2,7 @@ package com.devcycle.sdk.server.cloud.api;
 
 import com.devcycle.sdk.server.cloud.model.DevCycleCloudOptions;
 import com.devcycle.sdk.server.common.api.IDevCycleApi;
+import com.devcycle.sdk.server.common.api.IDevCycleClient;
 import com.devcycle.sdk.server.common.exception.DevCycleException;
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.devcycle.sdk.server.common.model.*;
@@ -18,7 +19,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class DevCycleCloudClient {
+public final class DevCycleCloudClient implements IDevCycleClient {
 
   private final IDevCycleApi api;
   private final DevCycleCloudOptions dvcOptions;
@@ -61,6 +62,12 @@ public final class DevCycleCloudClient {
     return getResponse(response);
   }
 
+  @Override
+  public boolean isInitialized() {
+    // Cloud SDKs are always initialized
+    return true;
+  }
+
   /**
    * Get variable value by key for user data
    *
@@ -69,9 +76,9 @@ public final class DevCycleCloudClient {
    * @param defaultValue Default value to use if the variable could not be fetched
    *                     (required)
    * @return Variable value
-   * @throws DevCycleException If there are any uses with the data provided
+   * @throws IllegalArgumentException If there are any issues with the key or default value provided
    */
-  public <T> T variableValue(DevCycleUser user, String key, T defaultValue)  throws DevCycleException {
+  public <T> T variableValue(DevCycleUser user, String key, T defaultValue)  {
     return variable(user, key, defaultValue).getValue();
   }
 
@@ -82,20 +89,20 @@ public final class DevCycleCloudClient {
    * @param key Variable key (required)
    * @param defaultValue Default value to use if the variable could not be fetched (required)
    * @return Variable
-   * @throws DevCycleException If there are any uses with the data provided
+   * @throws IllegalArgumentException If there are any issues with the key or default value provided
    */
   @SuppressWarnings("unchecked")
-  public <T> Variable<T> variable(DevCycleUser user, String key, T defaultValue) throws DevCycleException {
+  public <T> Variable<T> variable(DevCycleUser user, String key, T defaultValue) {
     validateUser(user);
 
     if (key == null || key.equals("")) {
       ErrorResponse errorResponse = new ErrorResponse(500, "Missing parameter: key", null);
-      throw new DevCycleException(HttpResponseCode.byCode(500), errorResponse);
+      throw new IllegalArgumentException("Missing parameter: key");
     }
 
     if (defaultValue == null) {
       ErrorResponse errorResponse = new ErrorResponse(500, "Missing parameter: defaultValue", null);
-      throw new DevCycleException(HttpResponseCode.byCode(500), errorResponse);
+      throw new IllegalArgumentException("Missing parameter: defaultValue");
     }
 
     TypeEnum variableType = TypeEnum.fromClass(defaultValue.getClass());
@@ -118,6 +125,11 @@ public final class DevCycleCloudClient {
           .build();
     }
     return variable;
+  }
+
+  @Override
+  public void close() {
+    // no-op
   }
 
   /**

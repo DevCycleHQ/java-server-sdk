@@ -86,7 +86,7 @@ public class DevCycleCloudClientTest {
             assertUserDefaultsCorrect(user);
 
             Assert.assertFalse(variable.getValue());
-        } catch (DevCycleException e) {
+        } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
     }
@@ -107,7 +107,7 @@ public class DevCycleCloudClientTest {
             assertUserDefaultsCorrect(user);
 
             Assert.assertFalse(value);
-        } catch (DevCycleException e) {
+        } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
     }

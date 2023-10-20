@@ -34,7 +34,7 @@ public class CloudExample {
         Boolean variableValue = false;
         try {
             variableValue = client.variableValue(user, VARIABLE_KEY, defaultValue);
-        } catch(DevCycleException e) {
+        } catch(IllegalArgumentException e) {
             System.err.println("Error fetching variable value: " + e.getMessage());
             System.exit(1);
         }
