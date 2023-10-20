@@ -1,10 +1,11 @@
 package com.devcycle.sdk.server.local.managers;
 
-import com.devcycle.sdk.server.common.api.IDVCApi;
+import com.devcycle.sdk.server.common.api.IDevCycleApi;
 import com.devcycle.sdk.server.common.model.*;
-import com.devcycle.sdk.server.local.api.DVCLocalEventsApiClient;
+import com.devcycle.sdk.server.local.api.DevCycleLocalEventsApiClient;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
 import com.devcycle.sdk.server.local.model.*;
+import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import retrofit2.Call;
@@ -21,21 +22,21 @@ public class EventQueueManager {
     private LocalBucketing localBucketing;
     private final String sdkKey;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private IDVCApi eventsApiClient;
+    private IDevCycleApi eventsApiClient;
     private int eventFlushIntervalMS;
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, new DaemonThreadFactory());
     private boolean isFlushingEvents = false;
     private int flushEventQueueSize;
     private int maxEventQueueSize;
 
-    public EventQueueManager(String sdkKey, LocalBucketing localBucketing, DVCLocalOptions options) throws Exception {
+    public EventQueueManager(String sdkKey, LocalBucketing localBucketing, DevCycleLocalOptions options) throws Exception {
         this.localBucketing = localBucketing;
         this.sdkKey = sdkKey;
         eventFlushIntervalMS = options.getEventFlushIntervalMS();
         flushEventQueueSize = options.getFlushEventQueueSize();
         maxEventQueueSize = options.getMaxEventQueueSize();
 
-        eventsApiClient = new DVCLocalEventsApiClient(sdkKey, options).initialize();
+        eventsApiClient = new DevCycleLocalEventsApiClient(sdkKey, options).initialize();
 
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
@@ -49,7 +50,7 @@ public class EventQueueManager {
             try {
                 flushEvents();
             } catch (Exception e) {
-                System.out.println("Error flushing events: " + e.getMessage());
+                DevCycleLogger.error( "DevCycle Error flushing events: " + e.getMessage(), e);
             }
         };
 
@@ -70,11 +71,12 @@ public class EventQueueManager {
         try {
             flushPayloads = this.localBucketing.flushEventQueue(this.sdkKey);
         } catch (Exception e) {
-            System.out.printf("DVC Error Flushing Events: %s%n", e.getMessage());
+            DevCycleLogger.error( "DevCycle Error flushing event payloads: " + e.getMessage(), e);
         }
 
         if (flushPayloads.length == 0) return;
-        System.out.printf("AS Flush Payloads: %s%n", Arrays.toString(flushPayloads));
+
+        DevCycleLogger.debug("DevCycle Flush Payloads: " + Arrays.toString(flushPayloads));
 
         int eventCount = 0;
         isFlushingEvents = true;
@@ -83,15 +85,15 @@ public class EventQueueManager {
             publishEvents(this.sdkKey, payload);
         }
         isFlushingEvents = false;
-        System.out.printf("DVC Flush %d AS Events, for %d Users%n", eventCount, flushPayloads.length);
+        DevCycleLogger.debug(String.format("DevCycle Flush %d AS Events, for %d Users", eventCount, flushPayloads.length));
     }
 
     /**
-     * Queue DVCAPIEvent for publishing to DevCycle Events API.
+     * Queue DevCycleAPIEvent for publishing to DevCycle Events API.
      */
-    public void queueEvent(User user, Event event) throws Exception {
+    public void queueEvent(DevCycleUser user, DevCycleEvent event) throws Exception {
         if (checkEventQueueSize()) {
-            System.out.printf("Max event queue size reached, dropping event: %s%n", event);
+            DevCycleLogger.warning("Max event queue size reached, dropping event: " + event);
             return;
         }
 
@@ -99,12 +101,12 @@ public class EventQueueManager {
     }
 
     /**
-     * Queue DVCEvent that can be aggregated together, where multiple calls are aggregated
+     * Queue DevCycleEvent that can be aggregated together, where multiple calls are aggregated
      * by incrementing the 'value' field.
      */
-    public void queueAggregateEvent(Event event, BucketedUserConfig bucketedConfig) throws Exception {
+    public void queueAggregateEvent(DevCycleEvent event, BucketedUserConfig bucketedConfig) throws Exception {
         if (checkEventQueueSize()) {
-            System.out.printf("Max event queue size reached, dropping aggregate event: %s%n", event);
+            DevCycleLogger.warning("Max event queue size reached, dropping aggregate event: " + event);
             return;
         }
 
@@ -116,13 +118,13 @@ public class EventQueueManager {
     }
 
     private void publishEvents(String sdkKey, FlushPayload flushPayload) throws InterruptedException {
-        Call<DVCResponse> response = eventsApiClient.publishEvents(EventsBatch.builder().batch(flushPayload.records).build());
+        Call<DevCycleResponse> response = eventsApiClient.publishEvents(EventsBatch.builder().batch(flushPayload.records).build());
         int responseCode = getResponse(response);
 
         if (responseCode == 201) {
             localBucketing.onPayloadSuccess(sdkKey, flushPayload.payloadId);
         } else {
-            System.out.printf("DVC Error Publishing Events: %d%n", responseCode);
+            DevCycleLogger.warning("DevCycle Error Publishing Events: " + responseCode);
             localBucketing.onPayloadFailure(sdkKey, flushPayload.payloadId, responseCode >= 500);
         }
     }
@@ -133,7 +135,7 @@ public class EventQueueManager {
         try {
             response = call.execute();
         } catch (IOException e) {
-            System.out.printf("DVC Events error: %s%n", e.getMessage());
+            DevCycleLogger.error( "DevCycle Events error: " + e.getMessage(), e);
         }
 
         if (response == null) {
@@ -167,7 +169,7 @@ public class EventQueueManager {
         try {
             flushEvents();
         } catch (Exception e) {
-            System.out.printf("DVC Cleanup error: %s%n", e.getMessage());
+            DevCycleLogger.error("DevCycle Cleanup error: " + e.getMessage(), e);
         }
         scheduler.shutdown();
     }

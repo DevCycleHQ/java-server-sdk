@@ -1,6 +1,7 @@
 package com.devcycle.sdk.server.local.bucketing;
 
-import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.common.logging.DevCycleLogger;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.common.model.Variable;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.devcycle.sdk.server.local.model.FlushPayload;
@@ -20,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Logger;
 
 import static io.github.kawamuray.wasmtime.WasmValType.F64;
 import static io.github.kawamuray.wasmtime.WasmValType.I32;
@@ -37,6 +39,8 @@ public class LocalBucketing {
 
     private final int WASM_OBJECT_ID_STRING = 1;
     private final int WASM_OBJECT_ID_UINT8ARRAY = 9;
+
+    private Logger logger = Logger.getLogger(LocalBucketing.class.getName());
 
     public LocalBucketing() {
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -72,25 +76,25 @@ public class LocalBucketing {
         Func dateNowFn = WasmFunctions.wrap(store, F64, () -> {
             return (double) System.currentTimeMillis();
         });
-        linker.define("env", "Date.now", Extern.fromFunc(dateNowFn));
+        linker.define(store, "env", "Date.now", Extern.fromFunc(dateNowFn));
 
         Func consoleLogFn = WasmFunctions.wrap(store, I32, (addr) -> {
             String message = readWasmString(((Number) addr).intValue());
-            System.out.println(message);
+            DevCycleLogger.warning("WASM error: " + message);
         });
-        linker.define("env", "console.log", Extern.fromFunc(consoleLogFn));
+        linker.define(store, "env", "console.log", Extern.fromFunc(consoleLogFn));
 
         Func abortFn = WasmFunctions.wrap(store, I32, I32, I32, I32, (messagePtr, filenamePtr, linenum, colnum) -> {
             String message = readWasmString(((Number) messagePtr).intValue());
             String fileName = readWasmString(((Number) filenamePtr).intValue());
             throw new RuntimeException("Exception in " + fileName + ":" + linenum + " : " + colnum + " " + message);
         });
-        linker.define("env", "abort", Extern.fromFunc(abortFn));
+        linker.define(store, "env", "abort", Extern.fromFunc(abortFn));
 
         Func seedFn = WasmFunctions.wrap(store, F64, () -> {
             return System.currentTimeMillis() * Math.random();
         });
-        linker.define("env", "seed", Extern.fromFunc(seedFn));
+        linker.define(store, "env", "seed", Extern.fromFunc(seedFn));
 
         return Arrays.asList(Extern.fromFunc(dateNowFn), Extern.fromFunc(consoleLogFn), Extern.fromFunc(abortFn));
     }
@@ -230,7 +234,7 @@ public class LocalBucketing {
         fn.accept(sdkKeyAddress, customDataAddress);
     }
 
-    public synchronized BucketedUserConfig generateBucketedConfig(String sdkKey, User user) throws JsonProcessingException {
+    public synchronized BucketedUserConfig generateBucketedConfig(String sdkKey, DevCycleUser user) throws JsonProcessingException {
         unpinAll();
         String userString = OBJECT_MAPPER.writeValueAsString(user);
 

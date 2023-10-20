@@ -6,16 +6,21 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'signing'
-    id "com.google.protobuf" version "0.9.3"
+    id "com.google.protobuf" version "0.9.4"
+    id "io.github.gradle-nexus.publish-plugin" version "1.3.0" apply(false)
+}
+
+if (project == rootProject) {
+    apply plugin: "io.github.gradle-nexus.publish-plugin"
 }
 
 task javadocJar(type: Jar) {
-    classifier = 'javadoc'
+    archiveClassifier.set("javadoc")
     from javadoc
 }
 
 task sourcesJar(type: Jar) {
-    classifier = 'sources'
+    archiveClassifier.set("sources")
     from sourceSets.main.allSource
 }
 
@@ -24,18 +29,15 @@ java {
     withSourcesJar()
 }
 
-signing {
-    sign publishing.publications
-}
-
 group = "com.devcycle"
 archivesBaseName = "java-server-sdk"
-version = "1.5.2"
+version = "2.0.1"
 
 publishing {
     publications {
-        javaServerSDK(MavenPublication) {
-            from components.java
+        mavenJava(MavenPublication) {
+            from(components.java)
+
             pom {
                 name = 'DevCycle Java Server SDK'
                 packaging = 'jar'
@@ -67,14 +69,36 @@ publishing {
             }
         }
     }
-    repositories {
-        maven {
-            def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-            def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
-            credentials {
-                username = ossrhUsername
-                password = ossrhPassword
+}
+
+signing {
+    // The signing key needs to be an ascii armored key version of the binary gpg keyfile
+    // encoded in base64 to preserver formatting when used in an environment variable
+    def signingKey = base64Decode(findProperty("signingKey"))
+    def signingKeyId = findProperty("signingKeyId")
+    def signingPassword = findProperty("signingPassword")
+    useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
+    sign publishing.publications
+}
+
+def base64Decode(encodedString){
+    if(encodedString != null) {
+        byte[] decoded = encodedString.decodeBase64()
+        String decode = new String(decoded)
+        return decode
+    }
+    return null;
+}
+if (project == rootProject) {
+    nexusPublishing {
+        // Utilizes the Gradle Nexus Publish Plugin: https://github.com/gradle-nexus/publish-plugin/
+        // to publish, close and release repositories to Sonatype
+        repositories {
+            sonatype {
+                nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+                snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+                username = findProperty("sonatypeUsername")
+                password = findProperty("sonatypePassword")
             }
         }
     }
@@ -84,16 +108,17 @@ repositories {
     mavenCentral()
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
 
 def wasmResourcePath = "$projectDir/src/main/resources"
-def wasmVersion = "1.6.7"
+def wasmVersion = "1.7.0"
 def wasmUrl = "https://unpkg.com/@devcycle/bucketing-assembly-script@$wasmVersion/build/bucketing-lib.release.wasm"
 task downloadDVCBucketingWASM(type: Download) {
     src wasmUrl
     dest wasmResourcePath
     doLast {
-        println "Completed DVC Bucketing WASM Download to $wasmResourcePath"
+        println "Completed DevCycle Bucketing WASM Download to $wasmResourcePath"
     }
 }
 
@@ -102,22 +127,20 @@ sourcesJar.dependsOn downloadDVCBucketingWASM
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:3.0.0"
+        artifact = "com.google.protobuf:protoc:3.24.4"
     }
 }
 
 ext {
     retrofit_version = "2.9.0"
-    jackson_version = "2.14.2"
+    jackson_version = "2.15.3"
     swagger_annotations_version = "2.2.0"
     lombok_version = "1.18.24"
     okhttp_version = "4.9.3"
-    wasmtime_version = "0.14.0"
-
+    wasmtime_version = "0.19.0"
     junit_version = "4.13.2"
-    mockito_core_version = "4.6.1"
-
-    protobuf_version = "3.23.0"
+    mockito_core_version = "5.6.0"
+    protobuf_version = "3.24.4"
 }
 
 dependencies {
@@ -134,9 +157,9 @@ dependencies {
     api("com.fasterxml.jackson.core:jackson-databind:$jackson_version")
     implementation("io.swagger.core.v3:swagger-annotations:$swagger_annotations_version")
 
-    implementation ("io.github.kawamuray.wasmtime:wasmtime-java:$wasmtime_version")
+    implementation("io.github.kawamuray.wasmtime:wasmtime-java:$wasmtime_version")
 
-    implementation ("com.google.protobuf:protobuf-java:$protobuf_version")
+    implementation("com.google.protobuf:protobuf-java:$protobuf_version")
 
     compileOnly("org.projectlombok:lombok:$lombok_version")
 
@@ -147,3 +170,29 @@ dependencies {
     testCompileOnly("org.projectlombok:lombok:$lombok_version")
 }
 
+// Gradle magic for adding a new "examples" source set that's separate from the main source set
+sourceSets {
+    examples {
+        java {
+            compileClasspath += sourceSets.main.output
+            runtimeClasspath += sourceSets.main.output
+        }
+    }
+}
+
+configurations {
+    examplesImplementation.extendsFrom implementation
+    examplesRuntimeOnly.extendsFrom runtimeOnly
+}
+
+task runLocalExample(type: JavaExec) {
+    description = "Run the local bucketing example"
+    classpath = sourceSets.examples.runtimeClasspath
+    main = 'com.devcycle.examples.LocalExample'
+}
+
+task runCloudExample(type: JavaExec) {
+    description = "Run the cloud bucketing example"
+    classpath = sourceSets.examples.runtimeClasspath
+    main = 'com.devcycle.examples.CloudExample'
+}

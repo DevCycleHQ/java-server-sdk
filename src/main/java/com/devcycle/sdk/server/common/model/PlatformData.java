@@ -1,5 +1,6 @@
 package com.devcycle.sdk.server.common.model;
 
+import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,7 +16,6 @@ import java.net.UnknownHostException;
 @Data
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-
 public class PlatformData {
     public PlatformData(String platform, String platformVersion, SdkTypeEnum sdkType, String sdkVersion, String hostname) {
         this.platform = platform;
@@ -25,7 +25,7 @@ public class PlatformData {
         try {
             this.hostname = hostname != null ? hostname : InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {
-            System.out.println("Error getting hostname: " + e.getMessage());
+            DevCycleLogger.warning("Error getting system hostname: " + e.getMessage());
             this.hostname = "";
         }
     }
@@ -44,7 +44,7 @@ public class PlatformData {
 
     @Schema(description = "DevCycle SDK Version")
     @Builder.Default
-    private String sdkVersion = "1.5.2";
+    private String sdkVersion = "2.0.1";
 
     @Schema(description = "Hostname where the SDK is running")
     private String hostname;
@@ -64,7 +64,7 @@ public class PlatformData {
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             platformDataString = mapper.writeValueAsString(platformData);
         } catch (JsonProcessingException e) {
-            System.out.println("Error reading platformData: " + e.getMessage());
+            DevCycleLogger.warning("Error reading platformData: " + e.getMessage());
         }
         return platformDataString;
     }

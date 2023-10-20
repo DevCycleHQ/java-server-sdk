@@ -5,15 +5,14 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.devcycle.sdk.server.common.model.PlatformData;
-import com.devcycle.sdk.server.common.model.Variable;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import com.devcycle.sdk.server.common.model.Event;
-import com.devcycle.sdk.server.common.model.User;
+import com.devcycle.sdk.server.common.model.DevCycleEvent;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
 import com.devcycle.sdk.server.local.model.FlushPayload;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -75,7 +74,7 @@ public class LocalBucketingTest {
 
     @Test
     public void testEventQueue() throws JsonProcessingException {
-        Event event = Event.builder().type("test").target("target").build();
+        DevCycleEvent event = DevCycleEvent.builder().type("test").target("target").build();
 
         localBucketing.initEventQueue(apiKey, "{}");
 
@@ -111,8 +110,8 @@ public class LocalBucketingTest {
         Assert.assertEquals(payloads.length, 0); // succeeded events deleted
     }
 
-    private User getUser() {
-        return User.builder()
+    private DevCycleUser getUser() {
+        return DevCycleUser.builder()
                 .userId("j_test")
                 .build();
     }

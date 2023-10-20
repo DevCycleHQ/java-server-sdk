@@ -21,7 +21,7 @@ public class RequestEvent {
     @Schema(required = true, description = "Custom event type")
     private String customType;
 
-    @Schema(description = "Event type")
+    @Schema(description = "DevCycleEvent type")
     @Builder.Default
     private String type = "customEvent";
 

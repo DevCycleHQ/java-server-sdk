@@ -4,17 +4,26 @@ Welcome to the DevCycle Java SDK, which interfaces with the [DevCycle Bucketing 
 
 ## Requirements
 
-This version of the DevCycle SDK works with Java 8 and above.
+This version of the DevCycle SDK works with Java 11 and above.
 
 Using the Java SDK library requires [Maven](https://maven.apache.org/) or [Gradle](https://gradle.org/) >= 7.6+ to be installed.
 
-An x86_64 JDK is required for Local Bucketing with the DevCycle Java SDK. Currently Supported Platforms are:
+An x86_64 or aarch64 JDK is required for Local Bucketing with the DevCycle Java SDK.
+
+Currently Supported Platforms are:
 
 | OS | Arch |
 | --- | --- |
 | Linux (ELF) | x86_64 |
 | Mac OS | x86_64 |
+| Mac OS | aarch64 |
 | Windows | x86_64 |
+
+In addition, the environment must support GLIBC v2.16 or higher.  You can use the following command to check your GLIBC version:
+
+```bash
+ldd --version
+``` 
 
 ## Installation
 
@@ -26,7 +35,7 @@ You can use the SDK in your Maven project by adding the following to your *pom.x
 <dependency>
     <groupId>com.devcycle</groupId>
     <artifactId>java-server-sdk</artifactId>
-    <version>1.5.2</version>
+    <version>2.0.1</version>
     <scope>compile</scope>
 </dependency>
 ```
@@ -35,7 +44,7 @@ You can use the SDK in your Maven project by adding the following to your *pom.x
 Alternatively you can use the SDK in your Gradle project by adding the following to *build.gradle*:
 
 ```yaml
-implementation("com.devcycle:java-server-sdk:1.5.2")
+implementation("com.devcycle:java-server-sdk:2.0.1")
 ```
 
 ## DNS Caching
@@ -49,28 +58,28 @@ To use the DevCycle Java SDK, initialize a client object.
 
 Cloud:
 ```java
-import com.devcycle.sdk.server.cloud.api.DVCCloudClient;
+import com.devcycle.sdk.server.cloud.api.DevCycleCloudClient;
 
 public class MyClass {
 
-    private DVCCloudClient dvcCloudClient;
+    private DevCycleCloudClient dvcCloudClient;
 
     public MyClass() {
-        dvcCloudClient = new DVCCloudClient("YOUR_DVC_SERVER_SDK_KEY");
+        dvcCloudClient = new DevCycleCloudClient("DEVCYCLE_SERVER_SDK_KEY");
     }
 }
 ```
 
 Local:
 ```java
-import com.devcycle.sdk.server.local.api.DVCLocalClient;
+import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
 
 public class MyClass {
     
-    private DVCLocalClient dvcLocalClient;
+    private DevCycleLocalClient dvcLocalClient;
     
     public MyClass() {
-        dvcLocalClient = new DVCLocalClient("YOUR_DVC_SERVER_SDK_KEY");
+        dvcLocalClient = new DevCycleLocalClient("DEVCYCLE_SERVER_SDK_KEY");
     }
 }
 ```
@@ -79,3 +88,49 @@ public class MyClass {
 
 To find usage documentation, visit our docs for [Local Bucketing](https://docs.devcycle.com/docs/sdk/server-side-sdks/java-local).
 
+## Logging
+
+The DevCycle SDK logs to **stdout** by default and does not require any specific logging package. To integrate with your 
+own logging system, such as Java Logging or SLF4J, you can create a wrapper that implements the `IDevCycleLogger` interface. 
+Then you can set the logger into the Java Server SDK setting the Custom Logger property in the options object used to 
+initialize the client.
+
+```java
+// Create your logging wrapper
+IDevCycleLogger loggingWrapper = new IDevCycleLogger() {
+    @Override
+    public void debug(String message) {
+        // Your logging implementation here
+    }
+
+    @Override
+    public void info(String message) {
+        // Your logging implementation here
+    }
+
+    @Override
+    public void warning(String message) {
+        // Your logging implementation here
+    }
+
+    @Override
+    public void error(String message) {
+        // Your logging implementation here
+    }
+
+    @Override
+    public void error(String message, Throwable throwable) {
+        // Your logging implementation here
+    }
+};
+
+// Set the logger in the options before creating the DevCycleLocalClient
+DevCycleLocalOptions options = DevCycleLocalOptions.builder().customLogger(loggingWrapper).build();
+DevCycleLocalClient dvcClient = new DevCycleLocalClient("DEVCYCLE_SERVER_SDK_KEY", options);
+
+// Or for DevCycleCloudClient
+DevCycleCloudOptions options = DevCycleCloudOptions.builder().customLogger(loggingWrapper).build();
+DevCycleCloudClient dvcClient = new DevCycleCloudClient("DEVCYCLE_SERVER_SDK_KEY", options);
+```
+
+You can also disable all logging by setting the custom logger to `new SimpleDevCycleLogger(SimpleDevCycleLogger.Level.OFF)`.
