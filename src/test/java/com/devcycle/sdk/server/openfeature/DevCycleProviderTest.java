@@ -62,6 +62,8 @@ public class DevCycleProviderTest {
     public void testResolveNoKey() {
         IDevCycleClient dvcClient = mock(IDevCycleClient.class);
         when(dvcClient.isInitialized()).thenReturn(true);
+        when(dvcClient.variable(any(), any(), any())).thenThrow(IllegalArgumentException.class);
+
         DevCycleProvider provider = new DevCycleProvider(dvcClient);
 
         ProviderEvaluation<Boolean> result = provider.resolve(null, false, new ImmutableContext("user-1234"));
@@ -75,11 +77,12 @@ public class DevCycleProviderTest {
     public void testResolveNoDefaultValue() {
         IDevCycleClient dvcClient = mock(IDevCycleClient.class);
         when(dvcClient.isInitialized()).thenReturn(true);
+        when(dvcClient.variable(any(), any(), any())).thenThrow(IllegalArgumentException.class);
         DevCycleProvider provider = new DevCycleProvider(dvcClient);
 
         ProviderEvaluation<Boolean> result = provider.resolve("some-flag", null, new ImmutableContext("user-1234"));
         Assert.assertNotNull(result);
-        Assert.assertEquals(result.getValue(), false);
+        Assert.assertEquals(result.getValue(), null);
         Assert.assertEquals(result.getReason(), Reason.ERROR.toString());
         Assert.assertEquals(result.getErrorCode(), ErrorCode.GENERAL);
     }
