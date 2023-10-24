@@ -155,7 +155,7 @@ public class DevCycleCloudClientTest {
                 .build();
 
         Assert.assertThrows("Missing parameter: key",
-                DevCycleException.class, () -> api.variable(user, null, true));
+                IllegalArgumentException.class, () -> api.variable(user, null, true));
     }
 
     @Test
@@ -165,7 +165,7 @@ public class DevCycleCloudClientTest {
                 .build();
 
         Assert.assertThrows("Missing parameter: defaultValue",
-        DevCycleException.class, () -> api.variable(user, "wibble", null));
+        IllegalArgumentException.class, () -> api.variable(user, "wibble", null));
     }
 
     @Test
