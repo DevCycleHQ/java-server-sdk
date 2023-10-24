@@ -20,7 +20,7 @@ public class DevCycleUserFactoryTest {
     public void testCreateUserNoUserID() {
         EvaluationContext ctx = new ImmutableContext();
 
-        try{
+        try {
             DevCycleUserFactory.createUser(ctx);
             Assert.fail("Expected exception");
         } catch (TargetingKeyMissingError e) {
@@ -30,7 +30,7 @@ public class DevCycleUserFactoryTest {
         Map<String, Value> attribs = new LinkedHashMap();
         ctx = new ImmutableContext(null, attribs);
 
-        try{
+        try {
             DevCycleUserFactory.createUser(ctx);
             Assert.fail("Expected exception");
         } catch (TargetingKeyMissingError e) {
@@ -79,18 +79,18 @@ public class DevCycleUserFactoryTest {
     public void testCreateUserWithCustomData() {
         Map<String, Value> apiAttrs = new LinkedHashMap();
 
-        Map<String,Object> customData = new LinkedHashMap();
-        customData.put("strValue",  "hello");
-        customData.put("intValue",  123);
-        customData.put("floatValue",  3.1456);
-        customData.put("boolValue",  true);
+        Map<String, Object> customData = new LinkedHashMap();
+        customData.put("strValue", "hello");
+        customData.put("intValue", 123);
+        customData.put("floatValue", 3.1456);
+        customData.put("boolValue", true);
         apiAttrs.put("customData", new Value(Structure.mapToStructure(customData)));
 
-        Map<String,Object> privateCustomData = new LinkedHashMap();
-        privateCustomData.put("strValue",  "world");
-        privateCustomData.put("intValue",  789);
-        privateCustomData.put("floatValue",  0.0001);
-        privateCustomData.put("boolValue",  false);
+        Map<String, Object> privateCustomData = new LinkedHashMap();
+        privateCustomData.put("strValue", "world");
+        privateCustomData.put("intValue", 789);
+        privateCustomData.put("floatValue", 0.0001);
+        privateCustomData.put("boolValue", false);
 
         apiAttrs.put("privateCustomData", new Value(Structure.mapToStructure(privateCustomData)));
 

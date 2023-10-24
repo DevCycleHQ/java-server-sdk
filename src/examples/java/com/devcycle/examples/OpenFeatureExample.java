@@ -3,10 +3,7 @@ package com.devcycle.examples;
 import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
 import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
 import com.devcycle.sdk.server.openfeature.DevCycleProvider;
-import dev.openfeature.sdk.EvaluationContext;
-import dev.openfeature.sdk.ImmutableContext;
-import dev.openfeature.sdk.OpenFeatureAPI;
-import dev.openfeature.sdk.Value;
+import dev.openfeature.sdk.*;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -39,6 +36,8 @@ public class OpenFeatureExample {
         OpenFeatureAPI api = OpenFeatureAPI.getInstance();
         api.setProvider(new DevCycleProvider(devCycleClient));
 
+        Client openFeatureClient = api.getClient();
+
         // Create the evaluation context to use for fetching variable values
         Map<String, Value> apiAttrs = new LinkedHashMap<>();
         apiAttrs.put("email", new Value("test-user@domain.com"));
@@ -51,7 +50,7 @@ public class OpenFeatureExample {
 
         // Fetch variable values using the identifier key, with a default value and user
         // object. The default value can be of type string, boolean, number, or JSON
-        Boolean variableValue = api.getClient().getBooleanValue(VARIABLE_KEY, defaultValue, context);
+        Boolean variableValue = openFeatureClient.getBooleanValue(VARIABLE_KEY, defaultValue, context);
 
         // Use variable value
         if (variableValue) {
