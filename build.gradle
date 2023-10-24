@@ -1,7 +1,7 @@
 plugins {
     id 'idea'
     id 'eclipse'
-    id 'de.undercouch.download' version '5.2.0'
+    id 'de.undercouch.download' version '5.5.0'
     id 'java'
     id 'java-library'
     id 'maven-publish'
