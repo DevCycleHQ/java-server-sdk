@@ -2,7 +2,6 @@ package com.devcycle.examples;
 
 import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
 import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
-import com.devcycle.sdk.server.openfeature.DevCycleProvider;
 import dev.openfeature.sdk.*;
 
 import java.util.LinkedHashMap;
@@ -24,7 +23,6 @@ public class OpenFeatureExample {
         // Initialize DevCycle Client
         DevCycleLocalClient devCycleClient = new DevCycleLocalClient(server_sdk_key, options);
 
-
         for (int i = 0; i < 10; i++) {
             if (devCycleClient.isInitialized()) {
                 break;
@@ -34,7 +32,7 @@ public class OpenFeatureExample {
 
         // Setup OpenFeature with the DevCycle Provider
         OpenFeatureAPI api = OpenFeatureAPI.getInstance();
-        api.setProvider(new DevCycleProvider(devCycleClient));
+        api.setProvider(devCycleClient.getOpenFeatureProvider());
 
         Client openFeatureClient = api.getClient();
 

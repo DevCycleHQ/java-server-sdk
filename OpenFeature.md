@@ -21,8 +21,8 @@ DevCycleLocalClient devCycleClient = new DevCycleLocalClient("DEVCYCLE_SERVER_SD
 
 // Set the initialzed DevCycle client as the provider for OpenFeature
 OpenFeatureAPI api = OpenFeatureAPI.getInstance();
-api.setProvider(new DevCycleProvider(devCycleClient));
-
+api.setProvider(devCycleClient.getOpenFeatureProvider());
+        
 // Get the OpenFeature client
 Client openFeatureClient = api.getClient();
 

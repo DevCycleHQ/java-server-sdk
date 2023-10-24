@@ -13,6 +13,7 @@ import com.devcycle.sdk.server.local.protobuf.VariableForUserParams_PB;
 import com.devcycle.sdk.server.local.protobuf.VariableType_PB;
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.devcycle.sdk.server.local.utils.ProtobufUtils;
+import com.devcycle.sdk.server.openfeature.DevCycleProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -29,6 +30,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
 
   private EventQueueManager eventQueueManager;
 
+  private final DevCycleProvider openFeatureProvider;
   public DevCycleLocalClient(String sdkKey) {
     this(sdkKey, DevCycleLocalOptions.builder().build());
   }
@@ -58,6 +60,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
     } catch (Exception e) {
         DevCycleLogger.error("Error creating event queue due to error: " + e.getMessage());
     }
+    this.openFeatureProvider = new DevCycleProvider(this);
   }
 
   /**
@@ -244,6 +247,11 @@ public final class DevCycleLocalClient implements IDevCycleClient {
     if (eventQueueManager != null) {
       eventQueueManager.cleanup();
     }
+  }
+
+  @Override
+  public DevCycleProvider getOpenFeatureProvider() {
+    return this.openFeatureProvider;
   }
 
   private void validateUser(DevCycleUser user) {

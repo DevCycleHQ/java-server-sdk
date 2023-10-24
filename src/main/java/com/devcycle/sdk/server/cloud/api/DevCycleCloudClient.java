@@ -7,6 +7,7 @@ import com.devcycle.sdk.server.common.exception.DevCycleException;
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.common.model.Variable.TypeEnum;
+import com.devcycle.sdk.server.openfeature.DevCycleProvider;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,6 +24,7 @@ public final class DevCycleCloudClient implements IDevCycleClient {
 
   private final IDevCycleApi api;
   private final DevCycleCloudOptions dvcOptions;
+  private final DevCycleProvider openFeatureProvider;
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -47,6 +49,8 @@ public final class DevCycleCloudClient implements IDevCycleClient {
     this.dvcOptions = options;
     api = new DevCycleCloudApiClient(sdkKey, options).initialize();
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+    this.openFeatureProvider = new DevCycleProvider(this);
   }
 
   /**
@@ -64,7 +68,7 @@ public final class DevCycleCloudClient implements IDevCycleClient {
 
   @Override
   public boolean isInitialized() {
-    // Cloud SDKs are always initialized
+    // Cloud Bucketing SDKs always count as initialized
     return true;
   }
 
@@ -130,6 +134,11 @@ public final class DevCycleCloudClient implements IDevCycleClient {
   @Override
   public void close() {
     // no-op
+  }
+
+  @Override
+  public DevCycleProvider getOpenFeatureProvider() {
+    return this.openFeatureProvider;
   }
 
   /**
