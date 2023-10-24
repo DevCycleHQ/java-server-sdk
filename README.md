@@ -52,6 +52,12 @@ The JVM, by default, caches DNS for infinity. DevCycle servers are load balanced
 setting the DNS cache TTL to a short duration is recommended. The TTL is controlled by this security setting `networkaddress.cache.ttl`.
 Recommended settings and how to configure them can be found [here](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/java-dg-jvm-ttl.html).
 
+## OpenFeature Support
+
+This SDK provides an implementation of the [OpenFeature](https://openfeature.dev/) Provider interface.
+
+You can find instructions on how to use it here: [OpenFeature Provider Guide](OpenFeature.md)
+
 ## Getting Started
 
 To use the DevCycle Java SDK, initialize a client object. 

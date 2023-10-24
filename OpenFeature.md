@@ -1,16 +1,18 @@
-# OpenFeature DevCycle Javaf Provider
+# OpenFeature DevCycle Java Provider
 
 This library provides a Java implementation of the [OpenFeature](https://openfeature.dev/) Provider interface for DevCycle.
 
 ## Example App
 
-See the [example app](/src/examples/com/devcycle/examples/OpenFeatureExample.java) for a working example of the OpenFeature DevCycle Python Provider.
+See the [example app](src/examples/java/com/devcycle/examples/OpenFeatureExample.java) for a working example of the OpenFeature DevCycle Java Provider.
 
 ## Usage
 
-See our [Java Cloud Bucketing SDK](https://docs.devcycle.com/sdk/server-side-sdks/java-cloud) and [Java Local Bucketing SDK](https://docs.devcycle.com/sdk/server-side-sdks/java-local) documentation for more information.
+See our [Java Cloud Bucketing SDK](https://docs.devcycle.com/sdk/server-side-sdks/java-cloud) and [Java Local Bucketing SDK](https://docs.devcycle.com/sdk/server-side-sdks/java-local) documentation for more information on how to configure the SDK.
 
-Create the appropriate DevCycle SDK client first (`DevCycleLocalClient` or `DevCycleCloudClient`), then pass it to the `DevCycleProvider` and set it as the provider for OpenFeature.
+Start by creating the appropriate DevCycle SDK client (`DevCycleLocalClient` or `DevCycleCloudClient`).
+
+Once the DevCycle client is configured, pass it to a new `DevCycleProvider` instance and set it as the provider for OpenFeature.
 
 ```java
 // Initialize DevCycle Client
@@ -31,12 +33,12 @@ EvaluationContext context = new ImmutableContext("test-1234");
 Boolean variableValue = openFeatureClient.getBooleanValue(VARIABLE_KEY, false, context);
 ```
 
-#### Required TargetingKey
+### Required Targeting Key
 
 For DevCycle SDK to work we require either a `targeting key` or `user_id` attribute to be set on the OpenFeature context.
 This is used to identify the user as the `user_id` for a `DevCycleUser` in DevCycle.
 
-#### Context properties to DevCycleUser
+### Context properties to DevCycleUser
 
 The provider will automatically translate known `DevCycleUser` properties from the OpenFeature context to the `DevCycleUser` object.
 [DevCycleUser Java Interface](https://github.com/DevCycleHQ/java-server-sdk/blob/main/src/main/java/com/devcycle/sdk/server/common/model/DevCycleUser.java)
@@ -65,18 +67,18 @@ EvaluationContext context = new ImmutableContext("test-1234", attributes);
 Context properties that are not known `DevCycleUser` properties will be automatically
 added to the `customData` property of the `DevCycleUser`.
 
-#### Context Limitations
+### Context Limitations
 
 DevCycle only supports flat JSON Object properties used in the Context. Non-flat properties will be ignored.
 
 For example `obj` will be ignored:
-```python
+```java
 context = EvaluationContext(targeting_key="test-1234", attributes={
     "obj": { "key": "value" }
 })
 ```
 
-#### JSON Flag Limitations
+### JSON Flag Limitations
 
 The OpenFeature spec for JSON flags allows for any type of valid JSON value to be set as the flag value.
 
