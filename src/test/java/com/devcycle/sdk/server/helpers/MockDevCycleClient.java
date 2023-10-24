@@ -3,9 +3,9 @@ package com.devcycle.sdk.server.helpers;
 import com.devcycle.sdk.server.common.api.IDevCycleClient;
 import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.common.model.Variable;
+import com.devcycle.sdk.server.openfeature.DevCycleProvider;
 
-public class MockDevCycleClient implements IDevCycleClient
-{
+public class MockDevCycleClient implements IDevCycleClient {
     @Override
     public boolean isInitialized() {
         return false;
@@ -24,5 +24,10 @@ public class MockDevCycleClient implements IDevCycleClient
     @Override
     public void close() {
 
+    }
+
+    @Override
+    public DevCycleProvider getOpenFeatureProvider() {
+        return null;
     }
 }
