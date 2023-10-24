@@ -135,7 +135,7 @@ ext {
     retrofit_version = "2.9.0"
     jackson_version = "2.15.3"
     swagger_annotations_version = "2.2.0"
-    lombok_version = "1.18.24"
+    lombok_version = "1.18.30"
     okhttp_version = "4.9.3"
     wasmtime_version = "0.19.0"
     junit_version = "4.13.2"
