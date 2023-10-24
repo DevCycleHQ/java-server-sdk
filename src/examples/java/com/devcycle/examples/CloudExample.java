@@ -2,7 +2,6 @@ package com.devcycle.examples;
 
 import com.devcycle.sdk.server.cloud.api.DevCycleCloudClient;
 import com.devcycle.sdk.server.cloud.model.DevCycleCloudOptions;
-import com.devcycle.sdk.server.common.exception.DevCycleException;
 import com.devcycle.sdk.server.common.model.DevCycleUser;
 
 public class CloudExample {
@@ -34,7 +33,7 @@ public class CloudExample {
         Boolean variableValue = false;
         try {
             variableValue = client.variableValue(user, VARIABLE_KEY, defaultValue);
-        } catch(IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             System.err.println("Error fetching variable value: " + e.getMessage());
             System.exit(1);
         }

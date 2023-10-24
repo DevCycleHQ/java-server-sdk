@@ -1,8 +1,8 @@
 package com.devcycle.examples;
 
+import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
 import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
-import com.devcycle.sdk.server.common.model.DevCycleUser;
 
 public class LocalExample {
     public static String VARIABLE_KEY = "test-boolean-variable";
@@ -29,7 +29,7 @@ public class LocalExample {
         DevCycleLocalClient client = new DevCycleLocalClient(server_sdk_key, options);
 
         for (int i = 0; i < 10; i++) {
-            if(client.isInitialized()) {
+            if (client.isInitialized()) {
                 break;
             }
             Thread.sleep(500);

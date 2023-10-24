@@ -21,35 +21,37 @@ public class OpenFeatureExample {
             System.exit(1);
         }
 
-        DevCycleLocalOptions options = DevCycleLocalOptions.builder().configPollingIntervalMs(60000)
+        DevCycleLocalOptions options = DevCycleLocalOptions.builder().configPollingIntervalMS(60000)
                 .disableAutomaticEventLogging(false).disableCustomEventLogging(false).build();
 
         // Initialize DevCycle Client
         DevCycleLocalClient devCycleClient = new DevCycleLocalClient(server_sdk_key, options);
 
-        OpenFeatureAPI api = OpenFeatureAPI.getInstance();
 
         for (int i = 0; i < 10; i++) {
-            if(devCycleClient.isInitialized()) {
+            if (devCycleClient.isInitialized()) {
                 break;
             }
             Thread.sleep(500);
         }
 
-        Map<String, Value> apiAttrs = new LinkedHashMap();
+        // Setup OpenFeature with the DevCycle Provider
+        OpenFeatureAPI api = OpenFeatureAPI.getInstance();
+        api.setProvider(new DevCycleProvider(devCycleClient));
+
+        // Create the evaluation context to use for fetching variable values
+        Map<String, Value> apiAttrs = new LinkedHashMap<>();
         apiAttrs.put("email", new Value("test-user@domain.com"));
         apiAttrs.put("country", new Value("US"));
 
-        EvaluationContext ctx = new ImmutableContext("test-1234", apiAttrs);
+        EvaluationContext context = new ImmutableContext("test-1234", apiAttrs);
 
         // The default value can be of type string, boolean, number, or JSON
         Boolean defaultValue = false;
 
-        api.setProvider(new DevCycleProvider(devCycleClient));
-
         // Fetch variable values using the identifier key, with a default value and user
         // object. The default value can be of type string, boolean, number, or JSON
-        Boolean variableValue = api.getClient().getBooleanValue(VARIABLE_KEY, defaultValue, ctx);
+        Boolean variableValue = api.getClient().getBooleanValue(VARIABLE_KEY, defaultValue, context);
 
         // Use variable value
         if (variableValue) {

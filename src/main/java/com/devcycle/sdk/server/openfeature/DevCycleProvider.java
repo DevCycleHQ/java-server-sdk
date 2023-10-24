@@ -1,12 +1,12 @@
 package com.devcycle.sdk.server.openfeature;
 
-import dev.openfeature.sdk.*;
 import com.devcycle.sdk.server.common.api.IDevCycleClient;
-import com.devcycle.sdk.server.common.model.*;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
+import com.devcycle.sdk.server.common.model.Variable;
+import dev.openfeature.sdk.*;
 import dev.openfeature.sdk.exceptions.ProviderNotReadyError;
 
-public class DevCycleProvider implements FeatureProvider
-{
+public class DevCycleProvider implements FeatureProvider {
     private static final String PROVIDER_NAME = "DevCycleProvider";
 
     private final IDevCycleClient devcycleClient;
@@ -51,13 +51,13 @@ public class DevCycleProvider implements FeatureProvider
     }
 
     <T> ProviderEvaluation<T> resolve(String key, T defaultValue, EvaluationContext ctx) {
-        if(devcycleClient.isInitialized()) {
+        if (devcycleClient.isInitialized()) {
             try {
-                DevCycleUser user = UserFactory.createUser(ctx);
+                DevCycleUser user = DevCycleUserFactory.createUser(ctx);
 
                 Variable<T> variable = devcycleClient.variable(user, key, defaultValue);
 
-                if(variable == null || variable.getIsDefaulted()) {
+                if (variable == null || variable.getIsDefaulted()) {
                     return ProviderEvaluation.<T>builder()
                             .value(defaultValue)
                             .reason(Reason.DEFAULT.toString())
@@ -76,8 +76,7 @@ public class DevCycleProvider implements FeatureProvider
                         .errorMessage(e.getMessage())
                         .build();
             }
-        }
-        else {
+        } else {
             throw new ProviderNotReadyError("DevCycle client not initialized");
         }
     }
