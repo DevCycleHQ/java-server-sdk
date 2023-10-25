@@ -23,3 +23,7 @@ jobs:
       run: ./gradlew runCloudExample
       env:
         DEVCYCLE_SERVER_SDK_KEY: "${{ secrets.DEVCYCLE_SERVER_SDK_KEY }}"
+    - name: Run OpenFeature example
+      run: ./gradlew runOpenFeatureExample
+      env:
+        DEVCYCLE_SERVER_SDK_KEY: "${{ secrets.DEVCYCLE_SERVER_SDK_KEY }}"
