@@ -86,6 +86,7 @@ public class DevCycleProviderLocalSDKTest {
         Assert.assertNotNull(result);
         Assert.assertNotNull(result.getValue());
         Assert.assertTrue(result.getValue().isStructure());
+        Assert.assertEquals(result.getReason(), Reason.TARGETING_MATCH.toString());
 
         Map<String, Object> variableData = result.getValue().asStructure().asObjectMap();
         Assert.assertEquals("This variation is on", variableData.get("displayText"));

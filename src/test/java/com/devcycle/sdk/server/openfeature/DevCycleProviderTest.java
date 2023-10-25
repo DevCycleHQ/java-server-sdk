@@ -24,12 +24,9 @@ public class DevCycleProviderTest {
         when(dvcClient.isInitialized()).thenReturn(false);
 
         DevCycleProvider provider = new DevCycleProvider(dvcClient);
-        try {
-            provider.resolvePrimitiveVariable("some-flag", false, new ImmutableContext("test-1234"));
-            Assert.fail("Expected ProviderNotReadyError");
-        } catch (ProviderNotReadyError e) {
-            // expected
-        }
+        Assert.assertThrows(
+                ProviderNotReadyError.class,
+                () -> provider.resolvePrimitiveVariable("some-flag", false, new ImmutableContext("test-1234")));
     }
 
     @Test
@@ -38,12 +35,9 @@ public class DevCycleProviderTest {
         when(dvcClient.isInitialized()).thenReturn(true);
         DevCycleProvider provider = new DevCycleProvider(dvcClient);
 
-        try {
-            provider.resolvePrimitiveVariable("some-flag", false, new ImmutableContext());
-            Assert.fail("Expected TargetingKeyMissingError");
-        } catch (TargetingKeyMissingError e) {
-            // expected
-        }
+        Assert.assertThrows(
+                TargetingKeyMissingError.class,
+                () -> provider.resolvePrimitiveVariable("some-flag", false, new ImmutableContext()));
     }
 
     @Test
@@ -187,51 +181,42 @@ public class DevCycleProviderTest {
 
         String key = "json-var";
 
-        try {
-            provider.getObjectEvaluation(key, new Value(1234), new ImmutableContext("user-1234"));
-            Assert.fail("Expected TypeMismatchError");
-        } catch (TypeMismatchError e) {
-        }
+        Assert.assertThrows(
+                TypeMismatchError.class,
+                () -> provider.getObjectEvaluation(key, new Value(1234), new ImmutableContext("user-1234")));
 
-        try {
-            provider.getObjectEvaluation(key, new Value("basic string"), new ImmutableContext("user-1234"));
-            Assert.fail("Expected TypeMismatchError");
-        } catch (TypeMismatchError e) {
-        }
 
-        try {
-            provider.getObjectEvaluation(key, new Value(true), new ImmutableContext("user-1234"));
-            Assert.fail("Expected TypeMismatchError");
-        } catch (TypeMismatchError e) {
-        }
+        Assert.assertThrows(
+                TypeMismatchError.class,
+                () -> provider.getObjectEvaluation(key, new Value("basic string"), new ImmutableContext("user-1234")));
 
-        try {
-            List<Value> someList = new ArrayList<>();
-            someList.add(new Value("some string"));
-            someList.add(new Value(1234));
-            provider.getObjectEvaluation(key, new Value(someList), new ImmutableContext("user-1234"));
-            Assert.fail("Expected TypeMismatchError");
-        } catch (TypeMismatchError e) {
-        }
 
-        try {
-            // Test a valid structure but with data DevCycle can't use
-            Map<String, Object> nestedMap = new HashMap<>();
-            nestedMap.put("nestedKey", "nestedValue");
+        Assert.assertThrows(
+                TypeMismatchError.class,
+                () -> provider.getObjectEvaluation(key, new Value(true), new ImmutableContext("user-1234")));
 
-            Map<String, Object> someMap = new HashMap<>();
-            someMap.put("nestedMap", new Value(Structure.mapToStructure(nestedMap)));
+        List<Value> someList = new ArrayList<>();
+        someList.add(new Value("some string"));
+        someList.add(new Value(1234));
+        Assert.assertThrows(
+                TypeMismatchError.class,
+                () -> provider.getObjectEvaluation(key, new Value(someList), new ImmutableContext("user-1234")));
 
-            List<Value> someList = new ArrayList<>();
-            someList.add(new Value("string"));
-            someList.add(new Value(1234));
-            someMap.put("nestedList", new Value(someList));
+        // Test a valid structure but with data DevCycle can't use
+        Map<String, Object> nestedMap = new HashMap<>();
+        nestedMap.put("nestedKey", "nestedValue");
 
-            provider.getObjectEvaluation(key, new Value(Structure.mapToStructure(someMap)), new ImmutableContext("user-1234"));
-            Assert.fail("Expected TypeMismatchError");
-        } catch (TypeMismatchError e) {
-        }
+        Map<String, Object> someMap = new HashMap<>();
+        someMap.put("nestedMap", new Value(Structure.mapToStructure(nestedMap)));
 
+        List<Value> nestedList = new ArrayList<>();
+        nestedList.add(new Value("string"));
+        nestedList.add(new Value(1234));
+        someMap.put("nestedList", new Value(nestedList));
+
+        Assert.assertThrows(
+                TypeMismatchError.class,
+                () -> provider.getObjectEvaluation(key, new Value(Structure.mapToStructure(someMap)), new ImmutableContext("user-1234")));
     }
 
     @Test
