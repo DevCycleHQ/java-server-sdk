@@ -16,6 +16,7 @@ import com.devcycle.sdk.server.local.utils.ProtobufUtils;
 import com.devcycle.sdk.server.openfeature.DevCycleProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.openfeature.sdk.FeatureProvider;
 
 import java.util.Collections;
 import java.util.Map;
@@ -249,8 +250,11 @@ public final class DevCycleLocalClient implements IDevCycleClient {
     }
   }
 
+  /**
+   * @return the OpenFeature provider for this client.
+   */
   @Override
-  public DevCycleProvider getOpenFeatureProvider() {
+  public FeatureProvider getOpenFeatureProvider() {
     return this.openFeatureProvider;
   }
 

@@ -2,7 +2,7 @@ package com.devcycle.sdk.server.common.api;
 
 import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.common.model.Variable;
-import com.devcycle.sdk.server.openfeature.DevCycleProvider;
+import dev.openfeature.sdk.FeatureProvider;
 
 /**
  * Base interface for DevCycle clients that can be used to evaluate Features and retrieve variables values.
@@ -40,5 +40,5 @@ public interface IDevCycleClient {
     /**
      * @return the OpenFeature provider for this client.
      */
-    DevCycleProvider getOpenFeatureProvider();
+    FeatureProvider getOpenFeatureProvider();
 }
