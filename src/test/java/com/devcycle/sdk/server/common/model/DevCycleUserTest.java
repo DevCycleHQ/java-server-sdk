@@ -1,6 +1,5 @@
-package com.devcycle.sdk.server.openfeature;
+package com.devcycle.sdk.server.common.model;
 
-import com.devcycle.sdk.server.common.model.DevCycleUser;
 import dev.openfeature.sdk.EvaluationContext;
 import dev.openfeature.sdk.ImmutableContext;
 import dev.openfeature.sdk.Structure;
@@ -8,20 +7,17 @@ import dev.openfeature.sdk.Value;
 import dev.openfeature.sdk.exceptions.TargetingKeyMissingError;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.*;
 
-@RunWith(MockitoJUnitRunner.class)
-public class DevCycleUserFactoryTest {
+public class DevCycleUserTest {
 
     @Test
     public void testCreateUserNoUserID() {
         EvaluationContext ctx = new ImmutableContext();
 
         try {
-            DevCycleUserFactory.createUser(ctx);
+            DevCycleUser.createUserFromContext(ctx);
             Assert.fail("Expected exception");
         } catch (TargetingKeyMissingError e) {
             // expected
@@ -31,7 +27,7 @@ public class DevCycleUserFactoryTest {
         ctx = new ImmutableContext(null, attribs);
 
         try {
-            DevCycleUserFactory.createUser(ctx);
+            DevCycleUser.createUserFromContext(ctx);
             Assert.fail("Expected exception");
         } catch (TargetingKeyMissingError e) {
             // expected
@@ -41,14 +37,14 @@ public class DevCycleUserFactoryTest {
     @Test
     public void testCreateUserOnlyUserId() {
         EvaluationContext ctx = new ImmutableContext("test-1234");
-        DevCycleUser user = DevCycleUserFactory.createUser(ctx);
+        DevCycleUser user = DevCycleUser.createUserFromContext(ctx);
         Assert.assertEquals(user.getUserId(), "test-1234");
 
         Map<String, Value> apiAttrs = new LinkedHashMap();
         apiAttrs.put("user_id", new Value("test-6789"));
 
         ctx = new ImmutableContext(null, apiAttrs);
-        user = DevCycleUserFactory.createUser(ctx);
+        user = DevCycleUser.createUserFromContext(ctx);
         Assert.assertEquals(user.getUserId(), "test-6789");
     }
 
@@ -65,7 +61,7 @@ public class DevCycleUserFactoryTest {
 
         EvaluationContext ctx = new ImmutableContext("test-1234", apiAttrs);
 
-        DevCycleUser user = DevCycleUserFactory.createUser(ctx);
+        DevCycleUser user = DevCycleUser.createUserFromContext(ctx);
         Assert.assertEquals(user.getUserId(), "test-1234");
         Assert.assertEquals(user.getEmail(), "test-user@domain.com");
         Assert.assertEquals(user.getCountry(), "US");
@@ -96,7 +92,7 @@ public class DevCycleUserFactoryTest {
 
         EvaluationContext ctx = new ImmutableContext("test-1234", apiAttrs);
 
-        DevCycleUser user = DevCycleUserFactory.createUser(ctx);
+        DevCycleUser user = DevCycleUser.createUserFromContext(ctx);
         Assert.assertEquals(user.getUserId(), "test-1234");
 
         Assert.assertEquals(user.getCustomData().size(), 4);
@@ -116,28 +112,28 @@ public class DevCycleUserFactoryTest {
     public void testSetCustomValueBadData() {
         Map<String, Object> customData = null;
 
-        DevCycleUserFactory.setCustomValue(customData, "test", new Value(true));
+        DevCycleUser.setCustomValue(customData, "test", new Value(true));
         Assert.assertNull(customData);
 
         customData = new HashMap();
-        DevCycleUserFactory.setCustomValue(customData, null, new Value(true));
+        DevCycleUser.setCustomValue(customData, null, new Value(true));
         Assert.assertEquals(customData.size(), 0);
 
-        DevCycleUserFactory.setCustomValue(customData, "test", null);
+        DevCycleUser.setCustomValue(customData, "test", null);
         Assert.assertEquals(customData.size(), 0);
 
         List list = new ArrayList();
         list.add("one");
         list.add("two");
         list.add("three");
-        DevCycleUserFactory.setCustomValue(customData, "test", new Value(list));
+        DevCycleUser.setCustomValue(customData, "test", new Value(list));
         Assert.assertEquals(customData.size(), 0);
 
         Map map = new HashMap();
         map.put("p1", "one");
         map.put("p2", "two");
         map.put("p3", "three");
-        DevCycleUserFactory.setCustomValue(customData, "test", new Value(Structure.mapToStructure(map)));
+        DevCycleUser.setCustomValue(customData, "test", new Value(Structure.mapToStructure(map)));
         Assert.assertEquals(customData.size(), 0);
     }
 
@@ -145,7 +141,7 @@ public class DevCycleUserFactoryTest {
     public void testSetCustomValueBoolean() {
         Map<String, Object> customData = new HashMap();
 
-        DevCycleUserFactory.setCustomValue(customData, "test", new Value(true));
+        DevCycleUser.setCustomValue(customData, "test", new Value(true));
         Assert.assertEquals(customData.size(), 1);
         Assert.assertEquals(customData.get("test"), true);
     }
@@ -154,7 +150,7 @@ public class DevCycleUserFactoryTest {
     public void testSetCustomValueString() {
         Map<String, Object> customData = new HashMap();
 
-        DevCycleUserFactory.setCustomValue(customData, "test", new Value("some string"));
+        DevCycleUser.setCustomValue(customData, "test", new Value("some string"));
         Assert.assertEquals(customData.size(), 1);
         Assert.assertEquals(customData.get("test"), "some string");
     }
@@ -163,7 +159,7 @@ public class DevCycleUserFactoryTest {
     public void testSetCustomValueInt() {
         Map<String, Object> customData = new HashMap();
 
-        DevCycleUserFactory.setCustomValue(customData, "test", new Value(999));
+        DevCycleUser.setCustomValue(customData, "test", new Value(999));
         Assert.assertEquals(customData.size(), 1);
         Assert.assertEquals(customData.get("test"), 999.0);
     }
@@ -172,7 +168,7 @@ public class DevCycleUserFactoryTest {
     public void testSetCustomValueDouble() {
         Map<String, Object> customData = new HashMap();
 
-        DevCycleUserFactory.setCustomValue(customData, "test", new Value(3.14));
+        DevCycleUser.setCustomValue(customData, "test", new Value(3.14));
         Assert.assertEquals(customData.size(), 1);
         Assert.assertEquals(customData.get("test"), 3.14);
     }

@@ -53,7 +53,7 @@ public class DevCycleProvider implements FeatureProvider {
     <T> ProviderEvaluation<T> resolve(String key, T defaultValue, EvaluationContext ctx) {
         if (devcycleClient.isInitialized()) {
             try {
-                DevCycleUser user = DevCycleUserFactory.createUser(ctx);
+                DevCycleUser user = DevCycleUser.createUserFromContext(ctx);
 
                 Variable<T> variable = devcycleClient.variable(user, key, defaultValue);
 
