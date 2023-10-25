@@ -27,6 +27,13 @@ ldd --version
 
 ## Installation
 
+### Gradle
+Alternatively you can use the SDK in your Gradle project by adding the following to *build.gradle*:
+
+```yaml
+implementation("com.devcycle:java-server-sdk:2.0.1")
+```
+
 ### Maven
 
 You can use the SDK in your Maven project by adding the following to your *pom.xml*:
@@ -40,23 +47,10 @@ You can use the SDK in your Maven project by adding the following to your *pom.x
 </dependency>
 ```
 
-### Gradle
-Alternatively you can use the SDK in your Gradle project by adding the following to *build.gradle*:
-
-```yaml
-implementation("com.devcycle:java-server-sdk:2.0.1")
-```
-
 ## DNS Caching
 The JVM, by default, caches DNS for infinity. DevCycle servers are load balanced and dynamic. To address this concern,
 setting the DNS cache TTL to a short duration is recommended. The TTL is controlled by this security setting `networkaddress.cache.ttl`.
 Recommended settings and how to configure them can be found [here](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/java-dg-jvm-ttl.html).
-
-## OpenFeature Support
-
-This SDK provides an implementation of the [OpenFeature](https://openfeature.dev/) Provider interface.
-
-You can find instructions on how to use it here: [OpenFeature Provider Guide](OpenFeature.md)
 
 ## Getting Started
 
@@ -90,9 +84,22 @@ public class MyClass {
 }
 ```
 
+## OpenFeature Support
+
+This SDK provides an implementation of the [OpenFeature](https://openfeature.dev/) Provider interface. Use the `getOpenFeatureProvider()` method on the DevCycle SDK client to obtain a provider for OpenFeature.
+
+```java
+DevCycleLocalClient devCycleClient = new DevCycleLocalClient("DEVCYCLE_SERVER_SDK_KEY", options);
+OpenFeatureAPI api = OpenFeatureAPI.getInstance();
+api.setProvider(devCycleClient.getOpenFeatureProvider());
+```
+
+You can find instructions on how to use it here: [DevCycle Java SDK OpenFeature Provider](OpenFeature.md)
+
+
 ## Usage
 
-To find usage documentation, visit our docs for [Local Bucketing](https://docs.devcycle.com/docs/sdk/server-side-sdks/java-local).
+To find usage documentation, visit our docs for [Local Bucketing](https://docs.devcycle.com/docs/sdk/server-side-sdks/java-local) and [Cloud Bucketing](https://docs.devcycle.com/docs/sdk/server-side-sdks/java-cloud)
 
 ## Logging
 

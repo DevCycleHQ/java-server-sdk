@@ -1,18 +1,21 @@
-# OpenFeature DevCycle Java Provider
+# DevCycle Java SDK OpenFeature Provider
 
-This library provides a Java implementation of the [OpenFeature](https://openfeature.dev/) Provider interface for DevCycle.
+This SDK provides a Java implementation of the [OpenFeature](https://openfeature.dev/) Provider interface.
 
 ## Example App
 
-See the [example app](src/examples/java/com/devcycle/examples/OpenFeatureExample.java) for a working example of the OpenFeature DevCycle Java Provider.
+See the [example app](src/examples/java/com/devcycle/examples/OpenFeatureExample.java) for a working example of the DevCycle Java SDK OpenFeature Provider.
 
 ## Usage
 
-See our [Java Cloud Bucketing SDK](https://docs.devcycle.com/sdk/server-side-sdks/java-cloud) and [Java Local Bucketing SDK](https://docs.devcycle.com/sdk/server-side-sdks/java-local) documentation for more information on how to configure the SDK.
-
 Start by creating the appropriate DevCycle SDK client (`DevCycleLocalClient` or `DevCycleCloudClient`).
 
+See our [Java Cloud Bucketing SDK](https://docs.devcycle.com/sdk/server-side-sdks/java-cloud) and [Java Local Bucketing SDK](https://docs.devcycle.com/sdk/server-side-sdks/java-local) documentation for more information on how to configure the SDK.
+
 Once the DevCycle client is configured, pass it to a new `DevCycleProvider` instance and set it as the provider for OpenFeature.
+
+Once the DevCycle client is configured, call the `getOpenFeatureProvider()` function to obtain the OpenFeature provider.
+
 
 ```java
 // Initialize DevCycle Client
@@ -36,9 +39,9 @@ Boolean variableValue = openFeatureClient.getBooleanValue(VARIABLE_KEY, false, c
 ### Required Targeting Key
 
 For DevCycle SDK to work we require either a `targeting key` or `user_id` attribute to be set on the OpenFeature context.
-This is used to identify the user as the `user_id` for a `DevCycleUser` in DevCycle.
+This value is used to identify the user as the `user_id` property for a `DevCycleUser` in DevCycle.
 
-### Context properties to DevCycleUser
+### Mapping Context Properties to DevCycleUser
 
 The provider will automatically translate known `DevCycleUser` properties from the OpenFeature context to the `DevCycleUser` object.
 [DevCycleUser Java Interface](https://github.com/DevCycleHQ/java-server-sdk/blob/main/src/main/java/com/devcycle/sdk/server/common/model/DevCycleUser.java)
@@ -93,7 +96,7 @@ openFeatureClient.getObjectValue("json-flag", new Value("string"));
 
 However, these are not valid types for the DevCycle SDK, the DevCycle SDK only supports JSON Objects:
 ```java
-// Valid JSON Object as the default value, will be evaluated by the DevCycle SDK
+
 Map<String,Object> defaultJsonData = new LinkedHashMap<>();
 defaultJsonData.put("default", "value");
 openFeatureClient.getObjectValue("json-flag", new Value(Structure.mapToStructure(defaultJsonData)));
