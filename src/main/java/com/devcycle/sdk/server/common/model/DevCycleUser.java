@@ -134,7 +134,7 @@ public class DevCycleUser {
      * @return An initialized DevCycleUser with data from the context
      * @throws TargetingKeyMissingError if the targeting key or user_id attribute is not set
      */
-    public static DevCycleUser createUserFromContext(EvaluationContext ctx) {
+    public static DevCycleUser fromEvaluationContext(EvaluationContext ctx) {
         String userId = "";
 
         if (ctx != null && ctx.getTargetingKey() != null) {

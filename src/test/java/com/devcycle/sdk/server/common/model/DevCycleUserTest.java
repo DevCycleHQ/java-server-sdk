@@ -17,7 +17,7 @@ public class DevCycleUserTest {
         EvaluationContext ctx = new ImmutableContext();
 
         try {
-            DevCycleUser.createUserFromContext(ctx);
+            DevCycleUser.fromEvaluationContext(ctx);
             Assert.fail("Expected exception");
         } catch (TargetingKeyMissingError e) {
             // expected
@@ -27,7 +27,7 @@ public class DevCycleUserTest {
         ctx = new ImmutableContext(null, attribs);
 
         try {
-            DevCycleUser.createUserFromContext(ctx);
+            DevCycleUser.fromEvaluationContext(ctx);
             Assert.fail("Expected exception");
         } catch (TargetingKeyMissingError e) {
             // expected
@@ -37,14 +37,14 @@ public class DevCycleUserTest {
     @Test
     public void testCreateUserOnlyUserId() {
         EvaluationContext ctx = new ImmutableContext("test-1234");
-        DevCycleUser user = DevCycleUser.createUserFromContext(ctx);
+        DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
         Assert.assertEquals(user.getUserId(), "test-1234");
 
         Map<String, Value> apiAttrs = new LinkedHashMap();
         apiAttrs.put("user_id", new Value("test-6789"));
 
         ctx = new ImmutableContext(null, apiAttrs);
-        user = DevCycleUser.createUserFromContext(ctx);
+        user = DevCycleUser.fromEvaluationContext(ctx);
         Assert.assertEquals(user.getUserId(), "test-6789");
     }
 
@@ -61,7 +61,7 @@ public class DevCycleUserTest {
 
         EvaluationContext ctx = new ImmutableContext("test-1234", apiAttrs);
 
-        DevCycleUser user = DevCycleUser.createUserFromContext(ctx);
+        DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
         Assert.assertEquals(user.getUserId(), "test-1234");
         Assert.assertEquals(user.getEmail(), "test-user@domain.com");
         Assert.assertEquals(user.getCountry(), "US");
@@ -92,7 +92,7 @@ public class DevCycleUserTest {
 
         EvaluationContext ctx = new ImmutableContext("test-1234", apiAttrs);
 
-        DevCycleUser user = DevCycleUser.createUserFromContext(ctx);
+        DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
         Assert.assertEquals(user.getUserId(), "test-1234");
 
         Assert.assertEquals(user.getCustomData().size(), 4);
