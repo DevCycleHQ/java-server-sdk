@@ -5,6 +5,9 @@ import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.common.model.Variable;
 import dev.openfeature.sdk.*;
 import dev.openfeature.sdk.exceptions.ProviderNotReadyError;
+import dev.openfeature.sdk.exceptions.TypeMismatchError;
+
+import java.util.Map;
 
 public class DevCycleProvider implements FeatureProvider {
     private static final String PROVIDER_NAME = "DevCycleProvider";
@@ -22,27 +25,71 @@ public class DevCycleProvider implements FeatureProvider {
 
     @Override
     public ProviderEvaluation<Boolean> getBooleanEvaluation(String key, Boolean defaultValue, EvaluationContext ctx) {
-        return resolve(key, defaultValue, ctx);
+        return resolvePrimitiveVariable(key, defaultValue, ctx);
     }
 
     @Override
     public ProviderEvaluation<String> getStringEvaluation(String key, String defaultValue, EvaluationContext ctx) {
-        return resolve(key, defaultValue, ctx);
+        return resolvePrimitiveVariable(key, defaultValue, ctx);
     }
 
     @Override
     public ProviderEvaluation<Integer> getIntegerEvaluation(String key, Integer defaultValue, EvaluationContext ctx) {
-        return resolve(key, defaultValue, ctx);
+        return resolvePrimitiveVariable(key, defaultValue, ctx);
     }
 
     @Override
     public ProviderEvaluation<Double> getDoubleEvaluation(String key, Double defaultValue, EvaluationContext ctx) {
-        return resolve(key, defaultValue, ctx);
+        return resolvePrimitiveVariable(key, defaultValue, ctx);
     }
 
     @Override
     public ProviderEvaluation<Value> getObjectEvaluation(String key, Value defaultValue, EvaluationContext ctx) {
-        return resolve(key, defaultValue, ctx);
+        if (!defaultValue.isStructure()) {
+            throw new TypeMismatchError("Default value must be a OpenFeature structure");
+        }
+
+        for (String k : defaultValue.asStructure().keySet()) {
+            Value v = defaultValue.asStructure().getValue(k);
+            if (!(v.isString() || v.isNumber() || v.isBoolean())) {
+                throw new TypeMismatchError("DevCycle JSON objects may only contain strings, numbers, and booleans");
+            }
+        }
+
+        if (devcycleClient.isInitialized()) {
+            try {
+                DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
+
+                Variable<Object> variable = devcycleClient.variable(user, key, defaultValue.asStructure().asObjectMap());
+
+                if (variable == null || variable.getIsDefaulted()) {
+                    return ProviderEvaluation.<Value>builder()
+                            .value(defaultValue)
+                            .reason(Reason.DEFAULT.toString())
+                            .build();
+                } else {
+                    if (variable.getValue() instanceof Map) {
+                        // Convert the variable Map to an OpenFeature structure
+                        Value objectValue = new Value(Structure.mapToStructure((Map) variable.getValue()));
+                        return ProviderEvaluation.<Value>builder()
+                                .value(objectValue)
+                                .reason(Reason.TARGETING_MATCH.toString())
+                                .build();
+                    } else {
+                        throw new TypeMismatchError("DevCycle variable for key " + key + " is not a JSON object");
+                    }
+                }
+            } catch (IllegalArgumentException e) {
+                return ProviderEvaluation.<Value>builder()
+                        .value(defaultValue)
+                        .reason(Reason.ERROR.toString())
+                        .errorCode(ErrorCode.GENERAL)
+                        .errorMessage(e.getMessage())
+                        .build();
+            }
+        } else {
+            throw new ProviderNotReadyError("DevCycle client not initialized");
+        }
     }
 
     @Override
@@ -50,7 +97,7 @@ public class DevCycleProvider implements FeatureProvider {
         devcycleClient.close();
     }
 
-    <T> ProviderEvaluation<T> resolve(String key, T defaultValue, EvaluationContext ctx) {
+    <T> ProviderEvaluation<T> resolvePrimitiveVariable(String key, T defaultValue, EvaluationContext ctx) {
         if (devcycleClient.isInitialized()) {
             try {
                 DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
