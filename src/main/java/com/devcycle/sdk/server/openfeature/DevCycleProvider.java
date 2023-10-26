@@ -57,8 +57,8 @@ public class DevCycleProvider implements FeatureProvider {
 
         for (String k : defaultValue.asStructure().keySet()) {
             Value v = defaultValue.asStructure().getValue(k);
-            if (!(v.isString() || v.isNumber() || v.isBoolean())) {
-                throw new TypeMismatchError("DevCycle JSON objects may only contain strings, numbers, and booleans");
+            if (!(v.isString() || v.isNumber() || v.isBoolean() || v.isNull())) {
+                throw new TypeMismatchError("DevCycle JSON objects may only contain strings, numbers, booleans and nulls");
             }
         }
 
