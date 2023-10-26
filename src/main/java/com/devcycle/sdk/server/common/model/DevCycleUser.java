@@ -114,7 +114,7 @@ public class DevCycleUser {
     }
 
     static void setCustomValue(Map<String, Object> customData, String key, Value value) {
-        // Only support boolean, number, and string types for custom data values
+        // Only support boolean, number, string and null types for custom data values
         // ignore all other data
         if (key != null && value != null) {
             if (value.isBoolean()) {
@@ -123,6 +123,10 @@ public class DevCycleUser {
                 customData.put(key, value.asDouble());
             } else if (value.isString()) {
                 customData.put(key, value.asString());
+            } else if (value.isNull()) {
+                customData.put(key, null);
+            } else {
+                throw new IllegalArgumentException("Custom data values must be of type boolean, number, string or null");
             }
         }
     }
@@ -158,31 +162,32 @@ public class DevCycleUser {
             }
 
             Value value = ctx.getValue(key);
-
-            if (key.equals("email") && value.isString()) {
-                user.setEmail(value.asString());
-            } else if (key.equals("name") && value.isString()) {
-                user.setName(value.asString());
-            } else if (key.equals("language") && value.isString()) {
-                user.setLanguage(value.asString());
-            } else if (key.equals("country") && value.isString()) {
-                user.setCountry(value.asString());
-            } else if (key.equals("appVersion") && value.isString()) {
-                user.setAppVersion(value.asString());
-            } else if (key.equals("appBuild") && value.isString()) {
-                user.setAppBuild(value.asString());
-            } else if (key.equals("customData") && value.isStructure()) {
-                Structure customDataStructure = value.asStructure();
-                for (String dataKey : customDataStructure.keySet()) {
-                    setCustomValue(customData, dataKey, customDataStructure.getValue(dataKey));
+            if (value != null) {
+                if (key.equals("email") && value.isString()) {
+                    user.setEmail(value.asString());
+                } else if (key.equals("name") && value.isString()) {
+                    user.setName(value.asString());
+                } else if (key.equals("language") && value.isString()) {
+                    user.setLanguage(value.asString());
+                } else if (key.equals("country") && value.isString()) {
+                    user.setCountry(value.asString());
+                } else if (key.equals("appVersion") && value.isString()) {
+                    user.setAppVersion(value.asString());
+                } else if (key.equals("appBuild") && value.isString()) {
+                    user.setAppBuild(value.asString());
+                } else if (key.equals("customData") && value.isStructure()) {
+                    Structure customDataStructure = value.asStructure();
+                    for (String dataKey : customDataStructure.keySet()) {
+                        setCustomValue(customData, dataKey, customDataStructure.getValue(dataKey));
+                    }
+                } else if (key.equals("privateCustomData") && value.isStructure()) {
+                    Structure privateDataStructure = value.asStructure();
+                    for (String dataKey : privateDataStructure.keySet()) {
+                        setCustomValue(privateCustomData, dataKey, privateDataStructure.getValue(dataKey));
+                    }
+                } else {
+                    setCustomValue(customData, key, value);
                 }
-            } else if (key.equals("privateCustomData") && value.isStructure()) {
-                Structure privateDataStructure = value.asStructure();
-                for (String dataKey : privateDataStructure.keySet()) {
-                    setCustomValue(privateCustomData, dataKey, privateDataStructure.getValue(dataKey));
-                }
-            } else {
-                setCustomValue(customData, key, value);
             }
         }
 

@@ -20,7 +20,7 @@ public class DevCycleProvider implements FeatureProvider {
 
     @Override
     public Metadata getMetadata() {
-        return () -> PROVIDER_NAME;
+        return () -> PROVIDER_NAME + " " + devcycleClient.getSDKPlatform();
     }
 
     @Override

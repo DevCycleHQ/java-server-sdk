@@ -30,4 +30,9 @@ public class MockDevCycleClient implements IDevCycleClient {
     public DevCycleProvider getOpenFeatureProvider() {
         return null;
     }
+
+    @Override
+    public String getSDKPlatform() {
+        return "Mock";
+    }
 }

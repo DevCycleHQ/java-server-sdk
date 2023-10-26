@@ -258,6 +258,11 @@ public final class DevCycleLocalClient implements IDevCycleClient {
     return this.openFeatureProvider;
   }
 
+  @Override
+  public String getSDKPlatform() {
+    return "Local";
+  }
+
   private void validateUser(DevCycleUser user) {
     if (user == null) {
       throw new IllegalArgumentException("DevCycleUser cannot be null");

@@ -41,4 +41,6 @@ public interface IDevCycleClient {
      * @return the OpenFeature provider for this client.
      */
     FeatureProvider getOpenFeatureProvider();
+
+    String getSDKPlatform();
 }

@@ -32,6 +32,17 @@ public class DevCycleUserTest {
         } catch (TargetingKeyMissingError e) {
             // expected
         }
+
+        attribs = new LinkedHashMap();
+        attribs.put("user_id", new Value(999));
+        ctx = new ImmutableContext(null, attribs);
+
+        try {
+            DevCycleUser.fromEvaluationContext(ctx);
+            Assert.fail("Expected exception");
+        } catch (TargetingKeyMissingError e) {
+            // expected
+        }
     }
 
     @Test
@@ -125,15 +136,28 @@ public class DevCycleUserTest {
         list.add("one");
         list.add("two");
         list.add("three");
-        DevCycleUser.setCustomValue(customData, "test", new Value(list));
-        Assert.assertEquals(customData.size(), 0);
+
+        Assert.assertThrows(IllegalArgumentException.class, () -> {
+            DevCycleUser.setCustomValue(customData, "test", new Value(list));
+        });
 
         Map map = new HashMap();
         map.put("p1", "one");
         map.put("p2", "two");
         map.put("p3", "three");
-        DevCycleUser.setCustomValue(customData, "test", new Value(Structure.mapToStructure(map)));
-        Assert.assertEquals(customData.size(), 0);
+
+        Assert.assertThrows(IllegalArgumentException.class, () -> {
+            DevCycleUser.setCustomValue(customData, "test", new Value(Structure.mapToStructure(map)));
+        });
+    }
+
+    @Test
+    public void testSetCustomValueNull() {
+        Map<String, Object> customData = new HashMap();
+
+        DevCycleUser.setCustomValue(customData, "test", new Value());
+        Assert.assertEquals(customData.size(), 1);
+        Assert.assertNull(customData.get("test"));
     }
 
     @Test

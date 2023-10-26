@@ -145,6 +145,11 @@ public final class DevCycleCloudClient implements IDevCycleClient {
         return this.openFeatureProvider;
     }
 
+    @Override
+    public String getSDKPlatform() {
+        return "Cloud";
+    }
+
     /**
      * Get all variables by key for user data
      *
