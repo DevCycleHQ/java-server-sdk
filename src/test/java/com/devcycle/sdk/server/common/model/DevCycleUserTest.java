@@ -110,12 +110,11 @@ public class DevCycleUserTest {
 
     @Test
     public void testSetCustomValueBadData() {
-        Map<String, Object> customData = null;
+        Assert.assertThrows(NullPointerException.class, () -> {
+            DevCycleUser.setCustomValue(null, "test", new Value(true));
+        });
 
-        DevCycleUser.setCustomValue(customData, "test", new Value(true));
-        Assert.assertNull(customData);
-
-        customData = new HashMap();
+        Map<String, Object> customData = new HashMap();
         DevCycleUser.setCustomValue(customData, null, new Value(true));
         Assert.assertEquals(customData.size(), 0);
 

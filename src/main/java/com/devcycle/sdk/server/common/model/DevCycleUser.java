@@ -116,7 +116,7 @@ public class DevCycleUser {
     static void setCustomValue(Map<String, Object> customData, String key, Value value) {
         // Only support boolean, number, and string types for custom data values
         // ignore all other data
-        if (customData != null && key != null && value != null) {
+        if (key != null && value != null) {
             if (value.isBoolean()) {
                 customData.put(key, value.asBoolean());
             } else if (value.isNumber()) {
