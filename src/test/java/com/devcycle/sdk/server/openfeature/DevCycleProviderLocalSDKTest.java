@@ -108,22 +108,20 @@ public class DevCycleProviderLocalSDKTest {
         Assert.assertEquals(result.getReason(), Reason.TARGETING_MATCH.toString());
     }
 
-    /**
-     * TODO - get this working
-     *
-     * @Test public void testGetIntegerEvaluation() {
-     * EvaluationContext ctx = getContext();
-     * String key = "num-var";
-     * Integer defaultValue = 0;
-     * Integer expectedValue = 12345;
-     * ProviderEvaluation<Integer> result = client.getOpenFeatureProvider().getIntegerEvaluation(key, defaultValue, ctx);
-     * <p>
-     * Assert.assertNotNull(result);
-     * Assert.assertNotNull(result.getValue());
-     * Assert.assertEquals(expectedValue, result.getValue());
-     * Assert.assertEquals(result.getReason(), Reason.TARGETING_MATCH.toString());
-     * }
-     */
+    @Test
+    public void testGetIntegerEvaluation() {
+        EvaluationContext ctx = getContext();
+        String key = "num-var";
+        Integer defaultValue = 0;
+        Integer expectedValue = 12345;
+        ProviderEvaluation<Integer> result = client.getOpenFeatureProvider().getIntegerEvaluation(key, defaultValue, ctx);
+
+        Assert.assertNotNull(result);
+        Assert.assertNotNull(result.getValue());
+        Assert.assertEquals(expectedValue, result.getValue());
+        Assert.assertEquals(result.getReason(), Reason.TARGETING_MATCH.toString());
+    }
+
     @Test
     public void testGetDoubleEvaluation() {
         EvaluationContext ctx = getContext();
