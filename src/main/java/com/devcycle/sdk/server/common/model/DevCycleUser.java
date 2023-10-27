@@ -125,8 +125,6 @@ public class DevCycleUser {
                 customData.put(key, value.asString());
             } else if (value.isNull()) {
                 customData.put(key, null);
-            } else {
-                throw new IllegalArgumentException("Custom data values must be of type boolean, number, string or null");
             }
         }
     }
