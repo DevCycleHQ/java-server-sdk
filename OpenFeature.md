@@ -12,11 +12,6 @@ Start by creating the appropriate DevCycle SDK client (`DevCycleLocalClient` or 
 
 See our [Java Cloud Bucketing SDK](https://docs.devcycle.com/sdk/server-side-sdks/java-cloud) and [Java Local Bucketing SDK](https://docs.devcycle.com/sdk/server-side-sdks/java-local) documentation for more information on how to configure the SDK.
 
-Once the DevCycle client is configured, pass it to a new `DevCycleProvider` instance and set it as the provider for OpenFeature.
-
-Once the DevCycle client is configured, call the `getOpenFeatureProvider()` function to obtain the OpenFeature provider.
-
-
 ```java
 // Initialize DevCycle Client
 DevCycleLocalOptions options = DevCycleLocalOptions.builder().build();
@@ -30,7 +25,7 @@ api.setProvider(devCycleClient.getOpenFeatureProvider());
 Client openFeatureClient = api.getClient();
 
 // Create the evaluation context to use for fetching variable values
-EvaluationContext context = new ImmutableContext("test-1234");
+EvaluationContext context = new ImmutableContext("user-1234");
 
 // Retrieve a boolean flag from the OpenFeature client
 Boolean variableValue = openFeatureClient.getBooleanValue(VARIABLE_KEY, false, context);
@@ -70,16 +65,7 @@ EvaluationContext context = new ImmutableContext("test-1234", attributes);
 Context properties that are not known `DevCycleUser` properties will be automatically
 added to the `customData` property of the `DevCycleUser`.
 
-### Context Limitations
-
-DevCycle only supports flat JSON Object properties used in the Context. Non-flat properties will be ignored.
-
-For example `obj` will be ignored:
-```java
-context = EvaluationContext(targeting_key="test-1234", attributes={
-    "obj": { "key": "value" }
-})
-```
+DevCycle allows the following data types for custom data values: **boolean**, **integer**, **double**, **float**, and **String**. Other data types will be ignored
 
 ### JSON Flag Limitations
 
