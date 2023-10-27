@@ -54,9 +54,20 @@ public class DevCycleUserTest {
         Map<String, Value> apiAttrs = new LinkedHashMap();
         apiAttrs.put("user_id", new Value("test-6789"));
 
+        // ensure fallback to user_id when target key is null
         ctx = new ImmutableContext(null, apiAttrs);
         user = DevCycleUser.fromEvaluationContext(ctx);
         Assert.assertEquals(user.getUserId(), "test-6789");
+
+        // ensure fallback to user_id when target key is empty
+        ctx = new ImmutableContext("", apiAttrs);
+        user = DevCycleUser.fromEvaluationContext(ctx);
+        Assert.assertEquals(user.getUserId(), "test-6789");
+
+        // ensure target key takes precedence over user_id
+        ctx = new ImmutableContext("user-4567", apiAttrs);
+        user = DevCycleUser.fromEvaluationContext(ctx);
+        Assert.assertEquals(user.getUserId(), "user-4567");
     }
 
     @Test
@@ -137,18 +148,18 @@ public class DevCycleUserTest {
         list.add("two");
         list.add("three");
 
-        Assert.assertThrows(IllegalArgumentException.class, () -> {
-            DevCycleUser.setCustomValue(customData, "test", new Value(list));
-        });
+        customData = new HashMap();
+        DevCycleUser.setCustomValue(customData, "test", new Value(list));
+        Assert.assertEquals(customData.size(), 0);
 
         Map map = new HashMap();
         map.put("p1", "one");
         map.put("p2", "two");
         map.put("p3", "three");
 
-        Assert.assertThrows(IllegalArgumentException.class, () -> {
-            DevCycleUser.setCustomValue(customData, "test", new Value(Structure.mapToStructure(map)));
-        });
+        customData = new HashMap();
+        DevCycleUser.setCustomValue(customData, "test", new Value(Structure.mapToStructure(map)));
+        Assert.assertEquals(customData.size(), 0);
     }
 
     @Test
