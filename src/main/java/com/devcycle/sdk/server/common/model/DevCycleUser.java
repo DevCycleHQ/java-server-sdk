@@ -139,7 +139,7 @@ public class DevCycleUser {
     public static DevCycleUser fromEvaluationContext(EvaluationContext ctx) {
         String userId = "";
 
-        if (ctx != null && ctx.getTargetingKey() != null) {
+        if (ctx != null && ctx.getTargetingKey() != null && !ctx.getTargetingKey().isEmpty()) {
             userId = ctx.getTargetingKey();
         } else if (ctx != null && ctx.getValue("user_id") != null) {
             userId = ctx.getValue("user_id").asString();
