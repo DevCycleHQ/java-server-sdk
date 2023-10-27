@@ -40,9 +40,9 @@ public class CloudExample {
 
         // Use variable value
         if (variableValue) {
-            System.err.println("feature is enabled");
+            System.out.println("feature is enabled");
         } else {
-            System.err.println("feature is NOT enabled");
+            System.out.println("feature is NOT enabled");
         }
     }
 }
