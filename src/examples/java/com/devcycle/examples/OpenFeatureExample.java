@@ -61,11 +61,11 @@ public class OpenFeatureExample {
         }
 
         // Default JSON objects must be a map of string to primitive values
-        Map<String,Object> defaultJsonData = new LinkedHashMap<>();
+        Map<String, Object> defaultJsonData = new LinkedHashMap<>();
         defaultJsonData.put("default", "value");
 
         // Fetch a JSON object variable
-        Value jsonObject = openFeatureClient.getObjectValue("test-json-variable", new Value(Structure.mapToStructure(defaultJsonData)), context );
+        Value jsonObject = openFeatureClient.getObjectValue("test-json-variable", new Value(Structure.mapToStructure(defaultJsonData)), context);
         System.out.println(jsonObject.toString());
 
 
