@@ -28,7 +28,7 @@ ldd --version
 ## Installation
 
 ### Gradle
-Alternatively you can use the SDK in your Gradle project by adding the following to *build.gradle*:
+You can use the SDK in your Gradle project by adding the following to *build.gradle*:
 
 ```yaml
 implementation("com.devcycle:java-server-sdk:2.0.1")
