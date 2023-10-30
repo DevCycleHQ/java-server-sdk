@@ -76,6 +76,7 @@ openFeatureClient.getObjectValue("json-flag", new Value(new ArrayList<String>(Ar
 openFeatureClient.getObjectValue("json-flag", new Value(610));
 openFeatureClient.getObjectValue("json-flag", new Value(false));
 openFeatureClient.getObjectValue("json-flag", new Value("string"));
+openFeatureClient.getObjectValue("json-flag", new Value());
 ```
 
 However, these are not valid types for the DevCycle SDK, the DevCycle SDK only supports JSON Objects:
