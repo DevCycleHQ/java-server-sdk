@@ -1,5 +1,6 @@
 package com.devcycle.sdk.server.local.api;
 
+import com.devcycle.sdk.server.common.api.IDevCycleClient;
 import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.common.model.Variable.TypeEnum;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
@@ -12,13 +13,15 @@ import com.devcycle.sdk.server.local.protobuf.VariableForUserParams_PB;
 import com.devcycle.sdk.server.local.protobuf.VariableType_PB;
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.devcycle.sdk.server.local.utils.ProtobufUtils;
+import com.devcycle.sdk.server.openfeature.DevCycleProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.openfeature.sdk.FeatureProvider;
 
 import java.util.Collections;
 import java.util.Map;
 
-public final class DevCycleLocalClient {
+public final class DevCycleLocalClient implements IDevCycleClient {
 
   private LocalBucketing localBucketing = new LocalBucketing();
 
@@ -28,6 +31,7 @@ public final class DevCycleLocalClient {
 
   private EventQueueManager eventQueueManager;
 
+  private final DevCycleProvider openFeatureProvider;
   public DevCycleLocalClient(String sdkKey) {
     this(sdkKey, DevCycleLocalOptions.builder().build());
   }
@@ -57,6 +61,7 @@ public final class DevCycleLocalClient {
     } catch (Exception e) {
         DevCycleLogger.error("Error creating event queue due to error: " + e.getMessage());
     }
+    this.openFeatureProvider = new DevCycleProvider(this);
   }
 
   /**
@@ -243,6 +248,19 @@ public final class DevCycleLocalClient {
     if (eventQueueManager != null) {
       eventQueueManager.cleanup();
     }
+  }
+
+  /**
+   * @return the OpenFeature provider for this client.
+   */
+  @Override
+  public FeatureProvider getOpenFeatureProvider() {
+    return this.openFeatureProvider;
+  }
+
+  @Override
+  public String getSDKPlatform() {
+    return "Local";
   }
 
   private void validateUser(DevCycleUser user) {

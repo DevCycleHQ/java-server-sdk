@@ -27,6 +27,13 @@ ldd --version
 
 ## Installation
 
+### Gradle
+You can use the SDK in your Gradle project by adding the following to *build.gradle*:
+
+```yaml
+implementation("com.devcycle:java-server-sdk:2.0.1")
+```
+
 ### Maven
 
 You can use the SDK in your Maven project by adding the following to your *pom.xml*:
@@ -38,13 +45,6 @@ You can use the SDK in your Maven project by adding the following to your *pom.x
     <version>2.0.1</version>
     <scope>compile</scope>
 </dependency>
-```
-
-### Gradle
-Alternatively you can use the SDK in your Gradle project by adding the following to *build.gradle*:
-
-```yaml
-implementation("com.devcycle:java-server-sdk:2.0.1")
 ```
 
 ## DNS Caching
@@ -84,9 +84,22 @@ public class MyClass {
 }
 ```
 
+## OpenFeature Support
+
+This SDK provides an implementation of the [OpenFeature](https://openfeature.dev/) Provider interface. Use the `getOpenFeatureProvider()` method on the DevCycle SDK client to obtain a provider for OpenFeature.
+
+```java
+DevCycleLocalClient devCycleClient = new DevCycleLocalClient("DEVCYCLE_SERVER_SDK_KEY", options);
+OpenFeatureAPI api = OpenFeatureAPI.getInstance();
+api.setProvider(devCycleClient.getOpenFeatureProvider());
+```
+
+You can find instructions on how to use it here: [DevCycle Java SDK OpenFeature Provider](OpenFeature.md)
+
+
 ## Usage
 
-To find usage documentation, visit our docs for [Local Bucketing](https://docs.devcycle.com/docs/sdk/server-side-sdks/java-local).
+To find usage documentation, visit our docs for [Local Bucketing](https://docs.devcycle.com/docs/sdk/server-side-sdks/java-local) and [Cloud Bucketing](https://docs.devcycle.com/docs/sdk/server-side-sdks/java-cloud)
 
 ## Logging
 

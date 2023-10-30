@@ -86,7 +86,7 @@ public class DevCycleCloudClientTest {
             assertUserDefaultsCorrect(user);
 
             Assert.assertFalse(variable.getValue());
-        } catch (DevCycleException e) {
+        } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
     }
@@ -107,7 +107,7 @@ public class DevCycleCloudClientTest {
             assertUserDefaultsCorrect(user);
 
             Assert.assertFalse(value);
-        } catch (DevCycleException e) {
+        } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
     }
@@ -155,7 +155,7 @@ public class DevCycleCloudClientTest {
                 .build();
 
         Assert.assertThrows("Missing parameter: key",
-                DevCycleException.class, () -> api.variable(user, null, true));
+                IllegalArgumentException.class, () -> api.variable(user, null, true));
     }
 
     @Test
@@ -165,7 +165,7 @@ public class DevCycleCloudClientTest {
                 .build();
 
         Assert.assertThrows("Missing parameter: defaultValue",
-        DevCycleException.class, () -> api.variable(user, "wibble", null));
+        IllegalArgumentException.class, () -> api.variable(user, "wibble", null));
     }
 
     @Test
