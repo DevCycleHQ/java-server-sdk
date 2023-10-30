@@ -1,7 +1,7 @@
 package com.devcycle.sdk.server.common.model;
 
 import dev.openfeature.sdk.EvaluationContext;
-import dev.openfeature.sdk.ImmutableContext;
+import dev.openfeature.sdk.MutableContext;
 import dev.openfeature.sdk.Structure;
 import dev.openfeature.sdk.Value;
 import dev.openfeature.sdk.exceptions.TargetingKeyMissingError;
@@ -14,7 +14,7 @@ public class DevCycleUserTest {
 
     @Test
     public void testCreateUserNoUserID() {
-        EvaluationContext ctx = new ImmutableContext();
+        MutableContext ctx = new MutableContext();
 
         try {
             DevCycleUser.fromEvaluationContext(ctx);
@@ -24,7 +24,7 @@ public class DevCycleUserTest {
         }
 
         Map<String, Value> attribs = new LinkedHashMap();
-        ctx = new ImmutableContext(null, attribs);
+        ctx = new MutableContext(null, attribs);
 
         try {
             DevCycleUser.fromEvaluationContext(ctx);
@@ -35,7 +35,7 @@ public class DevCycleUserTest {
 
         attribs = new LinkedHashMap();
         attribs.put("user_id", new Value(999));
-        ctx = new ImmutableContext(null, attribs);
+        ctx = new MutableContext(null, attribs);
 
         try {
             DevCycleUser.fromEvaluationContext(ctx);
@@ -47,7 +47,7 @@ public class DevCycleUserTest {
 
     @Test
     public void testCreateUserOnlyUserId() {
-        EvaluationContext ctx = new ImmutableContext("test-1234");
+        EvaluationContext ctx = new MutableContext("test-1234");
         DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
         Assert.assertEquals(user.getUserId(), "test-1234");
 
@@ -55,17 +55,17 @@ public class DevCycleUserTest {
         apiAttrs.put("user_id", new Value("test-6789"));
 
         // ensure fallback to user_id when target key is null
-        ctx = new ImmutableContext(null, apiAttrs);
+        ctx = new MutableContext(null, apiAttrs);
         user = DevCycleUser.fromEvaluationContext(ctx);
         Assert.assertEquals(user.getUserId(), "test-6789");
 
         // ensure fallback to user_id when target key is empty
-        ctx = new ImmutableContext("", apiAttrs);
+        ctx = new MutableContext("", apiAttrs);
         user = DevCycleUser.fromEvaluationContext(ctx);
         Assert.assertEquals(user.getUserId(), "test-6789");
 
         // ensure target key takes precedence over user_id
-        ctx = new ImmutableContext("user-4567", apiAttrs);
+        ctx = new MutableContext("user-4567", apiAttrs);
         user = DevCycleUser.fromEvaluationContext(ctx);
         Assert.assertEquals(user.getUserId(), "user-4567");
     }
@@ -81,7 +81,7 @@ public class DevCycleUserTest {
         apiAttrs.put("appVersion", new Value("1.0.0"));
         apiAttrs.put("appBuild", new Value("1"));
 
-        EvaluationContext ctx = new ImmutableContext("test-1234", apiAttrs);
+        EvaluationContext ctx = new MutableContext("test-1234", apiAttrs);
 
         DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
         Assert.assertEquals(user.getUserId(), "test-1234");
@@ -112,7 +112,7 @@ public class DevCycleUserTest {
 
         apiAttrs.put("privateCustomData", new Value(Structure.mapToStructure(privateCustomData)));
 
-        EvaluationContext ctx = new ImmutableContext("test-1234", apiAttrs);
+        EvaluationContext ctx = new MutableContext("test-1234", apiAttrs);
 
         DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
         Assert.assertEquals(user.getUserId(), "test-1234");

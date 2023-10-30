@@ -10,7 +10,7 @@ import dev.openfeature.sdk.exceptions.TypeMismatchError;
 import java.util.Map;
 
 public class DevCycleProvider implements FeatureProvider {
-    private static final String PROVIDER_NAME = "DevCycleProvider";
+    private static final String PROVIDER_NAME = "DevCycle";
 
     private final IDevCycleClient devcycleClient;
 

@@ -35,16 +35,24 @@ public class OpenFeatureExample {
         Client openFeatureClient = api.getClient();
 
         // Create the evaluation context to use for fetching variable values
-        Map<String, Value> attributes = new LinkedHashMap<>();
-        attributes.put("email", new Value("test-user@domain.com"));
-        attributes.put("name", new Value("Test User"));
-        attributes.put("language", new Value("en"));
-        attributes.put("country", new Value("CA"));
-        attributes.put("appVersion", new Value("1.0.0"));
-        attributes.put("appBuild", new Value("1"));
-        attributes.put("deviceModel", new Value("Macbook"));
+        MutableContext context = new MutableContext("test-1234");
+        context.add("email", "test-user@domain.com");
+        context.add("name", "Test User");
+        context.add("language", "en");
+        context.add("country", "CA");
+        context.add("appVersion", "1.0.0");
+        context.add("appBuild", "1");
+        context.add("deviceModel", "Macbook");
 
-        EvaluationContext context = new ImmutableContext("test-1234", attributes);
+        // Add Devcycle Custom Data values
+        Map<String,Object> customData = new LinkedHashMap<>();
+        customData.put("custom", "value");
+        context.add("customData", Structure.mapToStructure(customData));
+
+        // Add Devcycle Private Custom Data values
+        Map<String,Object> privateCustomData = new LinkedHashMap<>();
+        privateCustomData.put("private", "data");
+        context.add("privateCustomData", Structure.mapToStructure(privateCustomData));
 
         // The default value can be of type string, boolean, number, or JSON
         Boolean defaultValue = false;
@@ -67,7 +75,6 @@ public class OpenFeatureExample {
         // Fetch a JSON object variable
         Value jsonObject = openFeatureClient.getObjectValue("test-json-variable", new Value(Structure.mapToStructure(defaultJsonData)), context);
         System.out.println(jsonObject.toString());
-
 
         // Retrieving a string variable along with the resolution details
         FlagEvaluationDetails<String> details = openFeatureClient.getStringDetails("doesnt-exist", "default", context);
