@@ -11,7 +11,7 @@ updates:
   - package-ecosystem: gradle
     directory: "/"
     schedule:
-      day: "monday", "thursday"
+      interval: daily
       time: "12:00"
       timezone: "America/Toronto"
     commit-message:
