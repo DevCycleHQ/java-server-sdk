@@ -99,7 +99,7 @@ You can find additional instructions on how to use it here: [DevCycle Java SDK O
 
 ## Usage
 
-To find usage documentation, visit our docs for [Local Bucketing](https://docs.devcycle.com/docs/sdk/server-side-sdks/java-local) and [Cloud Bucketing](https://docs.devcycle.com/docs/sdk/server-side-sdks/java-cloud)
+To find usage documentation, visit our docs for [Local Bucketing](https://docs.devcycle.com/sdk/server-side-sdks/java-local/java-local-usage) and [Cloud Bucketing](https://docs.devcycle.com/sdk/server-side-sdks/java-cloud/java-cloud-usage)
 
 ## Logging
 
