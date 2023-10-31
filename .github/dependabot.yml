@@ -4,9 +4,17 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+      time: "12:00"
+      timezone: "America/Toronto"
+    commit-message:
+        prefix: "ci(deps): "
   - package-ecosystem: gradle
     directory: "/"
     schedule:
-      interval: "daily"
+      day: "monday", "thursday"
+      time: "12:00"
+      timezone: "America/Toronto"
+    commit-message:
+        prefix: "chore(deps): "
     reviewers:
       - "devcyclehq/engineering"
