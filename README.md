@@ -1,6 +1,6 @@
 # DevCycle Java Server SDK
 
-Welcome to the DevCycle Java SDK, which interfaces with the [DevCycle Bucketing API](https://docs.devcycle.com/bucketing-api/#tag/devcycle). 
+Welcome to the DevCycle Java Server SDK, providing feature flag functionality via [Local Bucketing](https://docs.devcycle.com/sdk/#difference-between-local-and-cloud-bucketing) or Cloud Bucket through the [DevCycle Bucketing API](https://docs.devcycle.com/bucketing-api/#tag/devcycle). 
 
 ## Requirements
 
@@ -12,12 +12,13 @@ An x86_64 or aarch64 JDK is required for Local Bucketing with the DevCycle Java 
 
 Currently Supported Platforms are:
 
-| OS | Arch |
-| --- | --- |
-| Linux (ELF) | x86_64 |
-| Mac OS | x86_64 |
-| Mac OS | aarch64 |
-| Windows | x86_64 |
+| OS             | Arch      |
+|----------------|-----------|
+| Linux (ELF)    | x86_64    |
+| Linux (ELF)    | aarch64   |
+| Mac OS         | x86_64    |
+| Mac OS         | aarch64   |
+| Windows        | x86_64    |
 
 In addition, the environment must support GLIBC v2.16 or higher.  You can use the following command to check your GLIBC version:
 
@@ -94,12 +95,11 @@ OpenFeatureAPI api = OpenFeatureAPI.getInstance();
 api.setProvider(devCycleClient.getOpenFeatureProvider());
 ```
 
-You can find instructions on how to use it here: [DevCycle Java SDK OpenFeature Provider](OpenFeature.md)
-
+You can find additional instructions on how to use it here: [DevCycle Java SDK OpenFeature Provider](OpenFeature.md)
 
 ## Usage
 
-To find usage documentation, visit our docs for [Local Bucketing](https://docs.devcycle.com/docs/sdk/server-side-sdks/java-local) and [Cloud Bucketing](https://docs.devcycle.com/docs/sdk/server-side-sdks/java-cloud)
+To find usage documentation, visit our docs for [Local Bucketing](https://docs.devcycle.com/sdk/server-side-sdks/java-local/java-local-usage) and [Cloud Bucketing](https://docs.devcycle.com/sdk/server-side-sdks/java-cloud/java-cloud-usage)
 
 ## Logging
 
