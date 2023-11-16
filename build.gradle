@@ -133,7 +133,7 @@ protobuf {
 
 ext {
     retrofit_version = "2.9.0"
-    jackson_version = "2.15.3"
+    jackson_version = "2.16.0"
     swagger_annotations_version = "2.2.18"
     lombok_version = "1.18.30"
     okhttp_version = "4.12.0"
