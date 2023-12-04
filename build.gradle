@@ -139,7 +139,7 @@ ext {
     okhttp_version = "4.12.0"
     wasmtime_version = "0.19.0"
     junit_version = "4.13.2"
-    mockito_core_version = "5.6.0"
+    mockito_core_version = "5.8.0"
     protobuf_version = "3.24.4"
     openfeature_version = "1.7.0"
 }
