@@ -112,7 +112,7 @@ sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
 
 def wasmResourcePath = "$projectDir/src/main/resources"
-def wasmVersion = "1.11.2"
+def wasmVersion = "1.11.3"
 def wasmUrl = "https://unpkg.com/@devcycle/bucketing-assembly-script@$wasmVersion/build/bucketing-lib.release.wasm"
 task downloadDVCBucketingWASM(type: Download) {
     src wasmUrl
