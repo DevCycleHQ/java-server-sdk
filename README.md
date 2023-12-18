@@ -1,6 +1,6 @@
 # DevCycle Java Server SDK
 
-Welcome to the DevCycle Java Server SDK, providing feature flag functionality via [Local Bucketing](https://docs.devcycle.com/sdk/#difference-between-local-and-cloud-bucketing) or Cloud Bucket through the [DevCycle Bucketing API](https://docs.devcycle.com/bucketing-api/#tag/devcycle). 
+Welcome to the DevCycle Java Server SDK, providing feature flag functionality via [Local Bucketing](https://docs.devcycle.com/sdk/#difference-between-local-and-cloud-bucketing) or Cloud Bucketing through the [DevCycle Bucketing API](https://docs.devcycle.com/bucketing-api/#tag/devcycle). 
 
 ## Requirements
 
