@@ -25,6 +25,9 @@ public class ProjectConfig {
   @Schema(description = "List of Variables in this Project")
   private Object[] variables;
 
+  @Schema(description = "Audiences in this Project indexed by ID")
+  private Object audiences;
+
   @Schema(description = "Variable Hashes for all Variables in this Project")
   private Object variableHashes;
 }
