@@ -27,9 +27,10 @@ public final class DevCycleCloudApiClient {
     OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     okBuilder = new OkHttpClient.Builder();
 
+    okBuilder.addInterceptor(new AuthorizationHeaderInterceptor(apiKey));
+
     APIUtils.applyRestOptions(options.getRestOptions(), okBuilder);
 
-    okBuilder.addInterceptor(new AuthorizationHeaderInterceptor(apiKey));
 
     if (!isStringNullOrEmpty(options.getBaseURLOverride())) {
       bucketingUrl = options.getBaseURLOverride();

@@ -23,7 +23,7 @@ public final class DevCycleLocalApiClient {
   private static final String CONFIG_URL = "https://config-cdn.devcycle.com/";
   private static final int DEFAULT_TIMEOUT_MS = 10000;
   private static final int MIN_INTERVALS_MS = 1000;
-  
+  private final OkHttpClient httpClient;
   private String configUrl;
   private int requestTimeoutMs;
 
@@ -47,6 +47,7 @@ public final class DevCycleLocalApiClient {
     adapterBuilder = new Retrofit.Builder()
         .baseUrl(configUrl)
         .addConverterFactory(JacksonConverterFactory.create());
+    httpClient = okBuilder.build();
   }
 
   public DevCycleLocalApiClient(String sdkKey, DevCycleLocalOptions options) {
@@ -55,7 +56,7 @@ public final class DevCycleLocalApiClient {
 
   public IDevCycleApi initialize() {
     return adapterBuilder
-        .client(okBuilder.build())
+        .client(httpClient)
         .build()
         .create(IDevCycleApi.class);
   }

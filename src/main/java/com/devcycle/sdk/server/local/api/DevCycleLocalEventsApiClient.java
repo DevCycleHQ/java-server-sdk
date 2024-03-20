@@ -27,10 +27,8 @@ public final class DevCycleLocalEventsApiClient {
     public DevCycleLocalEventsApiClient(String sdkKey, DevCycleLocalOptions options) {
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         okBuilder = new OkHttpClient.Builder();
-
-        APIUtils.applyRestOptions(options.getRestOptions(), okBuilder);
-
         okBuilder.addInterceptor(new AuthorizationHeaderInterceptor(sdkKey));
+        APIUtils.applyRestOptions(options.getRestOptions(), okBuilder);
 
         String eventsApiUrlFromOptions = options.getEventsApiBaseUrl();
 
