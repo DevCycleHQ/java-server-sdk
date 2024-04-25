@@ -37,7 +37,7 @@ jobs:
           token: ${{ secrets.AUTOMATION_USER_TOKEN }}
           fetch-depth: 0
 
-      - uses: DevCycleHQ/release-action/prepare-release@v2
+      - uses: DevCycleHQ/release-action/prepare-release@v2.3.0
         id: prepare-release
         with:
           github-token: ${{ secrets.AUTOMATION_USER_TOKEN }}
@@ -69,7 +69,7 @@ jobs:
         if: inputs.draft != true
 
       - name: Set up Java 11
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 11
@@ -97,7 +97,7 @@ jobs:
         run: ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository
         if: inputs.prerelease != true && inputs.draft != true
 
-      - uses: DevCycleHQ/release-action/create-release@v2
+      - uses: DevCycleHQ/release-action/create-release@v2.3.0
         id: create-release
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
