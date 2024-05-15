@@ -140,7 +140,7 @@ ext {
     wasmtime_version = "0.19.0"
     junit_version = "4.13.2"
     mockito_core_version = "5.6.0"
-    protobuf_version = "3.24.4"
+    protobuf_version = "4.26.1"
     openfeature_version = "1.7.0"
 }
 
