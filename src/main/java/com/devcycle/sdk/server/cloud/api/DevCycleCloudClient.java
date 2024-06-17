@@ -23,11 +23,10 @@ import java.util.Map;
 
 public final class DevCycleCloudClient implements IDevCycleClient {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final IDevCycleApi api;
     private final DevCycleCloudOptions dvcOptions;
     private final DevCycleProvider openFeatureProvider;
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public DevCycleCloudClient(String sdkKey) {
         this(sdkKey, DevCycleCloudOptions.builder().build());

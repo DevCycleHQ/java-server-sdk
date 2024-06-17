@@ -11,6 +11,7 @@ public class ByteConversionUtils {
 
         return result;
     }
+
     public static byte[] intToBytesLittleEndian(int value) {
         byte[] encodedValue = new byte[4];
         encodedValue[3] = (byte) (value >> 8 * 3);

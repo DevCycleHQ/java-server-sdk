@@ -1,4 +1,5 @@
 package com.devcycle.sdk.server.helpers;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,10 +9,11 @@ import java.nio.charset.StandardCharsets;
 public class TestDataFixtures {
     /**
      * Loads the config data from the file in the resources folder
+     *
      * @param fileName name of the file to load
      * @return the String contents of that resource file
      */
-    private static String loadConfigData(String fileName)  {
+    private static String loadConfigData(String fileName) {
         String configData = "";
         ClassLoader classLoader = TestDataFixtures.class.getClassLoader();
         try (InputStream inputStream = classLoader.getResourceAsStream(fileName);
@@ -22,7 +24,7 @@ public class TestDataFixtures {
                 configData += line;
             }
         } catch (IOException e) {
-            System.out.println("Failed to load config data ["+fileName+"]: " + e.getMessage());
+            System.out.println("Failed to load config data [" + fileName + "]: " + e.getMessage());
             e.printStackTrace();
         }
         return configData;

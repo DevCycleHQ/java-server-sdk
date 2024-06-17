@@ -1,11 +1,16 @@
 package com.devcycle.sdk.server.local.managers;
 
 import com.devcycle.sdk.server.common.api.IDevCycleApi;
-import com.devcycle.sdk.server.common.model.*;
+import com.devcycle.sdk.server.common.logging.DevCycleLogger;
+import com.devcycle.sdk.server.common.model.DevCycleEvent;
+import com.devcycle.sdk.server.common.model.DevCycleResponse;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.local.api.DevCycleLocalEventsApiClient;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
-import com.devcycle.sdk.server.local.model.*;
-import com.devcycle.sdk.server.common.logging.DevCycleLogger;
+import com.devcycle.sdk.server.local.model.BucketedUserConfig;
+import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
+import com.devcycle.sdk.server.local.model.EventsBatch;
+import com.devcycle.sdk.server.local.model.FlushPayload;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import retrofit2.Call;
@@ -19,15 +24,15 @@ import java.util.concurrent.TimeUnit;
 
 public class EventQueueManager {
 
-    private LocalBucketing localBucketing;
-    private final String sdkKey;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private IDevCycleApi eventsApiClient;
-    private int eventFlushIntervalMS;
+    private final String sdkKey;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, new DaemonThreadFactory());
+    private final LocalBucketing localBucketing;
+    private final IDevCycleApi eventsApiClient;
+    private final int eventFlushIntervalMS;
     private boolean isFlushingEvents = false;
-    private int flushEventQueueSize;
-    private int maxEventQueueSize;
+    private final int flushEventQueueSize;
+    private final int maxEventQueueSize;
 
     public EventQueueManager(String sdkKey, LocalBucketing localBucketing, DevCycleLocalOptions options) throws Exception {
         this.localBucketing = localBucketing;
@@ -50,7 +55,7 @@ public class EventQueueManager {
             try {
                 flushEvents();
             } catch (Exception e) {
-                DevCycleLogger.error( "DevCycle Error flushing events: " + e.getMessage(), e);
+                DevCycleLogger.error("DevCycle Error flushing events: " + e.getMessage(), e);
             }
         };
 
@@ -71,7 +76,7 @@ public class EventQueueManager {
         try {
             flushPayloads = this.localBucketing.flushEventQueue(this.sdkKey);
         } catch (Exception e) {
-            DevCycleLogger.error( "DevCycle Error flushing event payloads: " + e.getMessage(), e);
+            DevCycleLogger.error("DevCycle Error flushing event payloads: " + e.getMessage(), e);
         }
 
         if (flushPayloads.length == 0) return;
@@ -80,7 +85,7 @@ public class EventQueueManager {
 
         int eventCount = 0;
         isFlushingEvents = true;
-        for (FlushPayload payload: flushPayloads) {
+        for (FlushPayload payload : flushPayloads) {
             eventCount += payload.eventCount;
             publishEvents(this.sdkKey, payload);
         }
@@ -135,7 +140,7 @@ public class EventQueueManager {
         try {
             response = call.execute();
         } catch (IOException e) {
-            DevCycleLogger.error( "DevCycle Events error: " + e.getMessage(), e);
+            DevCycleLogger.error("DevCycle Events error: " + e.getMessage(), e);
         }
 
         if (response == null) {
@@ -157,9 +162,7 @@ public class EventQueueManager {
                 flushEvents();
             }
 
-            if (queueSize >= maxEventQueueSize) {
-                return true;
-            }
+            return queueSize >= maxEventQueueSize;
         }
         return false;
     }

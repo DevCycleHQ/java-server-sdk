@@ -3,14 +3,16 @@ package com.devcycle.sdk.server.helpers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 
 public class LocalConfigServer {
-    private HttpServer server;
+    private final HttpServer server;
     private String configData = "";
-    public LocalConfigServer(String configData, int port) throws IOException{
+
+    public LocalConfigServer(String configData, int port) throws IOException {
         this.configData = configData;
         InetSocketAddress address = new InetSocketAddress(port);
         server = HttpServer.create(address, 0);
@@ -20,7 +22,7 @@ public class LocalConfigServer {
     }
 
     public String getHostRootURL() {
-        return "http://localhost:" + server.getAddress().getPort() +"/";
+        return "http://localhost:" + server.getAddress().getPort() + "/";
     }
 
     public void handleConfigRequest(HttpExchange exchange) throws IOException {

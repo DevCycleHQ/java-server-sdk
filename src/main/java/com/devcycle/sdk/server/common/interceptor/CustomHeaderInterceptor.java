@@ -13,7 +13,7 @@ import java.util.Map;
  * implementation
  */
 public final class CustomHeaderInterceptor implements Interceptor {
-    private IRestOptions restOptions;
+    private final IRestOptions restOptions;
 
     public CustomHeaderInterceptor(IRestOptions restOptions) {
         this.restOptions = restOptions;
@@ -23,11 +23,11 @@ public final class CustomHeaderInterceptor implements Interceptor {
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
 
-        if(restOptions != null) {
+        if (restOptions != null) {
             Request.Builder builder = request.newBuilder();
 
             for (Map.Entry<String, String> entry : restOptions.getHeaders().entrySet()) {
-                if(entry.getValue() != null) {
+                if (entry.getValue() != null) {
                     builder.addHeader(entry.getKey(), entry.getValue());
                 }
             }

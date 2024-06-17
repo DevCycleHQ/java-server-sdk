@@ -16,11 +16,10 @@ public class ProtobufUtils {
         double appBuild = Double.NaN;
         try {
             appBuild = Double.parseDouble(user.getAppBuild());
-        }
-        catch(Exception e) { /* doesn't matter */ }
+        } catch (Exception e) { /* doesn't matter */ }
 
         return DVCUser_PB.newBuilder()
-                .setUserId( user.getUserId())
+                .setUserId(user.getUserId())
                 .setEmail(createNullableString(user.getEmail()))
                 .setName(createNullableString(user.getName()))
                 .setLanguage(createNullableString(user.getLanguage()))
@@ -43,7 +42,7 @@ public class ProtobufUtils {
     public static <T> Variable<T> createVariable(SDKVariable_PB sdkVariable, T defaultValue) throws JsonProcessingException {
         Variable<T> variable;
 
-        switch(sdkVariable.getType()) {
+        switch (sdkVariable.getType()) {
             case Boolean:
                 variable = (Variable<T>) Variable.builder()
                         .key(sdkVariable.getKey())
@@ -73,7 +72,8 @@ public class ProtobufUtils {
                 break;
             case JSON:
                 ObjectMapper mapper = new ObjectMapper();
-                LinkedHashMap<String,Object> jsonObject =  mapper.readValue(sdkVariable.getStringValue(), new TypeReference<LinkedHashMap<String,Object>>() {});
+                LinkedHashMap<String, Object> jsonObject = mapper.readValue(sdkVariable.getStringValue(), new TypeReference<LinkedHashMap<String, Object>>() {
+                });
                 variable = (Variable<T>) Variable.builder()
                         .key(sdkVariable.getKey())
                         .type(Variable.TypeEnum.JSON)
@@ -83,7 +83,7 @@ public class ProtobufUtils {
                         .build();
                 break;
             default:
-                throw new IllegalArgumentException("Unknown variable type: "+sdkVariable.getType());
+                throw new IllegalArgumentException("Unknown variable type: " + sdkVariable.getType());
         }
         return variable;
     }

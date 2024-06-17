@@ -19,6 +19,9 @@ public class FlushPayload {
     }
 
     public static class Record {
+        public DevCycleUser user;
+        public RequestEvent[] events;
+
         @Override
         public String toString() {
             return "Record{" +
@@ -26,9 +29,6 @@ public class FlushPayload {
                     ", events=" + Arrays.toString(events) +
                     '}';
         }
-
-        public DevCycleUser user;
-        public RequestEvent[] events;
     }
 }
 

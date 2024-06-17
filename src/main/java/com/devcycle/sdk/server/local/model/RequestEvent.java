@@ -1,4 +1,3 @@
-
 package com.devcycle.sdk.server.local.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;

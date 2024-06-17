@@ -24,7 +24,7 @@ public final class AuthorizationHeaderInterceptor implements Interceptor {
 
         // Is there already an authorization header on the request?
         // If so, we need to rename ours to avoid conflicts
-        if(request.header(AUTHORIZATION_HEADER) != null) {
+        if (request.header(AUTHORIZATION_HEADER) != null) {
             headerName = "DevCycle-" + AUTHORIZATION_HEADER;
         }
 

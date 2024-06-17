@@ -20,13 +20,13 @@ public enum HttpResponseCode {
         this.code = code;
     }
 
-    public int code() {
-        return code;
-    }
-
     public static HttpResponseCode byCode(int code) {
         return Arrays.stream(HttpResponseCode.values())
                 .filter(httpResponseCode -> httpResponseCode.code == code)
                 .findFirst().orElse(HttpResponseCode.SERVER_ERROR);
+    }
+
+    public int code() {
+        return code;
     }
 }

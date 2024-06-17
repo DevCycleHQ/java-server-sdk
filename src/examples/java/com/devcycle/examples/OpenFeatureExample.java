@@ -45,12 +45,12 @@ public class OpenFeatureExample {
         context.add("deviceModel", "Macbook");
 
         // Add Devcycle Custom Data values
-        Map<String,Object> customData = new LinkedHashMap<>();
+        Map<String, Object> customData = new LinkedHashMap<>();
         customData.put("custom", "value");
         context.add("customData", Structure.mapToStructure(customData));
 
         // Add Devcycle Private Custom Data values
-        Map<String,Object> privateCustomData = new LinkedHashMap<>();
+        Map<String, Object> privateCustomData = new LinkedHashMap<>();
         privateCustomData.put("private", "data");
         context.add("privateCustomData", Structure.mapToStructure(privateCustomData));
 

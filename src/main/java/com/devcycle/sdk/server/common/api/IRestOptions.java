@@ -13,7 +13,7 @@ public interface IRestOptions {
     /**
      * @return A set of HTTP request headers that should be incorporated into all outgoing requests. return null if no headers are needed.
      */
-    Map<String,String> getHeaders();
+    Map<String, String> getHeaders();
 
     /**
      * @return A custom SSLSocketFactory to use when making requests. Return null if the default SSLSocket factory can be used
@@ -21,7 +21,6 @@ public interface IRestOptions {
     SSLSocketFactory getSocketFactory();
 
     /**
-     *
      * @return Provide a trust manager to handle custom certificates. Return null if the default trust manager can be used
      */
     X509TrustManager getTrustManager();
