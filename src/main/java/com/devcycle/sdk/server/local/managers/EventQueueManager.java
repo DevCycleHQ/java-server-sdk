@@ -118,29 +118,22 @@ public class EventQueueManager {
         event.setType("sdkConfig");
         event.setTarget(req.url().toString());
 
-        try (okhttp3.Response res = response.raw()) {
-
-            if (res.networkResponse() != null
-                    && res.networkResponse().sentRequestAtMillis() != 0
-                    && res.networkResponse().receivedResponseAtMillis() != 0) {
-                event.setValue(BigDecimal.valueOf(res.networkResponse().receivedResponseAtMillis() - res.networkResponse().sentRequestAtMillis()));
-            }
-            HashMap<String, Object> metaData = new HashMap<>();
-            metaData.put("clientUUID", localBucketing.getClientUUID());
-            metaData.put("reqEtag", req.header("If-None-Match"));
-            metaData.put("reqLastModified", req.header("If-Modified-Since"));
-            metaData.put("resEtag", res.header("etag"));
-            metaData.put("resLastModified", res.header("Last-Modified"));
-            metaData.put("resRayId", res.header("cf-ray"));
-            metaData.put("resStatus", response.code());
-            metaData.put("errMsg", response.code() != 200 && response.code() != 304 ? response.message() : null);
-            metaData.put("sseConnected", null);
-            event.setMetaData(metaData);
-
-
+        try (okhttp3.Response res = response.raw().networkResponse()) {
+            event.setValue(BigDecimal.valueOf(res.receivedResponseAtMillis() - res.sentRequestAtMillis()));
         } catch (Exception e) {
             event.setValue(BigDecimal.valueOf(-1));
         }
+        HashMap<String, Object> metaData = new HashMap<>();
+        metaData.put("clientUUID", localBucketing.getClientUUID());
+        metaData.put("reqEtag", req.header("If-None-Match"));
+        metaData.put("reqLastModified", req.header("If-Modified-Since"));
+        metaData.put("resEtag", response.headers().get("etag"));
+        metaData.put("resLastModified", response.headers().get("Last-Modified"));
+        metaData.put("resRayId", response.headers().get("cf-ray"));
+        metaData.put("resStatus", response.code());
+        metaData.put("errMsg", response.code() != 200 && response.code() != 304 ? response.message() : null);
+        metaData.put("sseConnected", null);
+        event.setMetaData(metaData);
         queueEvent(user, event);
     }
 
