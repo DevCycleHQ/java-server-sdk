@@ -159,6 +159,11 @@ public final class EnvironmentConfigManager {
             DevCycleLogger.debug("Config not modified, using cache, etag: " + this.configETag);
             return this.config;
         } else {
+            try {
+                this.eventQueueManager.queueSDKConfigEvent(call.request(), response);
+            } catch (Exception e) {
+                // Explicitly ignore - best effort.
+            }
             if (response.errorBody() != null) {
                 try {
                     errorResponse = OBJECT_MAPPER.readValue(response.errorBody().string(), ErrorResponse.class);

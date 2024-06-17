@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -117,22 +118,25 @@ public class EventQueueManager {
         event.setType("sdkConfig");
         event.setTarget(req.url().toString());
 
-        try(okhttp3.Response res = response.raw()) {
-            if (res.isSuccessful()) {
+        try (okhttp3.Response res = response.raw()) {
+
+            if (res.networkResponse() != null
+                    && res.networkResponse().sentRequestAtMillis() != 0
+                    && res.networkResponse().receivedResponseAtMillis() != 0) {
                 event.setValue(BigDecimal.valueOf(res.networkResponse().receivedResponseAtMillis() - res.networkResponse().sentRequestAtMillis()));
-            } else {
-                event.setValue(BigDecimal.valueOf(-1));
             }
-            event.setMetaData(Map.of(
-                    "clientUUID", localBucketing.getClientUUID(),
-                    "reqEtag", req.header("If-None-Match"),
-                    "reqLastModified", req.header("If-Modified-Since"),
-                    "resEtag", res.header("etag"),
-                    "resLastModified", res.header("Last-Modified"),
-                    "resRayId", res.header("cf-ray"),
-                    "resStatus", response.code(),
-                    "errMsg", response.code() != 200 && response.code() != 304 ? response.message() : null,
-                    "sseConnected", null));
+            HashMap<String, Object> metaData = new HashMap<>();
+            metaData.put("clientUUID", localBucketing.getClientUUID());
+            metaData.put("reqEtag", req.header("If-None-Match"));
+            metaData.put("reqLastModified", req.header("If-Modified-Since"));
+            metaData.put("resEtag", res.header("etag"));
+            metaData.put("resLastModified", res.header("Last-Modified"));
+            metaData.put("resRayId", res.header("cf-ray"));
+            metaData.put("resStatus", response.code());
+            metaData.put("errMsg", response.code() != 200 && response.code() != 304 ? response.message() : null);
+            metaData.put("sseConnected", null);
+            event.setMetaData(metaData);
+
 
         } catch (Exception e) {
             event.setValue(BigDecimal.valueOf(-1));
