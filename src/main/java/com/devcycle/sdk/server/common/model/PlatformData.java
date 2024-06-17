@@ -17,6 +17,21 @@ import java.net.UnknownHostException;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PlatformData {
+    @Schema(description = "Platform the SDK is running on")
+    @Builder.Default
+    private String platform = "Java";
+    @Schema(description = "Version of the platform the SDK is running on")
+    @Builder.Default
+    private String platformVersion = System.getProperty("java.version");
+    @Schema(description = "DevCycle SDK type")
+    @Builder.Default
+    private PlatformData.SdkTypeEnum sdkType = PlatformData.SdkTypeEnum.SERVER;
+    @Schema(description = "DevCycle SDK Version")
+    @Builder.Default
+    private String sdkVersion = "2.2.0";
+    @Schema(description = "Hostname where the SDK is running")
+    private String hostname;
+
     public PlatformData(String platform, String platformVersion, SdkTypeEnum sdkType, String sdkVersion, String hostname) {
         this.platform = platform;
         this.platformVersion = platformVersion;
@@ -29,25 +44,6 @@ public class PlatformData {
             this.hostname = "";
         }
     }
-
-    @Schema(description = "Platform the SDK is running on")
-    @Builder.Default
-    private String platform = "Java";
-
-    @Schema(description = "Version of the platform the SDK is running on")
-    @Builder.Default
-    private String platformVersion = System.getProperty("java.version");
-
-    @Schema(description = "DevCycle SDK type")
-    @Builder.Default
-    private PlatformData.SdkTypeEnum sdkType = PlatformData.SdkTypeEnum.SERVER;
-
-    @Schema(description = "DevCycle SDK Version")
-    @Builder.Default
-    private String sdkVersion = "2.2.0";
-
-    @Schema(description = "Hostname where the SDK is running")
-    private String hostname;
 
     @Override
     public String toString() {
@@ -79,6 +75,15 @@ public class PlatformData {
             this.value = value;
         }
 
+        public static SdkTypeEnum fromValue(String text) {
+            for (SdkTypeEnum b : SdkTypeEnum.values()) {
+                if (String.valueOf(b.value).equals(text)) {
+                    return b;
+                }
+            }
+            return null;
+        }
+
         @JsonValue
         public String getValue() {
             return value;
@@ -87,15 +92,6 @@ public class PlatformData {
         @Override
         public String toString() {
             return String.valueOf(value);
-        }
-
-        public static SdkTypeEnum fromValue(String text) {
-            for (SdkTypeEnum b : SdkTypeEnum.values()) {
-                if (String.valueOf(b.value).equals(text)) {
-                    return b;
-                }
-            }
-            return null;
         }
     }
 }

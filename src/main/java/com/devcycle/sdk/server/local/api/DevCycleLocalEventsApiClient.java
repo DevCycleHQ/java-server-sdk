@@ -4,9 +4,8 @@ import com.devcycle.sdk.server.common.api.APIUtils;
 import com.devcycle.sdk.server.common.api.IDevCycleApi;
 import com.devcycle.sdk.server.common.interceptor.AuthorizationHeaderInterceptor;
 import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.annotation.JsonInclude;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -15,13 +14,10 @@ import java.util.Objects;
 
 public final class DevCycleLocalEventsApiClient {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String EVENTS_API_URL = "https://events.devcycle.com/";
     private final OkHttpClient.Builder okBuilder;
     private final Retrofit.Builder adapterBuilder;
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-    private static final String EVENTS_API_URL = "https://events.devcycle.com/";
-
     private String eventsApiUrl;
 
     public DevCycleLocalEventsApiClient(String sdkKey, DevCycleLocalOptions options) {

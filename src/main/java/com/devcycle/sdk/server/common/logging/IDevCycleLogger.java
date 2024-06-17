@@ -6,8 +6,12 @@ package com.devcycle.sdk.server.common.logging;
  */
 public interface IDevCycleLogger {
     void debug(String message);
+
     void info(String message);
+
     void warning(String message);
+
     void error(String message);
+
     void error(String message, Throwable t);
 }

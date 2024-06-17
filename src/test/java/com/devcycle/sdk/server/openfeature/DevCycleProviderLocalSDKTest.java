@@ -20,9 +20,9 @@ import java.util.UUID;
  * data conversions are working as expected
  */
 public class DevCycleProviderLocalSDKTest {
+    static final String apiKey = String.format("server-%s", UUID.randomUUID());
     private static DevCycleLocalClient client;
     private static LocalConfigServer localConfigServer;
-    static final String apiKey = String.format("server-%s", UUID.randomUUID());
 
     @BeforeClass
     public static void setup() throws Exception {

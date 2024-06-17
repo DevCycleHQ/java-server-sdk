@@ -3,7 +3,6 @@ package com.devcycle.sdk.server.cloud.model;
 import com.devcycle.sdk.server.common.api.IRestOptions;
 import com.devcycle.sdk.server.common.logging.IDevCycleLogger;
 import com.devcycle.sdk.server.common.model.IDevCycleOptions;
-
 import lombok.Builder;
 import lombok.Data;
 
@@ -22,5 +21,6 @@ public class DevCycleCloudOptions {
     @Builder.Default
     private IRestOptions restOptions = null;
 
-    public static class DevCycleCloudOptionsBuilder implements IDevCycleOptions { }
+    public static class DevCycleCloudOptionsBuilder implements IDevCycleOptions {
+    }
 }

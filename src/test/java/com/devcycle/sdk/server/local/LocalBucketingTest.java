@@ -1,23 +1,22 @@
 package com.devcycle.sdk.server.local;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
+import com.devcycle.sdk.server.common.model.DevCycleEvent;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.common.model.PlatformData;
+import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
+import com.devcycle.sdk.server.local.model.FlushPayload;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import com.devcycle.sdk.server.common.model.DevCycleEvent;
-import com.devcycle.sdk.server.common.model.DevCycleUser;
-import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
-import com.devcycle.sdk.server.local.model.FlushPayload;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @RunWith(MockitoJUnitRunner.class)
 public class LocalBucketingTest {
@@ -31,7 +30,7 @@ public class LocalBucketingTest {
     final ObjectMapper mapper = new ObjectMapper();
 
     @Before
-    public void setup(){
+    public void setup() {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         localBucketing.setPlatformData(getUser().getPlatformData().toString());
         localBucketing.storeConfig(apiKey, testConfigString);
@@ -39,7 +38,7 @@ public class LocalBucketingTest {
 
     @Test
     public void testSetClientCustomData() {
-        Map<String,Object> testData = new HashMap();
+        Map<String, Object> testData = new HashMap();
         testData.put("stringProp", "test");
         testData.put("intProp", 1);
         testData.put("booleanProp", true);
@@ -53,21 +52,21 @@ public class LocalBucketingTest {
     }
 
     @Test
-    public void testSetPlatformData(){
+    public void testSetPlatformData() {
         try {
             PlatformData platformData = PlatformData.builder().build();
             String platformDataJSON = mapper.writeValueAsString(platformData);
             localBucketing.setPlatformData(platformDataJSON);
-        }catch(Exception e){
+        } catch (Exception e) {
             Assert.fail("Unexpected exception: " + e.getMessage());
         }
     }
 
     @Test
-    public void testStoreConfig(){
+    public void testStoreConfig() {
         try {
             localBucketing.storeConfig(apiKey, testConfigString);
-        }catch(Exception e){
+        } catch (Exception e) {
             Assert.fail("Unexpected exception: " + e.getMessage());
         }
     }

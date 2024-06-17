@@ -13,21 +13,21 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ProjectConfig {
-  @Schema(description = "Project Settings")
-  private Object project;
+    @Schema(description = "Project Settings")
+    private Object project;
 
-  @Schema(description = "Environment Key & ID")
-  private Object environment;
+    @Schema(description = "Environment Key & ID")
+    private Object environment;
 
-  @Schema(description = "List of Features in this Project")
-  private Object[] features;
+    @Schema(description = "List of Features in this Project")
+    private Object[] features;
 
-  @Schema(description = "List of Variables in this Project")
-  private Object[] variables;
+    @Schema(description = "List of Variables in this Project")
+    private Object[] variables;
 
-  @Schema(description = "Audiences in this Project indexed by ID")
-  private Object audiences;
+    @Schema(description = "Audiences in this Project indexed by ID")
+    private Object audiences;
 
-  @Schema(description = "Variable Hashes for all Variables in this Project")
-  private Object variableHashes;
+    @Schema(description = "Variable Hashes for all Variables in this Project")
+    private Object variableHashes;
 }

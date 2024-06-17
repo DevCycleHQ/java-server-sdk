@@ -13,6 +13,7 @@ public class LongTimestampDeserializer extends StdDeserializer<Long> {
     public LongTimestampDeserializer() {
         super(Long.class);
     }
+
     @Override
     public Long deserialize(JsonParser parser, DeserializationContext ctxt)
             throws IOException {

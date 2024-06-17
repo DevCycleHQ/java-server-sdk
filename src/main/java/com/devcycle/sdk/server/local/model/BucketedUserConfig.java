@@ -1,7 +1,7 @@
 package com.devcycle.sdk.server.local.model;
 
-import com.devcycle.sdk.server.common.model.Feature;
 import com.devcycle.sdk.server.common.model.BaseVariable;
+import com.devcycle.sdk.server.common.model.Feature;
 
 import java.util.List;
 import java.util.Map;

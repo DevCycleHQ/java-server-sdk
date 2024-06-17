@@ -18,10 +18,10 @@ public class BaseVariable {
     @Schema(required = true, description = "unique database id")
     @JsonProperty("_id")
     private String id;
-    
+
     @Schema(required = true, description = "Unique key by Project, can be used in the SDK / API to reference by 'key' rather than _id.")
     private String key;
-    
+
     @Schema(required = true, description = "Variable type")
     private TypeEnum type;
 

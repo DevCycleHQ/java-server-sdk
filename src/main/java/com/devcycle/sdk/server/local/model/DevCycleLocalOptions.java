@@ -1,9 +1,9 @@
 package com.devcycle.sdk.server.local.model;
 
 import com.devcycle.sdk.server.common.api.IRestOptions;
-import com.devcycle.sdk.server.common.model.IDevCycleOptions;
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.devcycle.sdk.server.common.logging.IDevCycleLogger;
+import com.devcycle.sdk.server.common.model.IDevCycleOptions;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
@@ -30,19 +30,7 @@ public class DevCycleLocalOptions implements IDevCycleOptions {
 
     @JsonIgnore
     private IDevCycleLogger customLogger = null;
-
-    public int getConfigPollingIntervalMS(int configPollingIntervalMs, int configPollingIntervalMS) {
-        if (configPollingIntervalMS > 0) {
-            return configPollingIntervalMS;
-        } else if (configPollingIntervalMs > 0) {
-            return configPollingIntervalMs;
-        } else {
-            return this.configPollingIntervalMS;
-        }
-    }
-
     private boolean disableCustomEventLogging = false;
-
     @JsonIgnore
     private IRestOptions restOptions = null;
 
@@ -99,6 +87,16 @@ public class DevCycleLocalOptions implements IDevCycleOptions {
         if (this.maxEventQueueSize > 20000) {
             DevCycleLogger.warning("maxEventQueueSize: " + this.maxEventQueueSize + " must be smaller than 20,000");
             this.maxEventQueueSize = 20000;
+        }
+    }
+
+    public int getConfigPollingIntervalMS(int configPollingIntervalMs, int configPollingIntervalMS) {
+        if (configPollingIntervalMS > 0) {
+            return configPollingIntervalMS;
+        } else if (configPollingIntervalMs > 0) {
+            return configPollingIntervalMs;
+        } else {
+            return this.configPollingIntervalMS;
         }
     }
 }

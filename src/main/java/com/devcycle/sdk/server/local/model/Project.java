@@ -7,6 +7,9 @@ public class Project {
     public ProjectSettings settings;
 
     static class ProjectSettings {
+        public EdgeDBSettings edgeDB;
+        public OptInSettings optIn;
+
         static class EdgeDBSettings {
             public Boolean enabled;
         }
@@ -16,16 +19,13 @@ public class Project {
             public String title;
             public String description;
             public String imageURL;
+            public Colors colors;
+            public String poweredByAlignment;
 
             static class Colors {
                 public String primary;
                 public String secondary;
             }
-            public Colors colors;
-            public String poweredByAlignment;
         }
-
-        public EdgeDBSettings edgeDB;
-        public OptInSettings optIn;
     }
 }
