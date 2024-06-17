@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.github.kawamuray.wasmtime.Module;
 import io.github.kawamuray.wasmtime.*;
+import lombok.Getter;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,6 +31,8 @@ public class LocalBucketing {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final int WASM_OBJECT_ID_STRING = 1;
     private final int WASM_OBJECT_ID_UINT8ARRAY = 9;
+    @Getter
+    private final String clientUUID = UUID.randomUUID().toString();
     Store<Void> store; // WASM compilation environment
     Linker linker; // used to read/write to WASM
     AtomicReference<Memory> memRef; // reference to start of WASM's memory
@@ -263,11 +266,12 @@ public class LocalBucketing {
     public synchronized void initEventQueue(String sdkKey, String options) {
         unpinAll();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
+        int clientUUIDAddress = getSDKKeyAddress(clientUUID);
         int optionsAddress = newWasmString(options);
 
         Func initEventQueuePtr = linker.get(store, "", "initEventQueue").get().func();
-        WasmFunctions.Consumer2<Integer, Integer> fn = WasmFunctions.consumer(store, initEventQueuePtr, I32, I32);
-        fn.accept(sdkKeyAddress, optionsAddress);
+        WasmFunctions.Consumer3<Integer, Integer, Integer> fn = WasmFunctions.consumer(store, initEventQueuePtr, I32, I32, I32);
+        fn.accept(sdkKeyAddress, clientUUIDAddress, optionsAddress);
     }
 
     public synchronized void queueEvent(String sdkKey, String user, String event) {

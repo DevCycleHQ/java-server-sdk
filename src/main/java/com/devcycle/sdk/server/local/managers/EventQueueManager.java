@@ -5,6 +5,7 @@ import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.devcycle.sdk.server.common.model.DevCycleEvent;
 import com.devcycle.sdk.server.common.model.DevCycleResponse;
 import com.devcycle.sdk.server.common.model.DevCycleUser;
+import com.devcycle.sdk.server.common.model.ProjectConfig;
 import com.devcycle.sdk.server.local.api.DevCycleLocalEventsApiClient;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
@@ -13,11 +14,15 @@ import com.devcycle.sdk.server.local.model.EventsBatch;
 import com.devcycle.sdk.server.local.model.FlushPayload;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.InetAddress;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -103,6 +108,36 @@ public class EventQueueManager {
         }
 
         this.localBucketing.queueEvent(this.sdkKey, OBJECT_MAPPER.writeValueAsString(user), OBJECT_MAPPER.writeValueAsString(event));
+    }
+
+    public void queueSDKConfigEvent(Request req, Response<ProjectConfig> response) throws Exception {
+        DevCycleUser user = new DevCycleUser();
+        user.setUserId(localBucketing.getClientUUID() + "@" + InetAddress.getLocalHost().getHostName());
+        DevCycleEvent event = new DevCycleEvent();
+        event.setType("sdkConfig");
+        event.setTarget(req.url().toString());
+
+        try(okhttp3.Response res = response.raw()) {
+            if (res.isSuccessful()) {
+                event.setValue(BigDecimal.valueOf(res.networkResponse().receivedResponseAtMillis() - res.networkResponse().sentRequestAtMillis()));
+            } else {
+                event.setValue(BigDecimal.valueOf(-1));
+            }
+            event.setMetaData(Map.of(
+                    "clientUUID", localBucketing.getClientUUID(),
+                    "reqEtag", req.header("If-None-Match"),
+                    "reqLastModified", req.header("If-Modified-Since"),
+                    "resEtag", res.header("etag"),
+                    "resLastModified", res.header("Last-Modified"),
+                    "resRayId", res.header("cf-ray"),
+                    "resStatus", response.code(),
+                    "errMsg", response.code() != 200 && response.code() != 304 ? response.message() : null,
+                    "sseConnected", null));
+
+        } catch (Exception e) {
+            event.setValue(BigDecimal.valueOf(-1));
+        }
+        queueEvent(user, event);
     }
 
     /**
