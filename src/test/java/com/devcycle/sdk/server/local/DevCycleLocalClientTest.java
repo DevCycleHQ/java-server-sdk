@@ -60,6 +60,7 @@ public class DevCycleLocalClientTest {
             Map<String, String> headers = new HashMap<>();
             headers.put("Oauth-Token", "test-token");
             headers.put("Custom-Meta-Data", "some information the developer wants send");
+            headers.put("Authorization", "Custom auth header");
             return headers;
         }
 

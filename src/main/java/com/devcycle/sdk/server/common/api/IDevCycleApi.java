@@ -62,7 +62,7 @@ public interface IDevCycleApi {
      */
     @Headers({"Content-Type:application/json"})
     @GET("config/v1/server/{sdkToken}.json")
-    Call<ProjectConfig> getConfig(@Path("sdkToken") String sdkToken, @Header("If-None-Match") String etag);
+    Call<ProjectConfig> getConfig(@Path("sdkToken") String sdkToken, @Header("If-None-Match") String etag, @Header("If-Modified-Since") String lastModified);
 
     /**
      * Post events to DevCycle for user

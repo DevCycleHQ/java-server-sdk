@@ -27,18 +27,21 @@ public final class EnvironmentConfigManager {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, new DaemonThreadFactory());
     private final IDevCycleApi configApiClient;
     private final LocalBucketing localBucketing;
+    private final EventQueueManager eventQueueManager;
 
     private ProjectConfig config;
     private String configETag = "";
+
+    private String configLastModified = "";
 
     private final String sdkKey;
     private final int pollingIntervalMS;
     private boolean pollingEnabled = true;
 
-    public EnvironmentConfigManager(String sdkKey, LocalBucketing localBucketing, DevCycleLocalOptions options) {
+    public EnvironmentConfigManager(String sdkKey, LocalBucketing localBucketing, EventQueueManager eventQueue, DevCycleLocalOptions options) {
         this.sdkKey = sdkKey;
         this.localBucketing = localBucketing;
-
+        this.eventQueueManager = eventQueue;
         configApiClient = new DevCycleLocalApiClient(sdkKey, options).initialize();
 
         int configPollingIntervalMS = options.getConfigPollingIntervalMS();
@@ -69,7 +72,7 @@ public final class EnvironmentConfigManager {
     }
 
     private ProjectConfig getConfig() throws DevCycleException {
-        Call<ProjectConfig> config = this.configApiClient.getConfig(this.sdkKey, this.configETag);
+        Call<ProjectConfig> config = this.configApiClient.getConfig(this.sdkKey, this.configETag, this.configLastModified);
         this.config = getResponseWithRetries(config, 1);
         return this.config;
     }
@@ -110,10 +113,11 @@ public final class EnvironmentConfigManager {
 
     private ProjectConfig getConfigResponse(Call<ProjectConfig> call) throws DevCycleException {
         ErrorResponse errorResponse = ErrorResponse.builder().build();
-        Response<ProjectConfig> response;
+        Response<ProjectConfig> response = null;
 
         try {
             response = call.execute();
+
         } catch (JsonParseException badJsonExc) {
             // Got a valid status code but the response body was not valid json,
             // need to ignore this attempt and let the polling retry
@@ -122,13 +126,20 @@ public final class EnvironmentConfigManager {
         } catch (IOException e) {
             errorResponse.setMessage(e.getMessage());
             throw new DevCycleException(HttpResponseCode.byCode(500), errorResponse);
+        } finally {
+            try {
+                this.eventQueueManager.queueSDKConfigEvent(call.request(), response, errorResponse);
+            } catch (Exception e) {
+                // Explicitly ignore - best effort.
+            }
         }
 
         HttpResponseCode httpResponseCode = HttpResponseCode.byCode(response.code());
         errorResponse.setMessage("Unknown error");
-
         if (response.isSuccessful()) {
             String currentETag = response.headers().get("ETag");
+            String lastModified = response.headers().get("Last-Modified");
+
             ProjectConfig config = response.body();
             try {
                 ObjectMapper mapper = new ObjectMapper();
@@ -143,6 +154,8 @@ public final class EnvironmentConfigManager {
                 }
             }
             this.configETag = currentETag;
+            this.configLastModified = lastModified;
+
             return response.body();
         } else if (httpResponseCode == HttpResponseCode.NOT_MODIFIED) {
             DevCycleLogger.debug("Config not modified, using cache, etag: " + this.configETag);

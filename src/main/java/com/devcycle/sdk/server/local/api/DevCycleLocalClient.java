@@ -51,13 +51,13 @@ public final class DevCycleLocalClient implements IDevCycleClient {
 
         localBucketing.setPlatformData(PlatformData.builder().build().toString());
 
-        configManager = new EnvironmentConfigManager(sdkKey, localBucketing, dvcOptions);
         this.sdkKey = sdkKey;
         try {
             eventQueueManager = new EventQueueManager(sdkKey, localBucketing, dvcOptions);
         } catch (Exception e) {
             DevCycleLogger.error("Error creating event queue due to error: " + e.getMessage());
         }
+        configManager = new EnvironmentConfigManager(sdkKey, localBucketing, eventQueueManager, dvcOptions);
         this.openFeatureProvider = new DevCycleProvider(this);
     }
 
