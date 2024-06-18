@@ -113,10 +113,11 @@ public final class EnvironmentConfigManager {
 
     private ProjectConfig getConfigResponse(Call<ProjectConfig> call) throws DevCycleException {
         ErrorResponse errorResponse = ErrorResponse.builder().build();
-        Response<ProjectConfig> response;
+        Response<ProjectConfig> response = null;
 
         try {
             response = call.execute();
+
         } catch (JsonParseException badJsonExc) {
             // Got a valid status code but the response body was not valid json,
             // need to ignore this attempt and let the polling retry
@@ -125,11 +126,16 @@ public final class EnvironmentConfigManager {
         } catch (IOException e) {
             errorResponse.setMessage(e.getMessage());
             throw new DevCycleException(HttpResponseCode.byCode(500), errorResponse);
+        } finally {
+            try {
+                this.eventQueueManager.queueSDKConfigEvent(call.request(), response, errorResponse);
+            } catch (Exception e) {
+                // Explicitly ignore - best effort.
+            }
         }
 
         HttpResponseCode httpResponseCode = HttpResponseCode.byCode(response.code());
         errorResponse.setMessage("Unknown error");
-
         if (response.isSuccessful()) {
             String currentETag = response.headers().get("ETag");
             String lastModified = response.headers().get("Last-Modified");
@@ -149,21 +155,12 @@ public final class EnvironmentConfigManager {
             }
             this.configETag = currentETag;
             this.configLastModified = lastModified;
-            try {
-                this.eventQueueManager.queueSDKConfigEvent(call.request(), response);
-            } catch (Exception e) {
-                // Explicitly ignore - best effort.
-            }
+
             return response.body();
         } else if (httpResponseCode == HttpResponseCode.NOT_MODIFIED) {
             DevCycleLogger.debug("Config not modified, using cache, etag: " + this.configETag);
             return this.config;
         } else {
-            try {
-                this.eventQueueManager.queueSDKConfigEvent(call.request(), response);
-            } catch (Exception e) {
-                // Explicitly ignore - best effort.
-            }
             if (response.errorBody() != null) {
                 try {
                     errorResponse = OBJECT_MAPPER.readValue(response.errorBody().string(), ErrorResponse.class);

@@ -2,10 +2,7 @@ package com.devcycle.sdk.server.local.managers;
 
 import com.devcycle.sdk.server.common.api.IDevCycleApi;
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
-import com.devcycle.sdk.server.common.model.DevCycleEvent;
-import com.devcycle.sdk.server.common.model.DevCycleResponse;
-import com.devcycle.sdk.server.common.model.DevCycleUser;
-import com.devcycle.sdk.server.common.model.ProjectConfig;
+import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.local.api.DevCycleLocalEventsApiClient;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
@@ -111,27 +108,37 @@ public class EventQueueManager {
         this.localBucketing.queueEvent(this.sdkKey, OBJECT_MAPPER.writeValueAsString(user), OBJECT_MAPPER.writeValueAsString(event));
     }
 
-    public void queueSDKConfigEvent(Request req, Response<ProjectConfig> response) throws Exception {
+    public void queueSDKConfigEvent(Request req, Response<ProjectConfig> response, ErrorResponse errorResponse) throws Exception {
         DevCycleUser user = new DevCycleUser();
         user.setUserId(localBucketing.getClientUUID() + "@" + InetAddress.getLocalHost().getHostName());
         DevCycleEvent event = new DevCycleEvent();
         event.setType("sdkConfig");
         event.setTarget(req.url().toString());
 
-        try (okhttp3.Response res = response.raw().networkResponse()) {
-            event.setValue(BigDecimal.valueOf(res.receivedResponseAtMillis() - res.sentRequestAtMillis()));
-        } catch (Exception e) {
+        if (response != null) {
+            try (okhttp3.Response res = response.raw().networkResponse()) {
+                event.setValue(BigDecimal.valueOf(res.receivedResponseAtMillis() - res.sentRequestAtMillis()));
+            } catch (Exception e) {
+                event.setValue(BigDecimal.valueOf(-1));
+            }
+        } else {
             event.setValue(BigDecimal.valueOf(-1));
         }
         HashMap<String, Object> metaData = new HashMap<>();
         metaData.put("clientUUID", localBucketing.getClientUUID());
         metaData.put("reqEtag", req.header("If-None-Match"));
         metaData.put("reqLastModified", req.header("If-Modified-Since"));
-        metaData.put("resEtag", response.headers().get("etag"));
-        metaData.put("resLastModified", response.headers().get("Last-Modified"));
-        metaData.put("resRayId", response.headers().get("cf-ray"));
-        metaData.put("resStatus", response.code());
-        metaData.put("errMsg", response.code() != 200 && response.code() != 304 ? response.message() : null);
+        if (response != null) {
+            metaData.put("resEtag", response.headers().get("etag"));
+            metaData.put("resLastModified", response.headers().get("Last-Modified"));
+            metaData.put("resRayId", response.headers().get("cf-ray"));
+            metaData.put("resStatus", response.code());
+            metaData.put("errMsg", response.code() != 200 && response.code() != 304 ? response.message() : null);
+        } else if (errorResponse != null) {
+            metaData.put("resStatus", errorResponse.getStatusCode());
+            metaData.put("errMsg", errorResponse.getMessage());
+        }
+
         metaData.put("sseConnected", null);
         event.setMetaData(metaData);
         queueEvent(user, event);
