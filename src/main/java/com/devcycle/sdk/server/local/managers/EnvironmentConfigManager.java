@@ -16,6 +16,8 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -30,6 +32,7 @@ public final class EnvironmentConfigManager {
 
     private ProjectConfig config;
     private String configETag = "";
+    private String configLastModified = "";
 
     private final String sdkKey;
     private final int pollingIntervalMS;
@@ -129,13 +132,31 @@ public final class EnvironmentConfigManager {
 
         if (response.isSuccessful()) {
             String currentETag = response.headers().get("ETag");
+            String headerLastModified = response.headers().get("Last-Modified");
+
+            if (!this.configLastModified.isEmpty() && headerLastModified != null && !headerLastModified.isEmpty()) {
+                ZonedDateTime parsedLastModified = ZonedDateTime.parse(
+                        headerLastModified,
+                        DateTimeFormatter.RFC_1123_DATE_TIME
+                );
+                ZonedDateTime configLastModified = ZonedDateTime.parse(
+                        this.configLastModified,
+                        DateTimeFormatter.RFC_1123_DATE_TIME
+                );
+
+                if (parsedLastModified.isBefore(configLastModified)) {
+                    DevCycleLogger.warning("Received a config with last-modified header before the current stored timestamp. Not saving config.");
+                    return this.config;
+                }
+            }
+
             ProjectConfig config = response.body();
             try {
                 ObjectMapper mapper = new ObjectMapper();
                 localBucketing.storeConfig(sdkKey, mapper.writeValueAsString(config));
             } catch (JsonProcessingException e) {
                 if (this.config != null) {
-                    DevCycleLogger.error("Unable to parse config with etag: " + currentETag + ". Using cache, etag " + this.configETag);
+                    DevCycleLogger.error("Unable to parse config with etag: " + currentETag + ". Using cache, etag " + this.configETag + " last-modified: " + this.configLastModified);
                     return this.config;
                 } else {
                     errorResponse.setMessage(e.getMessage());
@@ -143,9 +164,10 @@ public final class EnvironmentConfigManager {
                 }
             }
             this.configETag = currentETag;
+            this.configLastModified = headerLastModified;
             return response.body();
         } else if (httpResponseCode == HttpResponseCode.NOT_MODIFIED) {
-            DevCycleLogger.debug("Config not modified, using cache, etag: " + this.configETag);
+            DevCycleLogger.debug("Config not modified, using cache, etag: " + this.configETag + " last-modified: " + this.configLastModified);
             return this.config;
         } else {
             if (response.errorBody() != null) {
