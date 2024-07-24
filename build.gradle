@@ -31,7 +31,7 @@ java {
 
 group = "com.devcycle"
 archivesBaseName = "java-server-sdk"
-version = "2.2.0"
+version = "2.3.0"
 
 publishing {
     publications {
