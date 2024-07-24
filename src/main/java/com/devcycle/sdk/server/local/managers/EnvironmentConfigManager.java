@@ -72,7 +72,7 @@ public final class EnvironmentConfigManager {
     }
 
     private ProjectConfig getConfig() throws DevCycleException {
-        Call<ProjectConfig> config = this.configApiClient.getConfig(this.sdkKey, this.configETag);
+        Call<ProjectConfig> config = this.configApiClient.getConfig(this.sdkKey, this.configETag, this.configLastModified);
         this.config = getResponseWithRetries(config, 1);
         return this.config;
     }
