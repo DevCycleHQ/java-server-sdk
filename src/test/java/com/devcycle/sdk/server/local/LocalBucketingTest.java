@@ -75,7 +75,7 @@ public class LocalBucketingTest {
     public void testEventQueue() throws JsonProcessingException {
         DevCycleEvent event = DevCycleEvent.builder().type("test").target("target").build();
 
-        localBucketing.initEventQueue(apiKey, "{}");
+        localBucketing.initEventQueue(apiKey, UUID.randomUUID().toString(),"{}");
 
         // Add 2 events, aggregated by same target (should create 1 event with eventCount 2)
         localBucketing.queueEvent(apiKey, mapper.writeValueAsString(getUser()), mapper.writeValueAsString(event));

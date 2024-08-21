@@ -20,6 +20,7 @@ import dev.openfeature.sdk.FeatureProvider;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.UUID;
 
 public final class DevCycleLocalClient implements IDevCycleClient {
 
@@ -28,12 +29,14 @@ public final class DevCycleLocalClient implements IDevCycleClient {
     private final LocalBucketing localBucketing = new LocalBucketing();
     private final EnvironmentConfigManager configManager;
     private EventQueueManager eventQueueManager;
+    private final String clientUUID;
 
     public DevCycleLocalClient(String sdkKey) {
         this(sdkKey, DevCycleLocalOptions.builder().build());
     }
 
     public DevCycleLocalClient(String sdkKey, DevCycleLocalOptions dvcOptions) {
+        clientUUID = UUID.randomUUID().toString();
         if (sdkKey == null || sdkKey.equals("")) {
             throw new IllegalArgumentException("Missing SDK key! Call initialize with a valid SDK key");
         }
@@ -54,7 +57,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
         configManager = new EnvironmentConfigManager(sdkKey, localBucketing, dvcOptions);
         this.sdkKey = sdkKey;
         try {
-            eventQueueManager = new EventQueueManager(sdkKey, localBucketing, dvcOptions);
+            eventQueueManager = new EventQueueManager(sdkKey, localBucketing, clientUUID, dvcOptions);
         } catch (Exception e) {
             DevCycleLogger.error("Error creating event queue due to error: " + e.getMessage());
         }

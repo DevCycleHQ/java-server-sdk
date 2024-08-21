@@ -260,14 +260,15 @@ public class LocalBucketing {
         return varBytes;
     }
 
-    public synchronized void initEventQueue(String sdkKey, String options) {
+    public synchronized void initEventQueue(String sdkKey, String clientUUID, String options) {
         unpinAll();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
+        int clientUUIDAddress = newWasmString(clientUUID);
         int optionsAddress = newWasmString(options);
 
         Func initEventQueuePtr = linker.get(store, "", "initEventQueue").get().func();
-        WasmFunctions.Consumer2<Integer, Integer> fn = WasmFunctions.consumer(store, initEventQueuePtr, I32, I32);
-        fn.accept(sdkKeyAddress, optionsAddress);
+        WasmFunctions.Consumer3<Integer, Integer, Integer> fn = WasmFunctions.consumer(store, initEventQueuePtr, I32, I32, I32);
+        fn.accept(sdkKeyAddress, clientUUIDAddress, optionsAddress);
     }
 
     public synchronized void queueEvent(String sdkKey, String user, String event) {
