@@ -34,7 +34,7 @@ public class EventQueueManager {
     private final int flushEventQueueSize;
     private final int maxEventQueueSize;
 
-    public EventQueueManager(String sdkKey, LocalBucketing localBucketing, DevCycleLocalOptions options) throws Exception {
+    public EventQueueManager(String sdkKey, LocalBucketing localBucketing, String clientUUID, DevCycleLocalOptions options) throws Exception {
         this.localBucketing = localBucketing;
         this.sdkKey = sdkKey;
         eventFlushIntervalMS = options.getEventFlushIntervalMS();
@@ -45,7 +45,7 @@ public class EventQueueManager {
 
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
-        this.localBucketing.initEventQueue(sdkKey, OBJECT_MAPPER.writeValueAsString(options));
+        this.localBucketing.initEventQueue(sdkKey, clientUUID, OBJECT_MAPPER.writeValueAsString(options));
 
         setupScheduler();
     }
