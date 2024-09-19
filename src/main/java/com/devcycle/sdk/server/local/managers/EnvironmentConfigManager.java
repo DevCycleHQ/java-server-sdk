@@ -12,10 +12,14 @@ import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.launchdarkly.eventsource.FaultEvent;
+import com.launchdarkly.eventsource.MessageEvent;
 import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Executors;
@@ -29,6 +33,8 @@ public final class EnvironmentConfigManager {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, new DaemonThreadFactory());
     private final IDevCycleApi configApiClient;
     private final LocalBucketing localBucketing;
+    private SSEManager sseManager;
+    private final DevCycleLocalOptions options;
 
     private ProjectConfig config;
     private String configETag = "";
@@ -36,11 +42,13 @@ public final class EnvironmentConfigManager {
 
     private final String sdkKey;
     private final int pollingIntervalMS;
+    private static final int pollingIntervalSSEMS = 15 * 60 * 60 * 1000;
     private boolean pollingEnabled = true;
 
     public EnvironmentConfigManager(String sdkKey, LocalBucketing localBucketing, DevCycleLocalOptions options) {
         this.sdkKey = sdkKey;
         this.localBucketing = localBucketing;
+        this.options = options;
 
         configApiClient = new DevCycleLocalApiClient(sdkKey, options).initialize();
 
@@ -74,7 +82,28 @@ public final class EnvironmentConfigManager {
     private ProjectConfig getConfig() throws DevCycleException {
         Call<ProjectConfig> config = this.configApiClient.getConfig(this.sdkKey, this.configETag, this.configLastModified);
         this.config = getResponseWithRetries(config, 1);
+        if (this.options.isEnableBetaRealtimeUpdates()) {
+            try {
+                URI uri = new URI(this.config.getSse().getHostname() + this.config.getSse().getPath());
+                if (sseManager == null) {
+                    sseManager = new SSEManager(uri);
+                }
+                sseManager.restart(uri, this::handleSSEMessage, this::handleSSEError);
+            } catch (URISyntaxException e) {
+                DevCycleLogger.warning("Failed to create SSEManager: " + e.getMessage());
+            }
+        }
         return this.config;
+    }
+
+    private Void handleSSEMessage(MessageEvent messageEvent) {
+        DevCycleLogger.debug("Received message: " + messageEvent.getData());
+        return null;
+    }
+
+    private Void handleSSEError(FaultEvent faultEvent) {
+        DevCycleLogger.warning("Received error: " + faultEvent.getCause());
+        return null;
     }
 
     private ProjectConfig getResponseWithRetries(Call<ProjectConfig> call, int maxRetries) throws DevCycleException {
