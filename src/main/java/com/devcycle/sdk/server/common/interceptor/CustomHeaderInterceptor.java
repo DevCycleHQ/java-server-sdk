@@ -23,7 +23,7 @@ public final class CustomHeaderInterceptor implements Interceptor {
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
 
-        if (restOptions != null) {
+        if (restOptions != null && chain.request().url().url().getHost().contains("devcycle")) {
             Request.Builder builder = request.newBuilder();
 
             for (Map.Entry<String, String> entry : restOptions.getHeaders().entrySet()) {

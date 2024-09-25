@@ -23,7 +23,7 @@ public class LocalExample {
         Boolean defaultValue = false;
 
         DevCycleLocalOptions options = DevCycleLocalOptions.builder().configPollingIntervalMs(60000)
-                .disableAutomaticEventLogging(false).disableCustomEventLogging(false).build();
+                .disableAutomaticEventLogging(false).disableCustomEventLogging(false).enableBetaRealtimeUpdates(true).build();
 
         // Initialize DevCycle Client
         DevCycleLocalClient client = new DevCycleLocalClient(server_sdk_key, options);
@@ -46,5 +46,6 @@ public class LocalExample {
         } else {
             System.out.println("feature is NOT enabled");
         }
+        Thread.sleep(1000000);
     }
 }

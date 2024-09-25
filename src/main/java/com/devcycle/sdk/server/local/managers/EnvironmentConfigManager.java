@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.launchdarkly.eventsource.FaultEvent;
 import com.launchdarkly.eventsource.MessageEvent;
+import com.launchdarkly.eventsource.StartedEvent;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -60,20 +61,20 @@ public final class EnvironmentConfigManager {
     }
 
     private void setupScheduler() {
-        Runnable getConfigRunnable = new Runnable() {
-            public void run() {
-                try {
-                    if (pollingEnabled) {
-                        getConfig();
-                    }
-                } catch (DevCycleException e) {
-                    DevCycleLogger.error("Failed to load config: " + e.getMessage());
-                }
-            }
-        };
-
         scheduler.scheduleAtFixedRate(getConfigRunnable, 0, this.pollingIntervalMS, TimeUnit.MILLISECONDS);
     }
+
+    private Runnable getConfigRunnable = new Runnable() {
+        public void run() {
+            try {
+                if (pollingEnabled) {
+                    getConfig();
+                }
+            } catch (DevCycleException e) {
+                DevCycleLogger.error("Failed to load config: " + e.getMessage());
+            }
+        }
+    };
 
     public boolean isConfigInitialized() {
         return config != null;
@@ -88,7 +89,7 @@ public final class EnvironmentConfigManager {
                 if (sseManager == null) {
                     sseManager = new SSEManager(uri);
                 }
-                sseManager.restart(uri, this::handleSSEMessage, this::handleSSEError);
+                sseManager.restart(uri, this::handleSSEMessage, this::handleSSEError, this::handleSSEStarted);
             } catch (URISyntaxException e) {
                 DevCycleLogger.warning("Failed to create SSEManager: " + e.getMessage());
             }
@@ -103,6 +104,13 @@ public final class EnvironmentConfigManager {
 
     private Void handleSSEError(FaultEvent faultEvent) {
         DevCycleLogger.warning("Received error: " + faultEvent.getCause());
+        return null;
+    }
+
+    private Void handleSSEStarted(StartedEvent startedEvent) {
+        DevCycleLogger.debug("SSE Connected - setting polling interval to " + pollingIntervalSSEMS);
+        scheduler.shutdown();
+        scheduler.scheduleAtFixedRate(getConfigRunnable, 0, pollingIntervalSSEMS, TimeUnit.MILLISECONDS);
         return null;
     }
 
