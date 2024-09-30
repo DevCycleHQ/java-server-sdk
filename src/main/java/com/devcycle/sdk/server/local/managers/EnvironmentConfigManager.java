@@ -3,9 +3,7 @@ package com.devcycle.sdk.server.local.managers;
 import com.devcycle.sdk.server.common.api.IDevCycleApi;
 import com.devcycle.sdk.server.common.exception.DevCycleException;
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
-import com.devcycle.sdk.server.common.model.ErrorResponse;
-import com.devcycle.sdk.server.common.model.HttpResponseCode;
-import com.devcycle.sdk.server.common.model.ProjectConfig;
+import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.local.api.DevCycleLocalApiClient;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
 import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
@@ -31,10 +29,11 @@ public final class EnvironmentConfigManager {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final int DEFAULT_POLL_INTERVAL_MS = 30000;
     private static final int MIN_INTERVALS_MS = 1000;
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, new DaemonThreadFactory());
+    private ScheduledExecutorService scheduler;
     private final IDevCycleApi configApiClient;
     private final LocalBucketing localBucketing;
     private SSEManager sseManager;
+    private boolean isSSEConnected = false;
     private final DevCycleLocalOptions options;
 
     private ProjectConfig config;
@@ -57,11 +56,12 @@ public final class EnvironmentConfigManager {
         pollingIntervalMS = configPollingIntervalMS >= MIN_INTERVALS_MS ? configPollingIntervalMS
                 : DEFAULT_POLL_INTERVAL_MS;
 
-        setupScheduler();
+        scheduler = setupScheduler();
+        scheduler.scheduleAtFixedRate(getConfigRunnable, 0, this.pollingIntervalMS, TimeUnit.MILLISECONDS);
     }
 
-    private void setupScheduler() {
-        scheduler.scheduleAtFixedRate(getConfigRunnable, 0, this.pollingIntervalMS, TimeUnit.MILLISECONDS);
+    private ScheduledExecutorService setupScheduler() {
+        return Executors.newScheduledThreadPool(1, new DaemonThreadFactory());
     }
 
     private Runnable getConfigRunnable = new Runnable() {
@@ -99,6 +99,24 @@ public final class EnvironmentConfigManager {
 
     private Void handleSSEMessage(MessageEvent messageEvent) {
         DevCycleLogger.debug("Received message: " + messageEvent.getData());
+        if (!isSSEConnected)
+        {
+            handleSSEStarted(null);
+        }
+
+        String data = messageEvent.getData();
+        if (data == null || data.isEmpty() || data.equals("keepalive")) {
+            return null;
+        }
+        try {
+            SSEMessage message = OBJECT_MAPPER.readValue(data, SSEMessage.class);
+            if (message.getType() == null || message.getType().equals("refetchConfig") || message.getType().isEmpty()) {
+                DevCycleLogger.debug("Received refetchConfig message, fetching new config");
+                getConfigRunnable.run();
+            }
+        } catch (JsonProcessingException e) {
+            DevCycleLogger.warning("Failed to parse SSE message: " + e.getMessage());
+        }
         return null;
     }
 
@@ -108,8 +126,10 @@ public final class EnvironmentConfigManager {
     }
 
     private Void handleSSEStarted(StartedEvent startedEvent) {
+        isSSEConnected = true;
         DevCycleLogger.debug("SSE Connected - setting polling interval to " + pollingIntervalSSEMS);
-        scheduler.shutdown();
+        scheduler.close();
+        scheduler = Executors.newScheduledThreadPool(1, new DaemonThreadFactory());
         scheduler.scheduleAtFixedRate(getConfigRunnable, 0, pollingIntervalSSEMS, TimeUnit.MILLISECONDS);
         return null;
     }
@@ -239,10 +259,12 @@ public final class EnvironmentConfigManager {
 
     private void stopPolling() {
         pollingEnabled = false;
+
         scheduler.shutdown();
     }
 
     public void cleanup() {
+        sseManager.close();
         stopPolling();
     }
 }

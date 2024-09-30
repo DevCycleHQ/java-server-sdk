@@ -9,15 +9,13 @@ import java.util.function.Function;
 
 public class SSEManager {
 
-    private static EventSource eventSource;
+    private EventSource eventSource;
     private static Thread messageHandlerThread;
     private URI uri;
 
     public SSEManager(URI uri) {
-        eventSource = new EventSource.Builder(uri)
-                .errorStrategy(ErrorStrategy.alwaysContinue())
-                .retryDelay(10000, TimeUnit.MILLISECONDS)
-                .build();
+        this.eventSource = buildEventSource(uri);
+
         this.uri = uri;
     }
 
@@ -30,14 +28,23 @@ public class SSEManager {
             return;
         }
         this.uri = uri;
-        if (eventSource != null&& eventSource.getState() == ReadyState.OPEN) {
+        if (eventSource != null && eventSource.getState() == ReadyState.OPEN) {
             eventSource.close();
         }
         if (messageHandlerThread != null) {
             messageHandlerThread.interrupt();
         }
-        eventSource = new EventSource.Builder(uri).build();
+        eventSource = buildEventSource(uri);
         start(messageHandler, errorHandler, stateHandler);
+    }
+
+    private EventSource buildEventSource(URI uri) {
+        return new EventSource.Builder(ConnectStrategy.http(uri).clientBuilderActions(clientBuilder ->
+                clientBuilder
+                        .connectTimeout(100 * 60, TimeUnit.SECONDS)
+                        .readTimeout(100 * 60, TimeUnit.SECONDS)
+                        .writeTimeout(100 * 60, TimeUnit.SECONDS)
+        )).build();
     }
 
     private boolean start(Function<MessageEvent, Void> messageHandler, Function<FaultEvent, Void> errorHandler, Function<StartedEvent, Void> stateHandler) {
@@ -64,11 +71,13 @@ public class SSEManager {
 
         private final Function<MessageEvent, Void> messageHandler;
         private final Function<FaultEvent, Void> errorHandler;
+        private final Function<StartedEvent, Void> stateHandler;
         private final EventSource sse;
 
         public SSEMessageHandler(EventSource sse, Function<MessageEvent, Void> messageHandler, Function<FaultEvent, Void> errorHandler, Function<StartedEvent, Void> stateHandler) {
             this.messageHandler = messageHandler;
             this.errorHandler = errorHandler;
+            this.stateHandler = stateHandler;
             this.sse = sse;
         }
 
@@ -78,20 +87,18 @@ public class SSEManager {
                 try {
                     StreamEvent event = sse.readAnyEvent();
                     if (event instanceof MessageEvent) {
-                        DevCycleLogger.info("Message event received: " + ((MessageEvent) event).getData());
                         messageHandler.apply((MessageEvent) event);
                     } else if (event instanceof FaultEvent) {
-                        DevCycleLogger.error("Fault event received: " + ((FaultEvent) event).getCause().getMessage());
                         errorHandler.apply((FaultEvent) event);
                     } else if (event instanceof StartedEvent) {
-                        DevCycleLogger.info("Started event received");
-                    } else if (event instanceof CommentEvent){
-                        DevCycleLogger.info("Comment event received: " + ((CommentEvent) event).getText());
+                        stateHandler.apply((StartedEvent) event);
+                    } else if (event instanceof CommentEvent) {
+                        messageHandler.apply(new MessageEvent(((CommentEvent) event).getText()));
                     } else {
-                        DevCycleLogger.error("Unknown event type: " + event.getClass().getName());
+                        DevCycleLogger.warning("Unknown event type: " + event.getClass().getName());
                     }
                 } catch (StreamException e) {
-                    DevCycleLogger.error("Error reading event", e);
+                    DevCycleLogger.warning("Error reading event");
                     DevCycleLogger.warning(e.getMessage());
                 }
             }

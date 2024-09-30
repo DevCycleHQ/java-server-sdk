@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SSE {
-    private String hostname;
-    private String path;
+public class SSEMessage {
+    private String etag;
+    private double lastModified;
+    private String type;
 }
-

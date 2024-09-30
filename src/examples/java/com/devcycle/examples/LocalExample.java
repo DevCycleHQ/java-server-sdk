@@ -1,5 +1,6 @@
 package com.devcycle.examples;
 
+import com.devcycle.sdk.server.common.logging.SimpleDevCycleLogger;
 import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
 import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
@@ -22,8 +23,13 @@ public class LocalExample {
         // The default value can be of type string, boolean, number, or JSON
         Boolean defaultValue = false;
 
-        DevCycleLocalOptions options = DevCycleLocalOptions.builder().configPollingIntervalMs(60000)
-                .disableAutomaticEventLogging(false).disableCustomEventLogging(false).enableBetaRealtimeUpdates(true).build();
+        DevCycleLocalOptions options = DevCycleLocalOptions.builder()
+                .configPollingIntervalMS(60000)
+                .disableAutomaticEventLogging(false)
+                .customLogger(new SimpleDevCycleLogger(SimpleDevCycleLogger.Level.DEBUG))
+                .disableCustomEventLogging(false)
+                .enableBetaRealtimeUpdates(true)
+                .build();
 
         // Initialize DevCycle Client
         DevCycleLocalClient client = new DevCycleLocalClient(server_sdk_key, options);
