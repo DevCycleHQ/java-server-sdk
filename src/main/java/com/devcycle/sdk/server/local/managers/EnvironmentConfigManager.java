@@ -129,7 +129,7 @@ public final class EnvironmentConfigManager {
         isSSEConnected = true;
         DevCycleLogger.debug("SSE Connected - setting polling interval to " + pollingIntervalSSEMS);
         scheduler.close();
-        scheduler = Executors.newScheduledThreadPool(1, new DaemonThreadFactory());
+        scheduler = setupScheduler();
         scheduler.scheduleAtFixedRate(getConfigRunnable, 0, pollingIntervalSSEMS, TimeUnit.MILLISECONDS);
         return null;
     }
