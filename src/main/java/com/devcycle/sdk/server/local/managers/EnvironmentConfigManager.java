@@ -64,7 +64,7 @@ public final class EnvironmentConfigManager {
         return Executors.newScheduledThreadPool(1, new DaemonThreadFactory());
     }
 
-    private Runnable getConfigRunnable = new Runnable() {
+    private final Runnable getConfigRunnable = new Runnable() {
         public void run() {
             try {
                 if (pollingEnabled) {
