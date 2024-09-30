@@ -52,6 +52,6 @@ public class LocalExample {
         } else {
             System.out.println("feature is NOT enabled");
         }
-        Thread.sleep(1000000);
+        Thread.sleep(10000);
     }
 }
