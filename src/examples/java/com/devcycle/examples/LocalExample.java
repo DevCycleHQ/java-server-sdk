@@ -25,9 +25,7 @@ public class LocalExample {
 
         DevCycleLocalOptions options = DevCycleLocalOptions.builder()
                 .configPollingIntervalMS(60000)
-                .disableAutomaticEventLogging(false)
                 .customLogger(new SimpleDevCycleLogger(SimpleDevCycleLogger.Level.DEBUG))
-                .disableCustomEventLogging(false)
                 .enableBetaRealtimeUpdates(true)
                 .build();
 
