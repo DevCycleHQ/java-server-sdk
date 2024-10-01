@@ -30,7 +30,7 @@ public class DVCApiMock implements IDevCycleApi {
     }
 
     @Override
-    public Call<ProjectConfig> getConfig(String sdkToken, String etag, String lastModified) {
+    public Call<ProjectConfig> getConfig(String sdkToken, String lastModified) {
         // TODO Auto-generated method stub
         return null;
     }
