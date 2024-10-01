@@ -193,17 +193,17 @@ configurations {
 task runLocalExample(type: JavaExec) {
     description = "Run the local bucketing example"
     classpath = sourceSets.examples.runtimeClasspath
-    main = 'com.devcycle.examples.LocalExample'
+    mainClass = 'com.devcycle.examples.LocalExample'
 }
 
 task runCloudExample(type: JavaExec) {
     description = "Run the cloud bucketing example"
     classpath = sourceSets.examples.runtimeClasspath
-    main = 'com.devcycle.examples.CloudExample'
+    mainClass = 'com.devcycle.examples.CloudExample'
 }
 
 task runOpenFeatureExample(type: JavaExec) {
     description = "Run the OpenFeature example"
     classpath = sourceSets.examples.runtimeClasspath
-    main = 'com.devcycle.examples.OpenFeatureExample'
+    mainClass = 'com.devcycle.examples.OpenFeatureExample'
 }
