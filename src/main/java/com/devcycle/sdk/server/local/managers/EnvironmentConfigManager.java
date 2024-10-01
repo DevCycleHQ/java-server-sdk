@@ -37,7 +37,6 @@ public final class EnvironmentConfigManager {
     private final DevCycleLocalOptions options;
 
     private ProjectConfig config;
-    private String configETag = "";
     private String configLastModified = "";
 
     private final String sdkKey;
@@ -81,7 +80,7 @@ public final class EnvironmentConfigManager {
     }
 
     private ProjectConfig getConfig() throws DevCycleException {
-        Call<ProjectConfig> config = this.configApiClient.getConfig(this.sdkKey, this.configETag, this.configLastModified);
+        Call<ProjectConfig> config = this.configApiClient.getConfig(this.sdkKey, this.configLastModified);
         this.config = getResponseWithRetries(config, 1);
         if (this.options.isEnableBetaRealtimeUpdates()) {
             try {
@@ -213,18 +212,17 @@ public final class EnvironmentConfigManager {
                 localBucketing.storeConfig(sdkKey, mapper.writeValueAsString(config));
             } catch (JsonProcessingException e) {
                 if (this.config != null) {
-                    DevCycleLogger.error("Unable to parse config with etag: " + currentETag + ". Using cache, etag " + this.configETag + " last-modified: " + this.configLastModified);
+                    DevCycleLogger.error("Unable to parse config with etag: " + currentETag + ". Using cache - last-modified: " + this.configLastModified);
                     return this.config;
                 } else {
                     errorResponse.setMessage(e.getMessage());
                     throw new DevCycleException(HttpResponseCode.SERVER_ERROR, errorResponse);
                 }
             }
-            this.configETag = currentETag;
             this.configLastModified = headerLastModified;
             return response.body();
         } else if (httpResponseCode == HttpResponseCode.NOT_MODIFIED) {
-            DevCycleLogger.debug("Config not modified, using cache, etag: " + this.configETag + " last-modified: " + this.configLastModified);
+            DevCycleLogger.debug("Config not modified, using cache, last-modified: " + this.configLastModified);
             return this.config;
         } else {
             if (response.errorBody() != null) {
