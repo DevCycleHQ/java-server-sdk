@@ -3,19 +3,22 @@ package com.devcycle.sdk.server.local.managers;
 import com.devcycle.sdk.server.common.api.IDevCycleApi;
 import com.devcycle.sdk.server.common.exception.DevCycleException;
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
-import com.devcycle.sdk.server.common.model.ErrorResponse;
-import com.devcycle.sdk.server.common.model.HttpResponseCode;
-import com.devcycle.sdk.server.common.model.ProjectConfig;
+import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.local.api.DevCycleLocalApiClient;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
 import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.launchdarkly.eventsource.FaultEvent;
+import com.launchdarkly.eventsource.MessageEvent;
+import com.launchdarkly.eventsource.StartedEvent;
 import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Executors;
@@ -26,9 +29,12 @@ public final class EnvironmentConfigManager {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final int DEFAULT_POLL_INTERVAL_MS = 30000;
     private static final int MIN_INTERVALS_MS = 1000;
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, new DaemonThreadFactory());
+    private ScheduledExecutorService scheduler;
     private final IDevCycleApi configApiClient;
     private final LocalBucketing localBucketing;
+    private SSEManager sseManager;
+    private boolean isSSEConnected = false;
+    private final DevCycleLocalOptions options;
 
     private ProjectConfig config;
     private String configETag = "";
@@ -36,11 +42,13 @@ public final class EnvironmentConfigManager {
 
     private final String sdkKey;
     private final int pollingIntervalMS;
+    private static final int pollingIntervalSSEMS = 15 * 60 * 60 * 1000;
     private boolean pollingEnabled = true;
 
     public EnvironmentConfigManager(String sdkKey, LocalBucketing localBucketing, DevCycleLocalOptions options) {
         this.sdkKey = sdkKey;
         this.localBucketing = localBucketing;
+        this.options = options;
 
         configApiClient = new DevCycleLocalApiClient(sdkKey, options).initialize();
 
@@ -48,24 +56,25 @@ public final class EnvironmentConfigManager {
         pollingIntervalMS = configPollingIntervalMS >= MIN_INTERVALS_MS ? configPollingIntervalMS
                 : DEFAULT_POLL_INTERVAL_MS;
 
-        setupScheduler();
-    }
-
-    private void setupScheduler() {
-        Runnable getConfigRunnable = new Runnable() {
-            public void run() {
-                try {
-                    if (pollingEnabled) {
-                        getConfig();
-                    }
-                } catch (DevCycleException e) {
-                    DevCycleLogger.error("Failed to load config: " + e.getMessage());
-                }
-            }
-        };
-
+        scheduler = setupScheduler();
         scheduler.scheduleAtFixedRate(getConfigRunnable, 0, this.pollingIntervalMS, TimeUnit.MILLISECONDS);
     }
+
+    private ScheduledExecutorService setupScheduler() {
+        return Executors.newScheduledThreadPool(1, new DaemonThreadFactory());
+    }
+
+    private final Runnable getConfigRunnable = new Runnable() {
+        public void run() {
+            try {
+                if (pollingEnabled) {
+                    getConfig();
+                }
+            } catch (DevCycleException e) {
+                DevCycleLogger.error("Failed to load config: " + e.getMessage());
+            }
+        }
+    };
 
     public boolean isConfigInitialized() {
         return config != null;
@@ -74,7 +83,55 @@ public final class EnvironmentConfigManager {
     private ProjectConfig getConfig() throws DevCycleException {
         Call<ProjectConfig> config = this.configApiClient.getConfig(this.sdkKey, this.configETag, this.configLastModified);
         this.config = getResponseWithRetries(config, 1);
+        if (this.options.isEnableBetaRealtimeUpdates()) {
+            try {
+                URI uri = new URI(this.config.getSse().getHostname() + this.config.getSse().getPath());
+                if (sseManager == null) {
+                    sseManager = new SSEManager(uri);
+                }
+                sseManager.restart(uri, this::handleSSEMessage, this::handleSSEError, this::handleSSEStarted);
+            } catch (URISyntaxException e) {
+                DevCycleLogger.warning("Failed to create SSEManager: " + e.getMessage());
+            }
+        }
         return this.config;
+    }
+
+    private Void handleSSEMessage(MessageEvent messageEvent) {
+        DevCycleLogger.debug("Received message: " + messageEvent.getData());
+        if (!isSSEConnected)
+        {
+            handleSSEStarted(null);
+        }
+
+        String data = messageEvent.getData();
+        if (data == null || data.isEmpty() || data.equals("keepalive")) {
+            return null;
+        }
+        try {
+            SSEMessage message = OBJECT_MAPPER.readValue(data, SSEMessage.class);
+            if (message.getType() == null || message.getType().equals("refetchConfig") || message.getType().isEmpty()) {
+                DevCycleLogger.debug("Received refetchConfig message, fetching new config");
+                getConfigRunnable.run();
+            }
+        } catch (JsonProcessingException e) {
+            DevCycleLogger.warning("Failed to parse SSE message: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private Void handleSSEError(FaultEvent faultEvent) {
+        DevCycleLogger.warning("Received error: " + faultEvent.getCause());
+        return null;
+    }
+
+    private Void handleSSEStarted(StartedEvent startedEvent) {
+        isSSEConnected = true;
+        DevCycleLogger.debug("SSE Connected - setting polling interval to " + pollingIntervalSSEMS);
+        scheduler.shutdown();
+        scheduler = setupScheduler();
+        scheduler.scheduleAtFixedRate(getConfigRunnable, 0, pollingIntervalSSEMS, TimeUnit.MILLISECONDS);
+        return null;
     }
 
     private ProjectConfig getResponseWithRetries(Call<ProjectConfig> call, int maxRetries) throws DevCycleException {
@@ -206,6 +263,9 @@ public final class EnvironmentConfigManager {
     }
 
     public void cleanup() {
+        if (sseManager != null) {
+            sseManager.close();
+        }
         stopPolling();
     }
 }

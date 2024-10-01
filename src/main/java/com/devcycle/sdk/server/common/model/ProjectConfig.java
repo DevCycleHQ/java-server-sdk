@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ProjectConfig {
+
     @Schema(description = "Project Settings")
     private Object project;
 
@@ -30,4 +31,8 @@ public class ProjectConfig {
 
     @Schema(description = "Variable Hashes for all Variables in this Project")
     private Object variableHashes;
+
+    @Schema(description = "SSE Configuration")
+    private SSE sse;
 }
+

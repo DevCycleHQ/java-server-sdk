@@ -132,7 +132,7 @@ protobuf {
 }
 
 ext {
-    retrofit_version = "2.9.0"
+    retrofit_version = "2.11.0"
     jackson_version = "2.15.3"
     swagger_annotations_version = "2.2.18"
     lombok_version = "1.18.30"
@@ -142,6 +142,7 @@ ext {
     mockito_core_version = "5.6.0"
     protobuf_version = "3.24.4"
     openfeature_version = "1.7.0"
+    eventsource_version = "4.1.1"
 }
 
 dependencies {
@@ -163,6 +164,7 @@ dependencies {
     implementation("com.google.protobuf:protobuf-java:$protobuf_version")
 
     implementation("dev.openfeature:sdk:$openfeature_version")
+    implementation("com.launchdarkly:okhttp-eventsource:$eventsource_version")
 
     compileOnly("org.projectlombok:lombok:$lombok_version")
 
@@ -191,17 +193,17 @@ configurations {
 task runLocalExample(type: JavaExec) {
     description = "Run the local bucketing example"
     classpath = sourceSets.examples.runtimeClasspath
-    main = 'com.devcycle.examples.LocalExample'
+    mainClass = 'com.devcycle.examples.LocalExample'
 }
 
 task runCloudExample(type: JavaExec) {
     description = "Run the cloud bucketing example"
     classpath = sourceSets.examples.runtimeClasspath
-    main = 'com.devcycle.examples.CloudExample'
+    mainClass = 'com.devcycle.examples.CloudExample'
 }
 
 task runOpenFeatureExample(type: JavaExec) {
     description = "Run the OpenFeature example"
     classpath = sourceSets.examples.runtimeClasspath
-    main = 'com.devcycle.examples.OpenFeatureExample'
+    mainClass = 'com.devcycle.examples.OpenFeatureExample'
 }
