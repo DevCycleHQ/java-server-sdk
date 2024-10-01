@@ -263,7 +263,9 @@ public final class EnvironmentConfigManager {
     }
 
     public void cleanup() {
-        sseManager.close();
+        if (sseManager != null) {
+            sseManager.close();
+        }
         stopPolling();
     }
 }
