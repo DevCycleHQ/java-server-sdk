@@ -28,7 +28,7 @@ public class PlatformData {
     private PlatformData.SdkTypeEnum sdkType = PlatformData.SdkTypeEnum.SERVER;
     @Schema(description = "DevCycle SDK Version")
     @Builder.Default
-    private String sdkVersion = "2.3.0";
+    private String sdkVersion = "2.4.0";
     @Schema(description = "Hostname where the SDK is running")
     private String hostname;
 
