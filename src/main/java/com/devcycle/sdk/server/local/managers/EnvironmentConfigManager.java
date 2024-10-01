@@ -128,7 +128,7 @@ public final class EnvironmentConfigManager {
     private Void handleSSEStarted(StartedEvent startedEvent) {
         isSSEConnected = true;
         DevCycleLogger.debug("SSE Connected - setting polling interval to " + pollingIntervalSSEMS);
-        scheduler.close();
+        scheduler.shutdown();
         scheduler = setupScheduler();
         scheduler.scheduleAtFixedRate(getConfigRunnable, 0, pollingIntervalSSEMS, TimeUnit.MILLISECONDS);
         return null;
@@ -259,7 +259,6 @@ public final class EnvironmentConfigManager {
 
     private void stopPolling() {
         pollingEnabled = false;
-
         scheduler.shutdown();
     }
 
