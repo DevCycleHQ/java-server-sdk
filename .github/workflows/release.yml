@@ -14,14 +14,14 @@ on:
         default: false
         type: boolean
       version-increment-type:
-        description: 'Which part of the version to increment:'
+        description: "Which part of the version to increment:"
         required: true
         type: choice
         options:
           - major
           - minor
           - patch
-        default: 'patch'
+        default: "patch"
 
 permissions:
   contents: write
@@ -73,7 +73,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 11
-          cache: 'gradle'
+          cache: "gradle"
 
       - name: Build and Publish To Sonatype
         env:
@@ -82,19 +82,7 @@ jobs:
           ORG_GRADLE_PROJECT_signingKeyId: ${{ secrets.SIGNING_KEY_ID }}
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
-        run: ./gradlew publishToSonatype
-
-      - name: Close Sonatype Staging Repository
-        env:
-          ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
-          ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
-        run: ./gradlew findSonatypeStagingRepository closeSonatypeStagingRepository
-
-      - name: Release Sonatype Staging Repository
-        env:
-          ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
-          ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
-        run: ./gradlew findSonatypeStagingRepository releaseSonatypeStagingRepository
+        run: ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository
         if: inputs.prerelease != true && inputs.draft != true
 
       - uses: DevCycleHQ/release-action/create-release@v2.3.0
