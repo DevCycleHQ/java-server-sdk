@@ -83,7 +83,7 @@ public final class EnvironmentConfigManager {
     private ProjectConfig getConfig() throws DevCycleException {
         Call<ProjectConfig> config = this.configApiClient.getConfig(this.sdkKey, this.configETag, this.configLastModified);
         this.config = getResponseWithRetries(config, 1);
-        if (this.options.isEnableBetaRealtimeUpdates()) {
+        if (!this.options.isDisableRealtimeUpdates()) {
             try {
                 URI uri = new URI(this.config.getSse().getHostname() + this.config.getSse().getPath());
                 if (sseManager == null) {
