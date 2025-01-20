@@ -28,6 +28,12 @@ public class DevCycleLocalOptions implements IDevCycleOptions {
 
     private boolean disableAutomaticEventLogging = false;
 
+    private boolean disableRealtimeUpdates = false;
+
+    /**
+     * @deprecated real time updates are enabled by default now
+     */
+    @Deprecated
     private boolean enableBetaRealtimeUpdates = false;
 
     @JsonIgnore
@@ -52,7 +58,9 @@ public class DevCycleLocalOptions implements IDevCycleOptions {
             boolean disableCustomEventLogging,
             IDevCycleLogger customLogger,
             IRestOptions restOptions,
-            boolean enableBetaRealtimeUpdates
+            @Deprecated 
+            boolean enableBetaRealtimeUpdates,
+            boolean disableRealtimeUpdates
     ) {
         this.configRequestTimeoutMs = configRequestTimeoutMs > 0 ? configRequestTimeoutMs : this.configRequestTimeoutMs;
         this.configPollingIntervalMS = getConfigPollingIntervalMS(configPollingIntervalMs, configPollingIntervalMS);
@@ -67,6 +75,7 @@ public class DevCycleLocalOptions implements IDevCycleOptions {
         this.customLogger = customLogger;
         this.restOptions = restOptions;
         this.enableBetaRealtimeUpdates = enableBetaRealtimeUpdates;
+        this.disableRealtimeUpdates = disableRealtimeUpdates;
 
         if (this.flushEventQueueSize >= this.maxEventQueueSize) {
             DevCycleLogger.warning("flushEventQueueSize: " + this.flushEventQueueSize + " must be smaller than maxEventQueueSize: " + this.maxEventQueueSize);
