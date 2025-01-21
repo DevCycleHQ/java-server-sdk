@@ -85,16 +85,6 @@ jobs:
         run: |
           ./gradlew publishAllPublicationsToMavenCentral --no-configuration-cache
 
-      - name: Release Sonatype Staging Repository
-        if: inputs.prerelease != true && inputs.draft != true
-        env:
-          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_USERNAME }}
-          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_PASSWORD }}
-          ORG_GRADLE_PROJECT_signingKeyId: ${{ secrets.SIGNING_KEY_ID }}
-          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
-          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
-        run: ./gradlew closeAndReleaseRepository
-
       - uses: DevCycleHQ/release-action/create-release@v2.3.0
         id: create-release
         with:
