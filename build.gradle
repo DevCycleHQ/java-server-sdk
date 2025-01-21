@@ -11,11 +11,6 @@ plugins {
 }
 import com.vanniktech.maven.publish.SonatypeHost
 
-task javadocJar(type: Jar) {
-    archiveClassifier.set("javadoc")
-    from javadoc
-}
-
 task sourcesJar(type: Jar) {
     archiveClassifier.set("sources")
     from sourceSets.main.allSource
