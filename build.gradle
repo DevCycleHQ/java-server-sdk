@@ -17,7 +17,6 @@ task sourcesJar(type: Jar) {
 }
 
 java {
-    withJavadocJar()
     withSourcesJar()
 }
 
