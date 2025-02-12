@@ -105,6 +105,7 @@ public class DevCycleUser {
     private String sdkVersion = getPlatformData().getSdkVersion();
 
     @Schema(description = "DevCycle SDK Platform")
+    @Builder.Default
     @JsonProperty("sdkPlatform")
     private String sdkPlatform = null;
 
@@ -153,7 +154,7 @@ public class DevCycleUser {
             throw new TargetingKeyMissingError();
         }
 
-        DevCycleUser user = DevCycleUser.builder().userId(userId).build();
+        DevCycleUser user = DevCycleUser.builder().userId(userId).sdkPlatform("java-of").build();
 
         Map<String, Object> customData = new LinkedHashMap<>();
         Map<String, Object> privateCustomData = new LinkedHashMap<>();
