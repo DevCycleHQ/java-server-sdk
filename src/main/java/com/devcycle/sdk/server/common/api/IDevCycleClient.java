@@ -1,5 +1,7 @@
 package com.devcycle.sdk.server.common.api;
 
+import com.devcycle.sdk.server.common.exception.DevCycleException;
+import com.devcycle.sdk.server.common.model.DevCycleEvent;
 import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.common.model.Variable;
 import dev.openfeature.sdk.FeatureProvider;
@@ -31,6 +33,8 @@ public interface IDevCycleClient {
      * @return the variable for the given user, or the default variable if the variable is not found.
      */
     <T> Variable<T> variable(DevCycleUser user, String key, T defaultValue);
+
+    void track(DevCycleUser user, DevCycleEvent event) throws DevCycleException;
 
     /**
      * Close the client and release any resources.

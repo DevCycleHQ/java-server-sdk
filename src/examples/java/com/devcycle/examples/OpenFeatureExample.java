@@ -1,5 +1,6 @@
 package com.devcycle.examples;
 
+import com.devcycle.sdk.server.common.logging.SimpleDevCycleLogger;
 import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
 import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
 import dev.openfeature.sdk.*;
@@ -15,22 +16,16 @@ public class OpenFeatureExample {
             System.exit(1);
         }
 
-        DevCycleLocalOptions options = DevCycleLocalOptions.builder().configPollingIntervalMS(60000)
-                .disableAutomaticEventLogging(false).disableCustomEventLogging(false).build();
+        DevCycleLocalOptions options = DevCycleLocalOptions.builder()
+                .customLogger(new SimpleDevCycleLogger(SimpleDevCycleLogger.Level.DEBUG))
+                .build();
 
         // Initialize DevCycle Client
         DevCycleLocalClient devCycleClient = new DevCycleLocalClient(server_sdk_key, options);
 
-        for (int i = 0; i < 10; i++) {
-            if (devCycleClient.isInitialized()) {
-                break;
-            }
-            Thread.sleep(500);
-        }
-
         // Setup OpenFeature with the DevCycle Provider
         OpenFeatureAPI api = OpenFeatureAPI.getInstance();
-        api.setProvider(devCycleClient.getOpenFeatureProvider());
+        api.setProviderAndWait(devCycleClient.getOpenFeatureProvider());
 
         Client openFeatureClient = api.getClient();
 
@@ -41,7 +36,7 @@ public class OpenFeatureExample {
         context.add("language", "en");
         context.add("country", "CA");
         context.add("appVersion", "1.0.0");
-        context.add("appBuild", "1");
+        context.add("appBuild", 1.0);
         context.add("deviceModel", "Macbook");
 
         // Add Devcycle Custom Data values
@@ -81,5 +76,14 @@ public class OpenFeatureExample {
         System.out.println("Value: " + details.getValue());
         System.out.println("Reason: " + details.getReason());
 
+        MutableTrackingEventDetails eventDetails = new MutableTrackingEventDetails(610.1);
+        eventDetails.add("test-string", "test-value");
+        eventDetails.add("test-number", 123.456);
+        eventDetails.add("test-boolean", true);
+        eventDetails.add("test-json", new Value(Structure.mapToStructure(defaultJsonData)));
+
+        openFeatureClient.track("test-of-event", context, eventDetails);
+
+        Thread.sleep(20000);
     }
 }

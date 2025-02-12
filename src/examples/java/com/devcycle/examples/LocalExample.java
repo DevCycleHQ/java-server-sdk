@@ -1,6 +1,7 @@
 package com.devcycle.examples;
 
 import com.devcycle.sdk.server.common.logging.SimpleDevCycleLogger;
+import com.devcycle.sdk.server.common.model.DevCycleEvent;
 import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
 import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
@@ -24,9 +25,7 @@ public class LocalExample {
         Boolean defaultValue = false;
 
         DevCycleLocalOptions options = DevCycleLocalOptions.builder()
-                .configPollingIntervalMS(60000)
                 .customLogger(new SimpleDevCycleLogger(SimpleDevCycleLogger.Level.DEBUG))
-                .enableBetaRealtimeUpdates(true)
                 .build();
 
         // Initialize DevCycle Client
@@ -50,6 +49,10 @@ public class LocalExample {
         } else {
             System.out.println("feature is NOT enabled");
         }
-        Thread.sleep(10000);
+
+        DevCycleEvent event = DevCycleEvent.builder().type("local-test").build();
+        client.track(user, event);
+
+        Thread.sleep(20000);
     }
 }

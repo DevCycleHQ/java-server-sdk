@@ -25,7 +25,6 @@ import java.util.UUID;
 public final class DevCycleLocalClient implements IDevCycleClient {
 
     private final String sdkKey;
-    private final DevCycleProvider openFeatureProvider;
     private final LocalBucketing localBucketing = new LocalBucketing();
     private final EnvironmentConfigManager configManager;
     private EventQueueManager eventQueueManager;
@@ -61,7 +60,6 @@ public final class DevCycleLocalClient implements IDevCycleClient {
         } catch (Exception e) {
             DevCycleLogger.error("Error creating event queue due to error: " + e.getMessage());
         }
-        this.openFeatureProvider = new DevCycleProvider(this);
     }
 
     /**
@@ -249,12 +247,24 @@ public final class DevCycleLocalClient implements IDevCycleClient {
         }
     }
 
+
+    private static DevCycleProvider openFeatureProvider = null;
+
     /**
      * @return the OpenFeature provider for this client.
      */
     @Override
     public FeatureProvider getOpenFeatureProvider() {
-        return this.openFeatureProvider;
+        if (openFeatureProvider == null) {
+            synchronized (DevCycleLocalClient.class) {
+                if (openFeatureProvider == null) {
+                    openFeatureProvider = new DevCycleProvider(this);
+                }
+                PlatformData platformData = PlatformData.builder().sdkPlatform("java-of").build();
+                localBucketing.setPlatformData(platformData.toString());
+            }
+        }
+        return openFeatureProvider;
     }
 
     @Override
