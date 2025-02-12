@@ -258,7 +258,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
         if (openFeatureProvider == null) {
             synchronized (DevCycleLocalClient.class) {
                 if (openFeatureProvider == null) {
-                    openFeatureProvider = new DevCycleProvider(this);;
+                    openFeatureProvider = new DevCycleProvider(this);
                 }
                 PlatformData platformData = PlatformData.builder().sdkPlatform("java-of").build();
                 localBucketing.setPlatformData(platformData.toString());
