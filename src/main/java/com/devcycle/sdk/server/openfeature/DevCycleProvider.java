@@ -1,13 +1,18 @@
 package com.devcycle.sdk.server.openfeature;
 
 import com.devcycle.sdk.server.common.api.IDevCycleClient;
+import com.devcycle.sdk.server.common.exception.DevCycleException;
+import com.devcycle.sdk.server.common.model.DevCycleEvent;
 import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.common.model.Variable;
 import dev.openfeature.sdk.*;
 import dev.openfeature.sdk.exceptions.ProviderNotReadyError;
+import dev.openfeature.sdk.exceptions.GeneralError;
 import dev.openfeature.sdk.exceptions.TypeMismatchError;
 
+import java.math.BigDecimal;
 import java.util.Map;
+import java.util.Optional;
 
 public class DevCycleProvider implements FeatureProvider {
     private static final String PROVIDER_NAME = "DevCycle";
@@ -21,6 +26,28 @@ public class DevCycleProvider implements FeatureProvider {
     @Override
     public Metadata getMetadata() {
         return () -> PROVIDER_NAME + " " + devcycleClient.getSDKPlatform();
+    }
+
+    @Override
+    public void initialize(EvaluationContext evaluationContext) throws Exception {
+        if (devcycleClient.isInitialized()) {
+            return;
+        }
+
+        long deadline = 2 * 1000; // Delay in milliseconds
+        long start = System.currentTimeMillis();
+
+        do {
+            if (deadline <= System.currentTimeMillis() - start) {
+                throw new GeneralError("DevCycle client not initialized within 2 seconds");
+            }
+            Thread.sleep(5);
+        } while (!devcycleClient.isInitialized());
+    }
+
+    @Override
+    public void shutdown() {
+        devcycleClient.close();
     }
 
     @Override
@@ -62,83 +89,120 @@ public class DevCycleProvider implements FeatureProvider {
             }
         }
 
-        if (devcycleClient.isInitialized()) {
-            try {
-                DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
+        if (!devcycleClient.isInitialized()) {
+            throw new ProviderNotReadyError("DevCycle client not initialized");
+        }
 
-                Variable<Object> variable = devcycleClient.variable(user, key, defaultValue.asStructure().asObjectMap());
+        try {
+            DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
 
-                if (variable == null || variable.getIsDefaulted()) {
-                    return ProviderEvaluation.<Value>builder()
-                            .value(defaultValue)
-                            .reason(Reason.DEFAULT.toString())
-                            .build();
-                } else {
-                    if (variable.getValue() instanceof Map) {
-                        // JSON objects are managed as Map implementations and must be converted to an OpenFeature structure
-                        Value objectValue = new Value(Structure.mapToStructure((Map) variable.getValue()));
-                        return ProviderEvaluation.<Value>builder()
-                                .value(objectValue)
-                                .reason(Reason.TARGETING_MATCH.toString())
-                                .build();
-                    } else {
-                        throw new TypeMismatchError("DevCycle variable for key " + key + " is not a JSON object");
-                    }
-                }
-            } catch (IllegalArgumentException e) {
+            Variable<Object> variable = devcycleClient.variable(user, key, defaultValue.asStructure().asObjectMap());
+
+            if (variable == null || variable.getIsDefaulted()) {
                 return ProviderEvaluation.<Value>builder()
                         .value(defaultValue)
-                        .reason(Reason.ERROR.toString())
-                        .errorCode(ErrorCode.GENERAL)
-                        .errorMessage(e.getMessage())
+                        .reason(Reason.DEFAULT.toString())
+                        .build();
+            } else {
+                if (variable.getValue() instanceof Map) {
+                    // JSON objects are managed as Map implementations and must be converted to an OpenFeature structure
+                    Value objectValue = new Value(Structure.mapToStructure((Map) variable.getValue()));
+                    return ProviderEvaluation.<Value>builder()
+                            .value(objectValue)
+                            .reason(Reason.TARGETING_MATCH.toString())
+                            .build();
+                } else {
+                    throw new TypeMismatchError("DevCycle variable for key " + key + " is not a JSON object");
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            return ProviderEvaluation.<Value>builder()
+                    .value(defaultValue)
+                    .reason(Reason.ERROR.toString())
+                    .errorCode(ErrorCode.GENERAL)
+                    .errorMessage(e.getMessage())
+                    .build();
+        }
+    }
+
+    <T> ProviderEvaluation<T> resolvePrimitiveVariable(String key, T defaultValue, EvaluationContext ctx) {
+        if (!devcycleClient.isInitialized()) {
+            throw new ProviderNotReadyError("DevCycle client not initialized");
+        }
+
+        try {
+            DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
+
+            Variable<T> variable = devcycleClient.variable(user, key, defaultValue);
+
+            if (variable == null || variable.getIsDefaulted()) {
+                return ProviderEvaluation.<T>builder()
+                        .value(defaultValue)
+                        .reason(Reason.DEFAULT.toString())
+                        .build();
+            } else {
+                T value = variable.getValue();
+                if (variable.getType() == Variable.TypeEnum.NUMBER && defaultValue.getClass() == Integer.class) {
+                    // Internally in the DevCycle SDK all number values are stored as Doubles
+                    // need to explicitly convert to an Integer if the requested type is Integer
+                    Number numVal = (Number) value;
+                    value = (T) Integer.valueOf(numVal.intValue());
+                }
+
+                return ProviderEvaluation.<T>builder()
+                        .value(value)
+                        .reason(Reason.TARGETING_MATCH.toString())
                         .build();
             }
-        } else {
-            throw new ProviderNotReadyError("DevCycle client not initialized");
+        } catch (IllegalArgumentException e) {
+            return ProviderEvaluation.<T>builder()
+                    .value(defaultValue)
+                    .reason(Reason.ERROR.toString())
+                    .errorCode(ErrorCode.GENERAL)
+                    .errorMessage(e.getMessage())
+                    .build();
         }
     }
 
     @Override
-    public void shutdown() {
-        devcycleClient.close();
-    }
-
-    <T> ProviderEvaluation<T> resolvePrimitiveVariable(String key, T defaultValue, EvaluationContext ctx) {
-        if (devcycleClient.isInitialized()) {
-            try {
-                DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
-
-                Variable<T> variable = devcycleClient.variable(user, key, defaultValue);
-
-                if (variable == null || variable.getIsDefaulted()) {
-                    return ProviderEvaluation.<T>builder()
-                            .value(defaultValue)
-                            .reason(Reason.DEFAULT.toString())
-                            .build();
-                } else {
-                    T value = variable.getValue();
-                    if (variable.getType() == Variable.TypeEnum.NUMBER && defaultValue.getClass() == Integer.class) {
-                        // Internally in the DevCycle SDK all number values are stored as Doubles
-                        // need to explicitly convert to an Integer if the requested type is Integer
-                        Number numVal = (Number) value;
-                        value = (T) Integer.valueOf(numVal.intValue());
-                    }
-
-                    return ProviderEvaluation.<T>builder()
-                            .value(value)
-                            .reason(Reason.TARGETING_MATCH.toString())
-                            .build();
-                }
-            } catch (IllegalArgumentException e) {
-                return ProviderEvaluation.<T>builder()
-                        .value(defaultValue)
-                        .reason(Reason.ERROR.toString())
-                        .errorCode(ErrorCode.GENERAL)
-                        .errorMessage(e.getMessage())
-                        .build();
-            }
-        } else {
+    public void track(String eventName, EvaluationContext context, TrackingEventDetails details) {
+        if (!devcycleClient.isInitialized()) {
             throw new ProviderNotReadyError("DevCycle client not initialized");
+        }
+
+        DevCycleUser user = DevCycleUser.fromEvaluationContext(context);
+        try {
+            // This casting is required because the TrackingEventDetails interface doesn't expose the getValue()
+            // call that returns the numeric value
+            Object rawValue = null;
+            if (details instanceof MutableTrackingEventDetails) {
+                rawValue = ((MutableTrackingEventDetails) details).getValue();
+            } else if (details instanceof ImmutableTrackingEventDetails) {
+                rawValue = ((ImmutableTrackingEventDetails) details).getValue();
+            }
+
+            // Unwrap Optional if present
+            if (rawValue instanceof Optional) {
+                rawValue = ((Optional<?>) rawValue).orElse(null);
+            }
+            Value value = rawValue != null ? Value.objectToValue(rawValue) : null;
+
+            BigDecimal bigDecimalValue = null;
+            if (value != null && value.isNumber()) {
+                bigDecimalValue = new BigDecimal(Double.toString(value.asDouble()));
+            }
+
+            Map<String, Object> metaData = details.asObjectMap();
+            metaData.remove("value");
+
+            DevCycleEvent event = DevCycleEvent.builder()
+                    .type(eventName)
+                    .value(bigDecimalValue)
+                    .metaData(metaData)
+                    .build();
+            devcycleClient.track(user, event);
+        } catch (DevCycleException e) {
+            throw new GeneralError(e);
         }
     }
 }

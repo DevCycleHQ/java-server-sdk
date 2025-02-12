@@ -117,6 +117,8 @@ public class DevCycleUserTest {
         DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
         Assert.assertEquals(user.getUserId(), "test-1234");
 
+        System.out.println("Custom Data: " + user.getCustomData().toString());
+
         Assert.assertEquals(user.getCustomData().size(), 4);
         Assert.assertEquals(user.getCustomData().get("strValue"), "hello");
         Assert.assertEquals(user.getCustomData().get("intValue"), 123.0);

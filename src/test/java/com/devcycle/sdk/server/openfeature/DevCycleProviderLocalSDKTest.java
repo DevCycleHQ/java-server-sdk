@@ -150,5 +150,15 @@ public class DevCycleProviderLocalSDKTest {
         Assert.assertEquals(result.getReason(), Reason.TARGETING_MATCH.toString());
     }
 
+    @Test
+    public void testTrackEvent() {
+        EvaluationContext ctx = getContext();
+        MutableTrackingEventDetails eventDetails = new MutableTrackingEventDetails(123.456);
+        eventDetails.add("test-key", "test-value");
+        client.getOpenFeatureProvider().track("test-event", ctx, eventDetails);
 
+        Number value = eventDetails.getValue().orElse(null);
+        Assert.assertEquals(123.456, value.doubleValue(), 0.0001);
+        Assert.assertEquals("test-value", eventDetails.getValue("test-key").asString());
+    }
 }

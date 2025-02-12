@@ -104,6 +104,10 @@ public class DevCycleUser {
     @JsonProperty("sdkVersion")
     private String sdkVersion = getPlatformData().getSdkVersion();
 
+    @Schema(description = "DevCycle SDK Platform")
+    @JsonProperty("sdkPlatform")
+    private String sdkPlatform = null;
+
     @Schema(description = "Hostname where the SDK is running")
     @Builder.Default
     @JsonProperty("hostname")
@@ -155,7 +159,7 @@ public class DevCycleUser {
         Map<String, Object> privateCustomData = new LinkedHashMap<>();
 
         for (String key : ctx.keySet()) {
-            if (key.equals("user_id")) {
+            if (key.equals("user_id") || key.equals("targetingKey")) {
                 continue;
             }
 
