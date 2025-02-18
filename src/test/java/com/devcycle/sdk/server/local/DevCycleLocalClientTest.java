@@ -2,10 +2,7 @@ package com.devcycle.sdk.server.local;
 
 import com.devcycle.sdk.server.common.api.IRestOptions;
 import com.devcycle.sdk.server.common.logging.IDevCycleLogger;
-import com.devcycle.sdk.server.common.model.BaseVariable;
-import com.devcycle.sdk.server.common.model.DevCycleUser;
-import com.devcycle.sdk.server.common.model.Feature;
-import com.devcycle.sdk.server.common.model.Variable;
+import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.helpers.LocalConfigServer;
 import com.devcycle.sdk.server.helpers.TestDataFixtures;
 import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
@@ -20,6 +17,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.X509TrustManager;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -316,6 +314,18 @@ public class DevCycleLocalClientTest {
         Assert.assertEquals(variables.get("num-var").getId(), "65272363125123fca69d3a7d");
         Assert.assertEquals(variables.get("json-var").getId(), "64372363125123fca69d3f7b");
         Assert.assertEquals(variables.size(), 4);
+    }
+
+    @Test
+    public void trackTest() {
+        DevCycleUser user = getUser();
+        DevCycleEvent event = DevCycleEvent.builder()
+                .type("test-event")
+                .value(BigDecimal.valueOf(123.45))
+                .metaData(Map.of("test-key", "test-value"))
+                .build();
+
+        client.track(user, event);
     }
 
     @Test
