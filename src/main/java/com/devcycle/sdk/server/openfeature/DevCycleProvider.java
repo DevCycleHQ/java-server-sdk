@@ -172,37 +172,38 @@ public class DevCycleProvider implements FeatureProvider {
 
         DevCycleUser user = DevCycleUser.fromEvaluationContext(context);
         try {
-            // This casting is required because the TrackingEventDetails interface doesn't expose the getValue()
-            // call that returns the numeric value
-            Object rawValue = null;
-            if (details instanceof MutableTrackingEventDetails) {
-                rawValue = ((MutableTrackingEventDetails) details).getValue();
-            } else if (details instanceof ImmutableTrackingEventDetails) {
-                rawValue = ((ImmutableTrackingEventDetails) details).getValue();
-            }
-
-            // Unwrap Optional if present
-            if (rawValue instanceof Optional) {
-                rawValue = ((Optional<?>) rawValue).orElse(null);
-            }
-            Value value = rawValue != null ? Value.objectToValue(rawValue) : null;
-
-            BigDecimal bigDecimalValue = null;
-            if (value != null && value.isNumber()) {
-                bigDecimalValue = new BigDecimal(Double.toString(value.asDouble()));
-            }
-
-            Map<String, Object> metaData = details.asObjectMap();
-            metaData.remove("value");
+            BigDecimal eventValue = extractEventValue(details);
+            Map<String, Object> metaData = getMetadataWithoutValue(details);
 
             DevCycleEvent event = DevCycleEvent.builder()
                     .type(eventName)
-                    .value(bigDecimalValue)
+                    .value(eventValue)
                     .metaData(metaData)
                     .build();
             devcycleClient.track(user, event);
         } catch (DevCycleException e) {
             throw new GeneralError(e);
         }
+    }
+
+    private BigDecimal extractEventValue(TrackingEventDetails details) {
+        Optional<Number> rawValue = details.getValue();
+        if (rawValue.isEmpty()) {
+            return null;
+        }
+
+        Number numberValue = rawValue.get();
+        if (numberValue == null) {
+            return null;
+        }
+
+        Value value = Value.objectToValue(numberValue);
+        return value.isNumber() ? new BigDecimal(Double.toString(value.asDouble())) : null;
+    }
+
+    private Map<String, Object> getMetadataWithoutValue(TrackingEventDetails details) {
+        Map<String, Object> metaData = details.asObjectMap();
+        metaData.remove("value");
+        return metaData;
     }
 }
