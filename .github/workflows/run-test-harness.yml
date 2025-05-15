@@ -10,7 +10,7 @@ jobs:
     permissions:
       contents: read
     runs-on:
-      labels: ubuntu-latest-4-core
+      labels: ubicloud-standard-8
     steps:
       - uses: DevCycleHQ/test-harness@main
         with:
