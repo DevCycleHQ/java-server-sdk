@@ -1,6 +1,7 @@
 package com.devcycle.sdk.server.local.api;
 
 import com.devcycle.sdk.server.common.api.IDevCycleClient;
+import com.devcycle.sdk.server.common.exception.BeforeHookError;
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.common.model.Variable.TypeEnum;
@@ -18,9 +19,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.openfeature.sdk.FeatureProvider;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public final class DevCycleLocalClient implements IDevCycleClient {
 
@@ -29,6 +28,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
     private final EnvironmentConfigManager configManager;
     private EventQueueManager eventQueueManager;
     private final String clientUUID;
+    private EvalHooksRunner evalHooksRunner;
 
     public DevCycleLocalClient(String sdkKey) {
         this(sdkKey, DevCycleLocalOptions.builder().build());
@@ -60,6 +60,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
         } catch (Exception e) {
             DevCycleLogger.error("Error creating event queue due to error: " + e.getMessage());
         }
+        this.evalHooksRunner = new EvalHooksRunner();
     }
 
     /**
@@ -155,24 +156,50 @@ public final class DevCycleLocalClient implements IDevCycleClient {
                 .setShouldTrackEvent(true)
                 .build();
 
+        HookContext<T> hookContext = new HookContext<T>(user, key, defaultValue);
+        Variable<T> variable = null;
+        ArrayList<EvalHook<T>> hooks = new ArrayList<EvalHook<T>>(evalHooksRunner.getHooks());
+        ArrayList<EvalHook<T>> reversedHooks = new ArrayList<EvalHook<T>>(evalHooksRunner.getHooks());
+        Collections.reverse(reversedHooks);
+
         try {
             byte[] paramsBuffer = params.toByteArray();
             byte[] variableData = localBucketing.getVariableForUserProtobuf(paramsBuffer);
+            Throwable beforeError = null;
+            try {
+                evalHooksRunner.executeBefore(hooks, hookContext);
+            } catch (Throwable e) {
+                beforeError = e;
+            }
+
 
             if (variableData == null || variableData.length == 0) {
-                return defaultVariable;
+                variable = defaultVariable;
             } else {
                 SDKVariable_PB sdkVariable = SDKVariable_PB.parseFrom(variableData);
                 if (sdkVariable.getType() != pbVariableType) {
                     DevCycleLogger.warning("Variable type mismatch, returning default value");
-                    return defaultVariable;
+                    variable = defaultVariable;
+                } else {
+                    variable = ProtobufUtils.createVariable(sdkVariable, defaultValue);
                 }
-                return ProtobufUtils.createVariable(sdkVariable, defaultValue);
             }
-        } catch (Exception e) {
-            DevCycleLogger.error("Unable to evaluate Variable " + key + " due to error: " + e, e);
+            if (beforeError != null) {
+                throw beforeError;
+            }
+            evalHooksRunner.executeAfter(reversedHooks, hookContext, variable);
+        } catch (Throwable e) {
+            if (!(e instanceof BeforeHookError)) {
+                DevCycleLogger.error("Unable to evaluate Variable " + key + " due to error: " + e, e);
+            }
+            evalHooksRunner.executeError(reversedHooks, hookContext, e);
+        } finally {
+            if (variable == null) {
+                variable = defaultVariable;
+            }
+            evalHooksRunner.executeFinally(reversedHooks, hookContext, Optional.of(variable));
+            return variable;
         }
-        return defaultVariable;
     }
 
 
@@ -247,6 +274,21 @@ public final class DevCycleLocalClient implements IDevCycleClient {
         }
     }
 
+    /**
+     * Add an evaluation hook to the client
+     *
+     * @param hook The hook to add
+     */
+    public void addHook(EvalHook hook) {
+        this.evalHooksRunner.addHook(hook);
+    }
+
+    /**
+     * Remove all evaluation hooks from the client
+     */
+    public void clearHooks() {
+        this.evalHooksRunner.clearHooks();
+    }
 
     private static DevCycleProvider openFeatureProvider = null;
 

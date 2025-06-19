@@ -1,6 +1,7 @@
 package com.devcycle.sdk.server.local;
 
 import com.devcycle.sdk.server.common.api.IRestOptions;
+import com.devcycle.sdk.server.common.exception.DevCycleException;
 import com.devcycle.sdk.server.common.logging.IDevCycleLogger;
 import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.helpers.LocalConfigServer;
@@ -11,6 +12,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.After;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
@@ -20,6 +22,7 @@ import javax.net.ssl.X509TrustManager;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -363,6 +366,487 @@ public class DevCycleLocalClientTest {
         Map<String, Feature> features = myClient.allFeatures(user);
         Assert.assertNotNull(features);
         Assert.assertEquals(features.size(), 1);
+    }
+
+    @Test
+    public void variable_withEvalHooks_callsHooksInOrder() throws DevCycleException {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final boolean[] beforeCalled = {false};
+        final boolean[] afterCalled = {false};
+        final boolean[] finallyCalled = {false};
+
+        client.addHook(new EvalHook<String>() {
+            @Override
+            public Optional<HookContext<String>> before(HookContext<String> ctx) {
+                beforeCalled[0] = true;
+                return Optional.empty();
+            }
+
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                afterCalled[0] = true;
+                Assert.assertTrue(beforeCalled[0]);
+            }
+
+            @Override
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+                finallyCalled[0] = true;
+                Assert.assertTrue(afterCalled[0]);
+            }
+        });
+
+        Variable<String> result = client.variable(user, "string-var", "default string");
+
+        Assert.assertTrue(beforeCalled[0]);
+        Assert.assertTrue(afterCalled[0]);
+        Assert.assertTrue(finallyCalled[0]);
+    }
+
+    @Test
+    public void variable_withEvalHooks_returnsVariableWhenBeforeHookThrows() {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final boolean[] beforeCalled = {false};
+        final boolean[] afterCalled = {false};
+        final boolean[] errorCalled = {false};
+        final boolean[] finallyCalled = {false};
+
+        client.addHook(new EvalHook<String>() {
+            @Override
+            public Optional<HookContext<String>> before(HookContext<String> ctx) {
+                throw new RuntimeException("Test before hook error");
+            }
+
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                afterCalled[0] = true;
+            }
+
+            @Override
+            public void error(HookContext<String> ctx, Throwable error) {
+                errorCalled[0] = true;
+            }
+
+            @Override
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+                finallyCalled[0] = true;
+            }
+        });
+
+        Variable<String> result = client.variable(user, "string-var", "default string");
+
+        Assert.assertNotNull(result);
+        Assert.assertFalse(beforeCalled[0]);
+        Assert.assertFalse(afterCalled[0]);
+        Assert.assertTrue(errorCalled[0]);
+        Assert.assertTrue(finallyCalled[0]);
+    }
+
+    @Test
+    public void variable_withEvalHooks_returnsVariableWhenAfterHookThrows() {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final boolean[] beforeCalled = {false};
+        final boolean[] afterCalled = {false};
+        final boolean[] errorCalled = {false};
+        final boolean[] finallyCalled = {false};
+
+        client.addHook(new EvalHook<String>() {
+            @Override
+            public Optional<HookContext<String>> before(HookContext<String> ctx) {
+                beforeCalled[0] = true;
+                return Optional.empty();
+            }
+
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                afterCalled[0] = true;
+                throw new RuntimeException("Test after hook error");
+            }
+
+            @Override
+            public void error(HookContext<String> ctx, Throwable error) {
+                errorCalled[0] = true;
+            }
+
+            @Override
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+                finallyCalled[0] = true;
+            }
+        });
+
+        Variable<String> result = client.variable(user, "string-var", "default string");
+
+        Assert.assertNotNull(result);
+        Assert.assertTrue(beforeCalled[0]);
+        Assert.assertTrue(afterCalled[0]);
+        Assert.assertTrue(errorCalled[0]);
+        Assert.assertTrue(finallyCalled[0]);
+    }
+
+    @Test
+    public void variable_withEvalHooks_returnsVariableWhenFinallyHookThrows() {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final boolean[] beforeCalled = {false};
+        final boolean[] afterCalled = {false};
+        final boolean[] errorCalled = {false};
+        final boolean[] finallyCalled = {false};
+
+        client.addHook(new EvalHook<String>() {
+            @Override
+            public Optional<HookContext<String>> before(HookContext<String> ctx) {
+                beforeCalled[0] = true;
+                return Optional.empty();
+            }
+
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                afterCalled[0] = true;
+            }
+
+            @Override
+            public void error(HookContext<String> ctx, Throwable error) {
+                errorCalled[0] = true;
+            }
+
+            @Override
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+                finallyCalled[0] = true;
+                throw new RuntimeException("Test finally hook error");
+            }
+        });
+
+        Variable<String> result = client.variable(user, "string-var", "default string");
+
+        Assert.assertNotNull(result);
+        Assert.assertTrue(beforeCalled[0]);
+        Assert.assertTrue(afterCalled[0]);
+        Assert.assertFalse(errorCalled[0]); // No error hook should be called for finally errors
+        Assert.assertTrue(finallyCalled[0]);
+    }
+
+    @Test
+    public void variable_withEvalHooks_returnsVariableWhenErrorHookThrows() {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final boolean[] beforeCalled = {false};
+        final boolean[] afterCalled = {false};
+        final boolean[] errorCalled = {false};
+        final boolean[] finallyCalled = {false};
+
+        client.addHook(new EvalHook<String>() {
+            @Override
+            public Optional<HookContext<String>> before(HookContext<String> ctx) {
+                throw new RuntimeException("Test before hook error");
+            }
+
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                afterCalled[0] = true;
+            }
+
+            @Override
+            public void error(HookContext<String> ctx, Throwable error) {
+                errorCalled[0] = true;
+                throw new RuntimeException("Test error hook error");
+            }
+
+            @Override
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+                finallyCalled[0] = true;
+            }
+        });
+
+        Variable<String> result = client.variable(user, "string-var", "default string");
+
+        Assert.assertNotNull(result);
+        Assert.assertFalse(beforeCalled[0]);
+        Assert.assertFalse(afterCalled[0]);
+        Assert.assertTrue(errorCalled[0]);
+        Assert.assertTrue(finallyCalled[0]);
+    }
+
+    @Test
+    public void variable_withEvalHooks_returnsVariableWhenMultipleHooksThrow() {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .email("giveMeVariationOn@email.com")
+                .build();
+
+        final boolean[] hook1BeforeCalled = {false};
+        final boolean[] hook1AfterCalled = {false};
+        final boolean[] hook1ErrorCalled = {false};
+        final boolean[] hook1FinallyCalled = {false};
+        final boolean[] hook2BeforeCalled = {false};
+        final boolean[] hook2AfterCalled = {false};
+        final boolean[] hook2ErrorCalled = {false};
+        final boolean[] hook2FinallyCalled = {false};
+
+        // First hook throws in before
+        client.addHook(new EvalHook<String>() {
+            @Override
+            public Optional<HookContext<String>> before(HookContext<String> ctx) {
+                hook1BeforeCalled[0] = true;
+                throw new RuntimeException("Test hook1 before error");
+            }
+
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                hook1AfterCalled[0] = true;
+            }
+
+            @Override
+            public void error(HookContext<String> ctx, Throwable error) {
+                hook1ErrorCalled[0] = true;
+            }
+
+            @Override
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+                hook1FinallyCalled[0] = true;
+            }
+        });
+
+        // Second hook throws in after
+        client.addHook(new EvalHook<String>() {
+            @Override
+            public Optional<HookContext<String>> before(HookContext<String> ctx) {
+                hook2BeforeCalled[0] = true;
+                return Optional.empty();
+            }
+
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                hook2AfterCalled[0] = true;
+                throw new RuntimeException("Test hook2 after error");
+            }
+
+            @Override
+            public void error(HookContext<String> ctx, Throwable error) {
+                hook2ErrorCalled[0] = true;
+            }
+
+            @Override
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+                hook2FinallyCalled[0] = true;
+            }
+        });
+
+        Variable<String> expected = Variable.<String>builder()
+                .key("string-var")
+                .value("variationOn")
+                .type(Variable.TypeEnum.STRING)
+                .isDefaulted(false)
+                .defaultValue("default string")
+                .build();
+
+        Variable<String> result = client.variable(user, "string-var", "default string");
+
+        Assert.assertEquals(expected, result);
+        // First hook should be called and throw
+        Assert.assertTrue(hook1BeforeCalled[0]);
+        Assert.assertFalse(hook1AfterCalled[0]);
+        Assert.assertTrue(hook1ErrorCalled[0]);
+        Assert.assertTrue(hook1FinallyCalled[0]);
+        // Second hook should not be called due to first hook error
+        Assert.assertFalse(hook2BeforeCalled[0]);
+        Assert.assertFalse(hook2AfterCalled[0]);
+        Assert.assertTrue(hook2ErrorCalled[0]);
+        Assert.assertTrue(hook2FinallyCalled[0]);
+    }
+
+    @Test
+    public void variable_withEvalHooks_returnsVariableWhenHookThrowsCheckedException() {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final boolean[] beforeCalled = {false};
+        final boolean[] afterCalled = {false};
+        final boolean[] errorCalled = {false};
+        final boolean[] finallyCalled = {false};
+
+        client.addHook(new EvalHook<String>() {
+            @Override
+            public Optional<HookContext<String>> before(HookContext<String> ctx) {
+                beforeCalled[0] = true;
+                throw new RuntimeException("Test checked exception in before hook");
+            }
+
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                afterCalled[0] = true;
+            }
+
+            @Override
+            public void error(HookContext<String> ctx, Throwable error) {
+                errorCalled[0] = true;
+                Assert.assertTrue(error instanceof RuntimeException);
+                Assert.assertEquals("Test checked exception in before hook", error.getMessage());
+            }
+
+            @Override
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+                finallyCalled[0] = true;
+            }
+        });
+
+        Variable<String> result = client.variable(user, "string-var", "default string");
+
+        Assert.assertNotNull(result);
+        Assert.assertTrue(beforeCalled[0]);
+        Assert.assertFalse(afterCalled[0]);
+        Assert.assertTrue(errorCalled[0]);
+        Assert.assertTrue(finallyCalled[0]);
+    }
+
+    @Test
+    public void variable_withEvalHooks_returnsVariableWhenHookThrowsNullPointerException() {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final boolean[] beforeCalled = {false};
+        final boolean[] afterCalled = {false};
+        final boolean[] errorCalled = {false};
+        final boolean[] finallyCalled = {false};
+
+        client.addHook(new EvalHook<String>() {
+            @Override
+            public Optional<HookContext<String>> before(HookContext<String> ctx) {
+                beforeCalled[0] = true;
+                throw new NullPointerException("Test NPE in before hook");
+            }
+
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                afterCalled[0] = true;
+            }
+
+            @Override
+            public void error(HookContext<String> ctx, Throwable error) {
+                errorCalled[0] = true;
+                Assert.assertTrue(error instanceof NullPointerException);
+                Assert.assertEquals("Test NPE in before hook", error.getMessage());
+            }
+
+            @Override
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+                finallyCalled[0] = true;
+            }
+        });
+
+        Variable<String> result = client.variable(user, "string-var", "default string");
+
+        Assert.assertNotNull(result);
+        Assert.assertTrue(beforeCalled[0]);
+        Assert.assertFalse(afterCalled[0]);
+        Assert.assertTrue(errorCalled[0]);
+        Assert.assertTrue(finallyCalled[0]);
+    }
+
+    @Test
+    public void variable_withEvalHooks_returnsVariableWhenHookThrowsInFinallyAfterError() {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final boolean[] beforeCalled = {false};
+        final boolean[] afterCalled = {false};
+        final boolean[] errorCalled = {false};
+        final boolean[] finallyCalled = {false};
+
+        client.addHook(new EvalHook<String>() {
+            @Override
+            public Optional<HookContext<String>> before(HookContext<String> ctx) {
+                beforeCalled[0] = true;
+                throw new RuntimeException("Test before hook error");
+            }
+
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                afterCalled[0] = true;
+            }
+
+            @Override
+            public void error(HookContext<String> ctx, Throwable error) {
+                errorCalled[0] = true;
+            }
+
+            @Override
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+                finallyCalled[0] = true;
+                throw new RuntimeException("Test finally hook error after previous error");
+            }
+        });
+
+        Variable<String> result = client.variable(user, "string-var", "default string");
+
+        Assert.assertNotNull(result);
+        Assert.assertTrue(beforeCalled[0]);
+        Assert.assertFalse(afterCalled[0]);
+        Assert.assertTrue(errorCalled[0]);
+        Assert.assertTrue(finallyCalled[0]);
+    }
+
+    @Test
+    public void variable_withEvalHooks_returnsVariableWhenHookThrowsInErrorAfterFinally() {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final boolean[] beforeCalled = {false};
+        final boolean[] afterCalled = {false};
+        final boolean[] errorCalled = {false};
+        final boolean[] finallyCalled = {false};
+
+        client.addHook(new EvalHook<String>() {
+            @Override
+            public Optional<HookContext<String>> before(HookContext<String> ctx) {
+                beforeCalled[0] = true;
+                throw new RuntimeException("Test before hook error");
+            }
+
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                afterCalled[0] = true;
+            }
+
+            @Override
+            public void error(HookContext<String> ctx, Throwable error) {
+                errorCalled[0] = true;
+                throw new RuntimeException("Test error hook error after before error");
+            }
+
+            @Override
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+                finallyCalled[0] = true;
+            }
+        });
+
+        Variable<String> result = client.variable(user, "string-var", "default string");
+
+        Assert.assertNotNull(result);
+        Assert.assertTrue(beforeCalled[0]);
+        Assert.assertFalse(afterCalled[0]);
+        Assert.assertTrue(errorCalled[0]);
+        Assert.assertTrue(finallyCalled[0]);
+    }
+
+    @After
+    public void clearHooks() {
+        client.clearHooks();
     }
 
     private DevCycleUser getUser() {

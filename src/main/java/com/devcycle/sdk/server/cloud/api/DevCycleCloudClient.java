@@ -3,6 +3,8 @@ package com.devcycle.sdk.server.cloud.api;
 import com.devcycle.sdk.server.cloud.model.DevCycleCloudOptions;
 import com.devcycle.sdk.server.common.api.IDevCycleApi;
 import com.devcycle.sdk.server.common.api.IDevCycleClient;
+import com.devcycle.sdk.server.common.exception.AfterHookError;
+import com.devcycle.sdk.server.common.exception.BeforeHookError;
 import com.devcycle.sdk.server.common.exception.DevCycleException;
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.devcycle.sdk.server.common.model.*;
@@ -17,9 +19,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public final class DevCycleCloudClient implements IDevCycleClient {
 
@@ -27,6 +27,7 @@ public final class DevCycleCloudClient implements IDevCycleClient {
     private final IDevCycleApi api;
     private final DevCycleCloudOptions dvcOptions;
     private final DevCycleProvider openFeatureProvider;
+    private final EvalHooksRunner evalHooksRunner;
 
     public DevCycleCloudClient(String sdkKey) {
         this(sdkKey, DevCycleCloudOptions.builder().build());
@@ -50,6 +51,7 @@ public final class DevCycleCloudClient implements IDevCycleClient {
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
         this.openFeatureProvider = new DevCycleProvider(this);
+        this.evalHooksRunner = new EvalHooksRunner();
     }
 
     /**
@@ -109,23 +111,46 @@ public final class DevCycleCloudClient implements IDevCycleClient {
         }
 
         TypeEnum variableType = TypeEnum.fromClass(defaultValue.getClass());
-        Variable<T> variable;
+        Variable<T> variable = null;
+        HookContext<T> context = new HookContext<T>(user, key, defaultValue);
+        ArrayList<EvalHook<T>> hooks = new ArrayList<EvalHook<T>>(evalHooksRunner.getHooks());
+        ArrayList<EvalHook<T>> reversedHooks = new ArrayList<>(hooks);
+        Collections.reverse(reversedHooks);
 
         try {
+            Throwable beforeError = null;
+
+            try {
+                context = context.merge(evalHooksRunner.executeBefore(hooks, context));
+            } catch (Throwable e) {
+                beforeError = e;
+            }
+
             Call<Variable> response = api.getVariableByKey(user, key, dvcOptions.getEnableEdgeDB());
             variable = getResponseWithRetries(response, 5);
             if (variable.getType() != variableType) {
                 throw new IllegalArgumentException("Variable type mismatch, returning default value");
             }
+            if (beforeError != null) {
+                throw beforeError;
+            }
+
+            evalHooksRunner.executeAfter(reversedHooks, context, variable);
             variable.setIsDefaulted(false);
-        } catch (Exception exception) {
-            variable = (Variable<T>) Variable.builder()
-                    .key(key)
-                    .type(variableType)
-                    .value(defaultValue)
-                    .defaultValue(defaultValue)
-                    .isDefaulted(true)
-                    .build();
+        } catch (Throwable exception) {
+            if (!(exception instanceof BeforeHookError || exception instanceof AfterHookError)) {
+                variable = (Variable<T>) Variable.builder()
+                        .key(key)
+                        .type(variableType)
+                        .value(defaultValue)
+                        .defaultValue(defaultValue)
+                        .isDefaulted(true)
+                        .build();
+            }
+
+            evalHooksRunner.executeError(reversedHooks, context, exception);
+        } finally {
+            evalHooksRunner.executeFinally(reversedHooks, context, Optional.ofNullable(variable));
         }
         return variable;
     }
@@ -226,6 +251,13 @@ public final class DevCycleCloudClient implements IDevCycleClient {
         throw new DevCycleException(HttpResponseCode.SERVER_ERROR, errorResponse);
     }
 
+    public void addHook(EvalHook hook) {
+        this.evalHooksRunner.addHook(hook);
+    }
+
+    public void clearHooks() {
+        this.evalHooksRunner.clearHooks();
+    }
 
     private <T> T getResponse(Call<T> call) throws DevCycleException {
         ErrorResponse errorResponse = ErrorResponse.builder().build();
