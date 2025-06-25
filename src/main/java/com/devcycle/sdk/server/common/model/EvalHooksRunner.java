@@ -18,6 +18,14 @@ public class EvalHooksRunner<T> {
     /**
      * Default constructor initializes an empty list of hooks.
      */
+    public EvalHooksRunner(List<EvalHook<T>> hooks) {
+        if (hooks == null) {
+            this.hooks = new ArrayList<>();
+        } else {
+            this.hooks = hooks;
+        }
+    }
+
     public EvalHooksRunner() {
         this.hooks = new ArrayList<>();
     }

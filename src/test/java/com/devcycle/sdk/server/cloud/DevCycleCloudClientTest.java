@@ -8,6 +8,7 @@ import com.devcycle.sdk.server.common.exception.DevCycleException;
 import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.helpers.WhiteBox;
 import dev.openfeature.sdk.Hook;
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,6 +24,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.*;
 
 import static org.mockito.Mockito.when;
 
@@ -745,6 +747,96 @@ public class DevCycleCloudClientTest {
         Assert.assertFalse(afterCalled[0]);
         Assert.assertTrue(errorCalled[0]);
         Assert.assertTrue(finallyCalled[0]);
+    }
+
+    @Test
+    public void client_withHooksInOptions_addsHooksToEvalRunner() {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final boolean[] beforeCalled = {false, false};
+        final boolean[] afterCalled = {false, false};
+        final boolean[] finallyCalled = {false, false};
+        final boolean[] errorCalled = {false, false};
+
+        List<EvalHook> hooks = new ArrayList<>();
+        hooks.add(new EvalHook<String>() {
+            @Override
+            public Optional<HookContext<String>> before(HookContext<String> ctx) {
+                beforeCalled[0] = true;
+                return Optional.empty();
+            }
+
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                afterCalled[0] = true;
+            }
+
+            @Override
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+                finallyCalled[0] = true;
+            }
+
+            @Override
+            public void error(HookContext<String> ctx, Throwable e) {
+                errorCalled[0] = true;
+            }
+        });
+        hooks.add(new EvalHook<String>() {
+            @Override
+            public Optional<HookContext<String>> before(HookContext<String> ctx) {
+                beforeCalled[1] = true;
+                return Optional.empty();
+            }
+
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                afterCalled[1] = true;
+            }
+
+            @Override
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+                finallyCalled[1] = true;
+            }
+
+            @Override
+            public void error(HookContext<String> ctx, Throwable e) {
+                errorCalled[1] = true;
+            }
+        });
+
+        DevCycleCloudOptions options = DevCycleCloudOptions.builder()
+                .hooks(hooks)
+                .build();
+
+        final String apiKey = String.format("server-%s", UUID.randomUUID());
+        DevCycleCloudClient client = new DevCycleCloudClient(apiKey, options);
+        WhiteBox.setInternalState(client, "api", apiInterface);
+
+        Variable<String> expected = Variable.<String>builder()
+                .key("test-string")
+                .value("test value")
+                .type(Variable.TypeEnum.STRING)
+                .isDefaulted(false)
+                .defaultValue("default string")
+                .build();
+
+        when(apiInterface.getVariableByKey(user, "test-string", false)).thenReturn(Calls.response(expected));
+
+        Variable<String> result = client.variable(user, "test-string", "default string");
+
+        Assert.assertEquals(expected, result);
+
+        Assert.assertTrue(beforeCalled[0]);
+        Assert.assertTrue(afterCalled[0]);
+        Assert.assertTrue(finallyCalled[0]);
+        Assert.assertFalse(errorCalled[0]);
+
+        Assert.assertTrue(beforeCalled[1]);
+        Assert.assertTrue(afterCalled[1]);
+        Assert.assertTrue(finallyCalled[1]);
+        Assert.assertFalse(errorCalled[1]);
     }
 
     private void assertUserDefaultsCorrect(DevCycleUser user) {

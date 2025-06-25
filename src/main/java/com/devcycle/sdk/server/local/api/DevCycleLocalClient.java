@@ -60,7 +60,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
         } catch (Exception e) {
             DevCycleLogger.error("Error creating event queue due to error: " + e.getMessage());
         }
-        this.evalHooksRunner = new EvalHooksRunner();
+        this.evalHooksRunner = new EvalHooksRunner(dvcOptions.getHooks());
     }
 
     /**
