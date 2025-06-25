@@ -3,10 +3,14 @@ package com.devcycle.sdk.server.local.model;
 import com.devcycle.sdk.server.common.api.IRestOptions;
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.devcycle.sdk.server.common.logging.IDevCycleLogger;
+import com.devcycle.sdk.server.common.model.EvalHook;
 import com.devcycle.sdk.server.common.model.IDevCycleOptions;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 public class DevCycleLocalOptions implements IDevCycleOptions {
@@ -41,6 +45,8 @@ public class DevCycleLocalOptions implements IDevCycleOptions {
     private boolean disableCustomEventLogging = false;
     @JsonIgnore
     private IRestOptions restOptions = null;
+    @JsonIgnore
+    private List<EvalHook> hooks = new ArrayList<>();
 
     @Builder()
     public DevCycleLocalOptions(
@@ -60,7 +66,8 @@ public class DevCycleLocalOptions implements IDevCycleOptions {
             IRestOptions restOptions,
             @Deprecated 
             boolean enableBetaRealtimeUpdates,
-            boolean disableRealtimeUpdates
+            boolean disableRealtimeUpdates,
+            List<EvalHook> hooks
     ) {
         this.configRequestTimeoutMs = configRequestTimeoutMs > 0 ? configRequestTimeoutMs : this.configRequestTimeoutMs;
         this.configPollingIntervalMS = getConfigPollingIntervalMS(configPollingIntervalMs, configPollingIntervalMS);
@@ -76,6 +83,7 @@ public class DevCycleLocalOptions implements IDevCycleOptions {
         this.restOptions = restOptions;
         this.enableBetaRealtimeUpdates = enableBetaRealtimeUpdates;
         this.disableRealtimeUpdates = disableRealtimeUpdates;
+        this.hooks = hooks;
 
         if (this.flushEventQueueSize >= this.maxEventQueueSize) {
             DevCycleLogger.warning("flushEventQueueSize: " + this.flushEventQueueSize + " must be smaller than maxEventQueueSize: " + this.maxEventQueueSize);

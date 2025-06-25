@@ -1,11 +1,14 @@
 package com.devcycle.sdk.server.local;
 
+import com.devcycle.sdk.server.cloud.api.DevCycleCloudClient;
+import com.devcycle.sdk.server.cloud.model.DevCycleCloudOptions;
 import com.devcycle.sdk.server.common.api.IRestOptions;
 import com.devcycle.sdk.server.common.exception.DevCycleException;
 import com.devcycle.sdk.server.common.logging.IDevCycleLogger;
 import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.helpers.LocalConfigServer;
 import com.devcycle.sdk.server.helpers.TestDataFixtures;
+import com.devcycle.sdk.server.helpers.WhiteBox;
 import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
 import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
 import org.junit.AfterClass;
@@ -15,6 +18,7 @@ import org.junit.Test;
 import org.junit.After;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
+import retrofit2.mock.Calls;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocketFactory;
@@ -24,6 +28,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.*;
+
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DevCycleLocalClientTest {
@@ -90,17 +97,7 @@ public class DevCycleLocalClientTest {
         client = createClient(TestDataFixtures.SmallConfig());
     }
 
-    private static DevCycleLocalClient createClient(String config) {
-        localConfigServer.setConfigData(config);
-
-        DevCycleLocalOptions options = DevCycleLocalOptions.builder()
-                .configCdnBaseUrl(localConfigServer.getHostRootURL())
-                .configPollingIntervalMS(60000)
-                .customLogger(testLoggingWrapper)
-                .restOptions(restOptions)
-                .build();
-
-        DevCycleLocalClient client = new DevCycleLocalClient(apiKey, options);
+    private static void waitForClient(DevCycleLocalClient client) {
         try {
             int loops = 0;
             while (!client.isInitialized()) {
@@ -115,6 +112,21 @@ public class DevCycleLocalClientTest {
         } catch (InterruptedException e) {
             // no-op
         }
+    }
+
+    private static DevCycleLocalClient createClient(String config) {
+        localConfigServer.setConfigData(config);
+
+        DevCycleLocalOptions options = DevCycleLocalOptions.builder()
+                .configCdnBaseUrl(localConfigServer.getHostRootURL())
+                .configPollingIntervalMS(60000)
+                .customLogger(testLoggingWrapper)
+                .restOptions(restOptions)
+                .build();
+
+        DevCycleLocalClient client = new DevCycleLocalClient(apiKey, options);
+
+        waitForClient(client);
         return client;
     }
 
@@ -842,6 +854,98 @@ public class DevCycleLocalClientTest {
         Assert.assertFalse(afterCalled[0]);
         Assert.assertTrue(errorCalled[0]);
         Assert.assertTrue(finallyCalled[0]);
+    }
+
+    @Test
+    public void client_withHooksInOptions_addsHooksToEvalRunner() {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final boolean[] beforeCalled = {false, false};
+        final boolean[] afterCalled = {false, false};
+        final boolean[] finallyCalled = {false, false};
+        final boolean[] errorCalled = {false, false};
+
+        List<EvalHook> hooks = new ArrayList<>();
+        hooks.add(new EvalHook<String>() {
+            @Override
+            public Optional<HookContext<String>> before(HookContext<String> ctx) {
+                beforeCalled[0] = true;
+                return Optional.empty();
+            }
+
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                afterCalled[0] = true;
+            }
+
+            @Override
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+                finallyCalled[0] = true;
+            }
+
+            @Override
+            public void error(HookContext<String> ctx, Throwable e) {
+                errorCalled[0] = true;
+            }
+        });
+        hooks.add(new EvalHook<String>() {
+            @Override
+            public Optional<HookContext<String>> before(HookContext<String> ctx) {
+                beforeCalled[1] = true;
+                return Optional.empty();
+            }
+
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                afterCalled[1] = true;
+            }
+
+            @Override
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+                finallyCalled[1] = true;
+            }
+
+            @Override
+            public void error(HookContext<String> ctx, Throwable e) {
+                errorCalled[1] = true;
+            }
+        });
+
+        DevCycleLocalOptions options = DevCycleLocalOptions.builder()
+                .configCdnBaseUrl(localConfigServer.getHostRootURL())
+                .configPollingIntervalMS(60000)
+                .customLogger(testLoggingWrapper)
+                .restOptions(restOptions)
+                .hooks(hooks)
+                .build();
+        localConfigServer.setConfigData(TestDataFixtures.SmallConfig());
+
+        DevCycleLocalClient client = new DevCycleLocalClient(apiKey, options);
+        waitForClient(client);
+
+        Variable<String> expected = Variable.<String>builder()
+                .key("string-var")
+                .value("variationOn")
+                .type(Variable.TypeEnum.STRING)
+                .isDefaulted(false)
+                .defaultValue("default string")
+                .build();
+
+        Variable<String> result = client.variable(user, "string-var", "default string");
+
+        Assert.assertEquals(expected, result);
+
+        Assert.assertTrue(beforeCalled[0]);
+        Assert.assertTrue(afterCalled[0]);
+        Assert.assertTrue(finallyCalled[0]);
+        Assert.assertFalse(errorCalled[0]);
+
+        Assert.assertTrue(beforeCalled[1]);
+        Assert.assertTrue(afterCalled[1]);
+        Assert.assertTrue(finallyCalled[1]);
+        Assert.assertFalse(errorCalled[1]);
     }
 
     @After

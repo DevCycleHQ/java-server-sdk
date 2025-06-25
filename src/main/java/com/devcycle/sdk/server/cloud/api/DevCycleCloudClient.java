@@ -51,7 +51,7 @@ public final class DevCycleCloudClient implements IDevCycleClient {
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
         this.openFeatureProvider = new DevCycleProvider(this);
-        this.evalHooksRunner = new EvalHooksRunner();
+        this.evalHooksRunner = new EvalHooksRunner(dvcOptions.getHooks());
     }
 
     /**
