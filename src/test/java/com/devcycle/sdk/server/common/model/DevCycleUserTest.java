@@ -71,6 +71,112 @@ public class DevCycleUserTest {
     }
 
     @Test
+    public void testCreateUserWithUserId() {
+        Map<String, Value> apiAttrs = new LinkedHashMap();
+        apiAttrs.put("userId", new Value("test-userId-123"));
+
+        // ensure fallback to userId when target key and user_id are null
+        EvaluationContext ctx = new MutableContext(null, apiAttrs);
+        DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
+        Assert.assertEquals(user.getUserId(), "test-userId-123");
+
+        // ensure fallback to userId when target key and user_id are empty
+        ctx = new MutableContext("", apiAttrs);
+        user = DevCycleUser.fromEvaluationContext(ctx);
+        Assert.assertEquals(user.getUserId(), "test-userId-123");
+    }
+
+    @Test
+    public void testUserIdPriorityOrder() {
+        Map<String, Value> apiAttrs = new LinkedHashMap();
+        apiAttrs.put("user_id", new Value("user_id_value"));
+        apiAttrs.put("userId", new Value("userId_value"));
+
+        // Test priority: targetingKey > user_id > userId
+        // When all three are present, targetingKey should win
+        EvaluationContext ctx = new MutableContext("targetingKey_value", apiAttrs);
+        DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
+        Assert.assertEquals(user.getUserId(), "targetingKey_value");
+
+        // When targetingKey is null, user_id should win over userId
+        ctx = new MutableContext(null, apiAttrs);
+        user = DevCycleUser.fromEvaluationContext(ctx);
+        Assert.assertEquals(user.getUserId(), "user_id_value");
+
+        // When targetingKey is empty, user_id should win over userId
+        ctx = new MutableContext("", apiAttrs);
+        user = DevCycleUser.fromEvaluationContext(ctx);
+        Assert.assertEquals(user.getUserId(), "user_id_value");
+
+        // When only userId is present, it should be used
+        Map<String, Value> userIdOnlyAttrs = new LinkedHashMap();
+        userIdOnlyAttrs.put("userId", new Value("userId_only_value"));
+        ctx = new MutableContext(null, userIdOnlyAttrs);
+        user = DevCycleUser.fromEvaluationContext(ctx);
+        Assert.assertEquals(user.getUserId(), "userId_only_value");
+    }
+
+    @Test
+    public void testUserIdExcludedFromCustomData() {
+        Map<String, Value> apiAttrs = new LinkedHashMap();
+        apiAttrs.put("userId", new Value("test-userId-123"));
+        apiAttrs.put("customField", new Value("customValue"));
+
+        // When userId is used as the user ID, it should be excluded from custom data
+        EvaluationContext ctx = new MutableContext(null, apiAttrs);
+        DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
+        
+        Assert.assertEquals(user.getUserId(), "test-userId-123");
+        Assert.assertNotNull(user.getCustomData());
+        Assert.assertEquals(user.getCustomData().size(), 1);
+        Assert.assertEquals(user.getCustomData().get("customField"), "customValue");
+        Assert.assertFalse(user.getCustomData().containsKey("userId"));
+    }
+
+    @Test
+    public void testUserIdInCustomDataWhenNotUsedAsUserId() {
+        Map<String, Value> apiAttrs = new LinkedHashMap();
+        apiAttrs.put("user_id", new Value("user_id_value"));
+        apiAttrs.put("userId", new Value("userId_value"));
+        apiAttrs.put("customField", new Value("customValue"));
+
+        // When user_id takes precedence, userId should be included in custom data
+        EvaluationContext ctx = new MutableContext(null, apiAttrs);
+        DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
+        
+        Assert.assertEquals(user.getUserId(), "user_id_value");
+        Assert.assertNotNull(user.getCustomData());
+        Assert.assertEquals(user.getCustomData().size(), 2);
+        Assert.assertEquals(user.getCustomData().get("customField"), "customValue");
+        Assert.assertEquals(user.getCustomData().get("userId"), "userId_value");
+        Assert.assertFalse(user.getCustomData().containsKey("user_id"));
+    }
+
+    @Test
+    public void testInvalidUserIdTypes() {
+        Map<String, Value> apiAttrs = new LinkedHashMap();
+        
+        // Test with non-string userId value - should be ignored
+        apiAttrs.put("userId", new Value(123));
+        EvaluationContext ctx = new MutableContext(null, apiAttrs);
+        
+        try {
+            DevCycleUser.fromEvaluationContext(ctx);
+            Assert.fail("Expected TargetingKeyMissingError");
+        } catch (TargetingKeyMissingError e) {
+            // expected
+        }
+
+        // Test with non-string user_id value but valid userId string - should use userId
+        apiAttrs.put("user_id", new Value(456));
+        apiAttrs.put("userId", new Value("valid-userId"));
+        ctx = new MutableContext(null, apiAttrs);
+        
+        DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
+        Assert.assertEquals(user.getUserId(), "valid-userId");
+    }
+
+    @Test
     public void testCreateUserWithAttributes() {
         Map<String, Value> apiAttrs = new LinkedHashMap();
         apiAttrs.put("email", new Value("test-user@domain.com"));

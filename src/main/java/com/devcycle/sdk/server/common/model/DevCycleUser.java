@@ -139,15 +139,21 @@ public class DevCycleUser {
      *
      * @param ctx A context to load a targeting key and user data from
      * @return An initialized DevCycleUser with data from the context
-     * @throws TargetingKeyMissingError if the targeting key or user_id attribute is not set
+     * @throws TargetingKeyMissingError if the targeting key, user_id, or userId attribute is not set
      */
     public static DevCycleUser fromEvaluationContext(EvaluationContext ctx) {
         String userId = "";
+        String userIdSource = null; // Track which field was used for user ID
 
         if (ctx != null && ctx.getTargetingKey() != null && !ctx.getTargetingKey().isEmpty()) {
             userId = ctx.getTargetingKey();
-        } else if (ctx != null && ctx.getValue("user_id") != null) {
+            userIdSource = "targetingKey";
+        } else if (ctx != null && ctx.getValue("user_id") != null && ctx.getValue("user_id").isString()) {
             userId = ctx.getValue("user_id").asString();
+            userIdSource = "user_id";
+        } else if (ctx != null && ctx.getValue("userId") != null && ctx.getValue("userId").isString()) {
+            userId = ctx.getValue("userId").asString();
+            userIdSource = "userId";
         }
 
         if (userId == null || userId.isEmpty()) {
@@ -160,7 +166,8 @@ public class DevCycleUser {
         Map<String, Object> privateCustomData = new LinkedHashMap<>();
 
         for (String key : ctx.keySet()) {
-            if (key.equals("user_id") || key.equals("targetingKey")) {
+            if (key.equals("user_id") || key.equals("targetingKey") || 
+                (key.equals("userId") && "userId".equals(userIdSource))) {
                 continue;
             }
 
