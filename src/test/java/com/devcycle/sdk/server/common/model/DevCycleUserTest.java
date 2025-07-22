@@ -134,22 +134,23 @@ public class DevCycleUserTest {
     }
 
     @Test
-    public void testUserIdInCustomDataWhenNotUsedAsUserId() {
+    public void testAllUserIdFieldsExcludedFromCustomData() {
         Map<String, Value> apiAttrs = new LinkedHashMap();
         apiAttrs.put("user_id", new Value("user_id_value"));
         apiAttrs.put("userId", new Value("userId_value"));
         apiAttrs.put("customField", new Value("customValue"));
 
-        // When user_id takes precedence, userId should be included in custom data
+        // All user ID fields should be excluded from custom data regardless of which is used
         EvaluationContext ctx = new MutableContext(null, apiAttrs);
         DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
         
         Assert.assertEquals(user.getUserId(), "user_id_value");
         Assert.assertNotNull(user.getCustomData());
-        Assert.assertEquals(user.getCustomData().size(), 2);
+        Assert.assertEquals(user.getCustomData().size(), 1);
         Assert.assertEquals(user.getCustomData().get("customField"), "customValue");
-        Assert.assertEquals(user.getCustomData().get("userId"), "userId_value");
+        Assert.assertFalse(user.getCustomData().containsKey("userId"));
         Assert.assertFalse(user.getCustomData().containsKey("user_id"));
+        Assert.assertFalse(user.getCustomData().containsKey("targetingKey"));
     }
 
     @Test

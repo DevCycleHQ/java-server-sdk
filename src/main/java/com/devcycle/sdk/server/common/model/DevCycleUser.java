@@ -143,17 +143,13 @@ public class DevCycleUser {
      */
     public static DevCycleUser fromEvaluationContext(EvaluationContext ctx) {
         String userId = "";
-        String userIdSource = null; // Track which field was used for user ID
 
         if (ctx != null && ctx.getTargetingKey() != null && !ctx.getTargetingKey().isEmpty()) {
             userId = ctx.getTargetingKey();
-            userIdSource = "targetingKey";
         } else if (ctx != null && ctx.getValue("user_id") != null && ctx.getValue("user_id").isString()) {
             userId = ctx.getValue("user_id").asString();
-            userIdSource = "user_id";
         } else if (ctx != null && ctx.getValue("userId") != null && ctx.getValue("userId").isString()) {
             userId = ctx.getValue("userId").asString();
-            userIdSource = "userId";
         }
 
         if (userId == null || userId.isEmpty()) {
@@ -166,8 +162,7 @@ public class DevCycleUser {
         Map<String, Object> privateCustomData = new LinkedHashMap<>();
 
         for (String key : ctx.keySet()) {
-            if (key.equals("user_id") || key.equals("targetingKey") || 
-                (key.equals("userId") && "userId".equals(userIdSource))) {
+            if (key.equals("user_id") || key.equals("targetingKey") || key.equals("userId")) {
                 continue;
             }
 
