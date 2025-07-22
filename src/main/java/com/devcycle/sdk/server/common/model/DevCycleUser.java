@@ -139,7 +139,7 @@ public class DevCycleUser {
      *
      * @param ctx A context to load a targeting key and user data from
      * @return An initialized DevCycleUser with data from the context
-     * @throws TargetingKeyMissingError if the targeting key, user_id, or userId attribute is not set
+     * @throws TargetingKeyMissingError if none of the targeting key, user_id, or userId attributes are set or valid
      */
     public static DevCycleUser fromEvaluationContext(EvaluationContext ctx) {
         String userId = "";
