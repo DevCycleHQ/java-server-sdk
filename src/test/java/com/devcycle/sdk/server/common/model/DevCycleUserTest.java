@@ -71,7 +71,7 @@ public class DevCycleUserTest {
     }
 
     @Test
-    public void testCreateUserWithUserId() {
+    public void testFromEvaluationContextWithUserId() {
         Map<String, Value> apiAttrs = new LinkedHashMap();
         apiAttrs.put("userId", new Value("test-userId-123"));
 
@@ -87,7 +87,7 @@ public class DevCycleUserTest {
     }
 
     @Test
-    public void testUserIdPriorityOrder() {
+    public void testFromEvaluationContextUserIdPriorityOrder() {
         Map<String, Value> apiAttrs = new LinkedHashMap();
         apiAttrs.put("user_id", new Value("user_id_value"));
         apiAttrs.put("userId", new Value("userId_value"));
@@ -117,7 +117,7 @@ public class DevCycleUserTest {
     }
 
     @Test
-    public void testUserIdExcludedFromCustomData() {
+    public void testFromEvaluationContextUserIdExcludedFromCustomData() {
         Map<String, Value> apiAttrs = new LinkedHashMap();
         apiAttrs.put("userId", new Value("test-userId-123"));
         apiAttrs.put("customField", new Value("customValue"));
@@ -134,7 +134,7 @@ public class DevCycleUserTest {
     }
 
     @Test
-    public void testAllUserIdFieldsExcludedFromCustomData() {
+    public void testFromEvaluationContextAllUserIdFieldsExcludedFromCustomData() {
         Map<String, Value> apiAttrs = new LinkedHashMap();
         apiAttrs.put("user_id", new Value("user_id_value"));
         apiAttrs.put("userId", new Value("userId_value"));
@@ -154,7 +154,7 @@ public class DevCycleUserTest {
     }
 
     @Test
-    public void testInvalidUserIdTypes() {
+    public void testFromEvaluationContextInvalidUserIdTypes() {
         Map<String, Value> apiAttrs = new LinkedHashMap();
         
         // Test with non-string userId value - should be ignored
