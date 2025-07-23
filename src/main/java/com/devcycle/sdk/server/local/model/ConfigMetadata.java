@@ -13,20 +13,4 @@ public class ConfigMetadata {
         this.project = new ProjectMetadata(project._id, project.key);
         this.environment = new EnvironmentMetadata(environment._id, environment.key);
     }
-
-    public String getConfigETag() {
-        return configETag;
-    }
-
-    public String getConfigLastModified() {
-        return configLastModified;
-    }
-
-    public ProjectMetadata getProject() {
-        return project;
-    }
-
-    public EnvironmentMetadata getEnvironment() {
-        return environment;
-    }
 }

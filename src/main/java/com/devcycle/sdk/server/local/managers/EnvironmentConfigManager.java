@@ -88,8 +88,8 @@ public final class EnvironmentConfigManager {
         String etag = null;
         String lastModified = null;
         if (this.configMetadata != null) {
-            etag = this.configMetadata.getConfigETag();
-            lastModified = this.configMetadata.getConfigLastModified();
+            etag = this.configMetadata.configETag;
+            lastModified = this.configMetadata.configLastModified;
         }
 
         Call<ProjectConfig> config = this.configApiClient.getConfig(this.sdkKey, etag, lastModified);

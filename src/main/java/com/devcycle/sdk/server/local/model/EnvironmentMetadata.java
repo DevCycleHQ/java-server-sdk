@@ -8,12 +8,4 @@ public class EnvironmentMetadata {
         this.id = id;
         this.key = key;
     }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getKey() {
-        return key;
-    }
 }
