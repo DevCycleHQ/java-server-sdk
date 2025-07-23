@@ -194,7 +194,9 @@ public final class DevCycleLocalClient implements IDevCycleClient {
             if (!(e instanceof BeforeHookError)) {
                 DevCycleLogger.error("Unable to evaluate Variable " + key + " due to error: " + e, e);
             }
-            evalHooksRunner.executeError(reversedHooks, hookContext, e);
+            // For BeforeHookError, pass the original cause to error hooks, not the wrapper
+            Throwable errorToPass = (e instanceof BeforeHookError && e.getCause() != null) ? e.getCause() : e;
+            evalHooksRunner.executeError(reversedHooks, hookContext, errorToPass);
         } finally {
             if (variable == null) {
                 variable = defaultVariable;
