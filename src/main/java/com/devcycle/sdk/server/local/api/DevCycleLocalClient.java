@@ -9,6 +9,7 @@ import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
 import com.devcycle.sdk.server.local.managers.EnvironmentConfigManager;
 import com.devcycle.sdk.server.local.managers.EventQueueManager;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
+import com.devcycle.sdk.server.local.model.ConfigMetadata;
 import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
 import com.devcycle.sdk.server.local.protobuf.SDKVariable_PB;
 import com.devcycle.sdk.server.local.protobuf.VariableForUserParams_PB;
@@ -28,6 +29,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
     private final EnvironmentConfigManager configManager;
     private EventQueueManager eventQueueManager;
     private final String clientUUID;
+    // raw type here is okay because we're using a generic type for the variable
     private EvalHooksRunner evalHooksRunner;
 
     public DevCycleLocalClient(String sdkKey) {
@@ -156,7 +158,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
                 .setShouldTrackEvent(true)
                 .build();
 
-        HookContext<T> hookContext = new HookContext<T>(user, key, defaultValue);
+        HookContext<T> hookContext = new HookContext<T>(user, key, defaultValue, getMetadata());
         Variable<T> variable = null;
         ArrayList<EvalHook<T>> hooks = new ArrayList<EvalHook<T>>(evalHooksRunner.getHooks());
         ArrayList<EvalHook<T>> reversedHooks = new ArrayList<EvalHook<T>>(evalHooksRunner.getHooks());
@@ -198,8 +200,12 @@ public final class DevCycleLocalClient implements IDevCycleClient {
                 variable = defaultVariable;
             }
             evalHooksRunner.executeFinally(reversedHooks, hookContext, Optional.of(variable));
-            return variable;
         }
+        return variable;
+    }
+
+    public ConfigMetadata getMetadata() {
+        return configManager.getConfigMetadata();
     }
 
 

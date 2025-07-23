@@ -844,4 +844,161 @@ public class DevCycleCloudClientTest {
         Assert.assertEquals(PlatformData.SdkTypeEnum.SERVER, user.getSdkType());
         Assert.assertNotNull(user.getPlatformVersion());
     }
+
+    @Test
+    public void variable_withEvalHooks_metadataIsNullInCloudClient() {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final boolean[] metadataChecked = {false};
+
+        api.addHook(new EvalHook<Boolean>() {
+            @Override
+            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable) {
+                // Cloud client should have null metadata since it doesn't manage local config
+                Assert.assertNull("Cloud client metadata should be null", ctx.getMetadata());
+                metadataChecked[0] = true;
+            }
+        });
+
+        Variable<Boolean> expected = Variable.<Boolean>builder()
+                .key("test-true")
+                .value(true)
+                .type(Variable.TypeEnum.BOOLEAN)
+                .isDefaulted(false)
+                .defaultValue(false)
+                .build();
+
+        when(apiInterface.getVariableByKey(user, "test-true", dvcOptions.getEnableEdgeDB())).thenReturn(Calls.response(expected));
+
+        Variable<Boolean> result = api.variable(user, "test-true", false);
+
+        Assert.assertTrue("Metadata check should have been executed", metadataChecked[0]);
+        Assert.assertEquals(expected, result);
+    }
+
+    @Test
+    public void variable_withEvalHooks_metadataConsistentlyNullAcrossHooks() {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final Boolean[] metadataWasNull = {null, null, null}; // before, after, finally
+
+        api.addHook(new EvalHook<Boolean>() {
+            @Override
+            public Optional<HookContext<Boolean>> before(HookContext<Boolean> ctx) {
+                metadataWasNull[0] = (ctx.getMetadata() == null);
+                return Optional.empty();
+            }
+
+            @Override
+            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable) {
+                metadataWasNull[1] = (ctx.getMetadata() == null);
+            }
+
+            @Override
+            public void onFinally(HookContext<Boolean> ctx, Optional<Variable<Boolean>> variable) {
+                metadataWasNull[2] = (ctx.getMetadata() == null);
+            }
+        });
+
+        Variable<Boolean> expected = Variable.<Boolean>builder()
+                .key("test-true")
+                .value(true)
+                .type(Variable.TypeEnum.BOOLEAN)
+                .isDefaulted(false)
+                .defaultValue(false)
+                .build();
+
+        when(apiInterface.getVariableByKey(user, "test-true", dvcOptions.getEnableEdgeDB())).thenReturn(Calls.response(expected));
+
+        Variable<Boolean> result = api.variable(user, "test-true", false);
+        
+        // Verify all hook stages received null metadata consistently
+        Assert.assertTrue("Before hook should have null metadata", metadataWasNull[0]);
+        Assert.assertTrue("After hook should have null metadata", metadataWasNull[1]);
+        Assert.assertTrue("Finally hook should have null metadata", metadataWasNull[2]);
+    }
+
+    @Test
+    public void variable_withEvalHooks_metadataIsNullInErrorHook() {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final boolean[] metadataCheckedInError = {false};
+
+        api.addHook(new EvalHook<Boolean>() {
+            @Override
+            public Optional<HookContext<Boolean>> before(HookContext<Boolean> ctx) {
+                throw new RuntimeException("Test error to trigger error hook");
+            }
+
+            @Override
+            public void error(HookContext<Boolean> ctx, Throwable error) {
+                // Verify metadata is null even in error hook for cloud client
+                Assert.assertNull("Cloud client metadata should be null in error hook", ctx.getMetadata());
+                metadataCheckedInError[0] = true;
+            }
+        });
+
+        Variable<Boolean> expected = Variable.<Boolean>builder()
+                .key("test-true")
+                .value(true)
+                .type(Variable.TypeEnum.BOOLEAN)
+                .isDefaulted(false)
+                .defaultValue(false)
+                .build();
+
+        when(apiInterface.getVariableByKey(user, "test-true", dvcOptions.getEnableEdgeDB())).thenReturn(Calls.response(expected));
+
+        Variable<Boolean> result = api.variable(user, "test-true", false);
+        
+        Assert.assertTrue("Metadata should have been checked in error hook", metadataCheckedInError[0]);
+        Assert.assertNotNull("Variable should not be null even after error", result);
+    }
+
+    @Test
+    public void variable_withMultipleHooks_allReceiveNullMetadata() {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final boolean[] metadataChecked = {false, false}; // Two hooks
+
+        // First hook
+        api.addHook(new EvalHook<Boolean>() {
+            @Override
+            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable) {
+                Assert.assertNull("First hook should receive null metadata in cloud client", ctx.getMetadata());
+                metadataChecked[0] = true;
+            }
+        });
+
+        // Second hook
+        api.addHook(new EvalHook<Boolean>() {
+            @Override
+            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable) {
+                Assert.assertNull("Second hook should receive null metadata in cloud client", ctx.getMetadata());
+                metadataChecked[1] = true;
+            }
+        });
+
+        Variable<Boolean> expected = Variable.<Boolean>builder()
+                .key("test-true")
+                .value(true)
+                .type(Variable.TypeEnum.BOOLEAN)
+                .isDefaulted(false)
+                .defaultValue(false)
+                .build();
+
+        when(apiInterface.getVariableByKey(user, "test-true", dvcOptions.getEnableEdgeDB())).thenReturn(Calls.response(expected));
+
+        Variable<Boolean> result = api.variable(user, "test-true", false);
+        
+        Assert.assertTrue("First hook should have checked metadata", metadataChecked[0]);
+        Assert.assertTrue("Second hook should have checked metadata", metadataChecked[1]);
+    }
 }
