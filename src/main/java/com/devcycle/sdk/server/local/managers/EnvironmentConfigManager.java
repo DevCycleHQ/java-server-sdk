@@ -85,9 +85,13 @@ public final class EnvironmentConfigManager {
 
     private ProjectConfig getConfig() throws DevCycleException {        
         // Handle initial request where configMetadata might be null
-        String etag = (this.configMetadata != null) ? this.configMetadata.configETag : null;
-        String lastModified = (this.configMetadata != null) ? this.configMetadata.configLastModified : null;
-        
+        String etag = null;
+        String lastModified = null;
+        if (this.configMetadata != null) {
+            etag = this.configMetadata.getConfigETag();
+            lastModified = this.configMetadata.getConfigLastModified();
+        }
+
         Call<ProjectConfig> config = this.configApiClient.getConfig(this.sdkKey, etag, lastModified);
         ProjectConfig fetchedConfig = getResponseWithRetries(config, 1);
         this.config = fetchedConfig;
@@ -227,7 +231,7 @@ public final class EnvironmentConfigManager {
                 if (this.config != null) {
                     String currentConfigInfo = (this.configMetadata != null) ? 
                         " etag " + this.configMetadata.configETag + " last-modified: " + this.configMetadata.configLastModified :
-                        " (no metadata available)";
+                        "";
                     DevCycleLogger.error("Unable to parse config with etag: " + currentETag + ". Using cache," + currentConfigInfo);
                     return this.config;
                 } else {

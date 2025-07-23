@@ -40,8 +40,8 @@ public class LocalExample {
             @Override
             public Optional<HookContext<String>> before(HookContext<String> ctx) {
                 System.out.println("before");
-                System.out.println(ctx.getMetadata().project.key);
-                System.out.println(ctx.getMetadata().environment.key);
+                System.out.println(ctx.getMetadata().getProject().getKey());
+                System.out.println(ctx.getMetadata().getEnvironment().getKey());
                 return Optional.of(ctx);
             }
 
@@ -49,15 +49,15 @@ public class LocalExample {
             public void after(HookContext<String> ctx, Variable<String> variable) {
                 System.out.println("after");
                 System.out.println(variable.getValue());
-                System.out.println(ctx.getMetadata().project.key);
-                System.out.println(ctx.getMetadata().environment.key);
+                System.out.println(ctx.getMetadata().getProject().getKey());
+                System.out.println(ctx.getMetadata().getEnvironment().getKey());
             }
 
             @Override
             public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
                 System.out.println("finally");
-                System.out.println(ctx.getMetadata().project.key);
-                System.out.println(ctx.getMetadata().environment.key);
+                System.out.println(ctx.getMetadata().getProject().getKey());
+                System.out.println(ctx.getMetadata().getEnvironment().getKey());
             }
         });
 
