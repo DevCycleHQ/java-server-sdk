@@ -112,6 +112,34 @@ public class DevCycleCloudClientTest {
     }
 
     @Test
+    public void getVariableTypeMismatchTest() {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        String key = "type-mismatch";
+
+        when(apiInterface.getVariableByKey(user, key, dvcOptions.getEnableEdgeDB())).thenReturn(dvcApiMock.getVariableByKey(user, key, dvcOptions.getEnableEdgeDB()));
+
+        Variable<Boolean> variable;
+        try {
+            variable = api.variable(user, key, true);
+
+            assertUserDefaultsCorrect(user);
+
+            Assert.assertTrue(variable.getValue());
+            Assert.assertTrue(variable.getIsDefaulted());
+
+            EvalReason varEval = variable.getEval();
+            Assert.assertEquals("DEFAULT", varEval.getReason());
+            Assert.assertEquals("Variable Type Mismatch", varEval.getDetails());
+            Assert.assertNull(varEval.getTargetId());
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
     public void getVariableValueByKeyTest() {
         DevCycleUser user = DevCycleUser.builder()
                 .userId("j_test")
@@ -145,6 +173,14 @@ public class DevCycleCloudClientTest {
         assertUserDefaultsCorrect(user);
 
         Assert.assertNotNull(variables);
+        Assert.assertEquals(4, variables.size());
+        BaseVariable testNumber = variables.get("test-number");
+        Assert.assertNotNull(testNumber);
+        Assert.assertEquals(100, (int) testNumber.getValue());
+        Assert.assertEquals(Variable.TypeEnum.NUMBER, testNumber.getType());
+        Assert.assertEquals("SPLIT", testNumber.getEval().getReason());
+        Assert.assertEquals("Random Distribution | User Id", testNumber.getEval().getDetails());
+        Assert.assertEquals("test_cloud_target_id", testNumber.getEval().getTargetId());
     }
 
     @Test

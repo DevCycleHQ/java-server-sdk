@@ -57,37 +57,51 @@ public final class TestResponse {
                 .key("test-false")
                 .value(false)
                 .type(Variable.TypeEnum.BOOLEAN)
+                .eval(new EvalReason("SPLIT", "Random Distribution | User Id", "test_cloud_target_id"))
                 .build());
         variables.put("test-true", BaseVariable.builder()
                 .id(UUID.randomUUID().toString())
                 .key("test-true")
                 .value(true)
                 .type(Variable.TypeEnum.BOOLEAN)
+                .eval(new EvalReason("SPLIT", "Random Distribution | User Id", "test_cloud_target_id"))
                 .build());
         variables.put("test-number", BaseVariable.builder()
                 .id(UUID.randomUUID().toString())
                 .key("test-number")
                 .value(100)
                 .type(Variable.TypeEnum.NUMBER)
+                .eval(new EvalReason("SPLIT", "Random Distribution | User Id", "test_cloud_target_id"))
                 .build());
         variables.put("test-json", BaseVariable.builder()
                 .id(UUID.randomUUID().toString())
                 .key("test-json")
                 .value("{'some':'json''}")
                 .type(Variable.TypeEnum.JSON)
+                .eval(new EvalReason("SPLIT", "Random Distribution | User Id", "test_cloud_target_id"))
                 .build());
 
         return Calls.response(variables);
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> Call<Variable> getVariableByKey() {
-        Variable<T> variable = (Variable<T>) Variable.builder()
+    public static <T> Call<Variable> getVariableByKey(String key) {
+        Variable<T> variable = null;
+        if (key.equals("type-mismatch")) {
+            variable = (Variable<T>) Variable.builder()
+                .key("type-mismatch")
+                .value(100)
+                .type(Variable.TypeEnum.NUMBER)
+                .eval(new EvalReason("TARGETING_MATCH", "All Users", "test_cloud_target_id"))
+                .build();
+        } else {
+                variable = (Variable<T>) Variable.builder()
                 .key("test-false")
                 .value(false)
                 .type(Variable.TypeEnum.BOOLEAN)
                 .eval(new EvalReason("TARGETING_MATCH", "All Users", "test_cloud_target_id"))
                 .build();
+        }
 
         return Calls.response(variable);
     }
