@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class LocalConfigServer {
     private final HttpServer server;
@@ -26,6 +28,11 @@ public class LocalConfigServer {
     }
 
     public void handleConfigRequest(HttpExchange exchange) throws IOException {
+        // Add required headers for ConfigMetadata creation
+        String currentTime = ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME);
+        exchange.getResponseHeaders().set("ETag", "\"test-etag-12345\"");
+        exchange.getResponseHeaders().set("Last-Modified", currentTime);
+        
         byte[] responseData = configData.getBytes(StandardCharsets.UTF_8);
         exchange.sendResponseHeaders(200, responseData.length);
         OutputStream outputStream = exchange.getResponseBody();

@@ -3,6 +3,7 @@ package com.devcycle.sdk.server.cloud.api;
 import com.devcycle.sdk.server.cloud.model.DevCycleCloudOptions;
 import com.devcycle.sdk.server.common.api.IDevCycleApi;
 import com.devcycle.sdk.server.common.api.IDevCycleClient;
+import com.devcycle.sdk.server.common.api.ObjectMapperUtils;
 import com.devcycle.sdk.server.common.exception.AfterHookError;
 import com.devcycle.sdk.server.common.exception.BeforeHookError;
 import com.devcycle.sdk.server.common.exception.DevCycleException;
@@ -10,7 +11,6 @@ import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.common.model.Variable.TypeEnum;
 import com.devcycle.sdk.server.openfeature.DevCycleProvider;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
@@ -23,7 +23,7 @@ import java.util.*;
 
 public final class DevCycleCloudClient implements IDevCycleClient {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperUtils.createDefaultObjectMapper();
     private final IDevCycleApi api;
     private final DevCycleCloudOptions dvcOptions;
     private final DevCycleProvider openFeatureProvider;
@@ -48,7 +48,6 @@ public final class DevCycleCloudClient implements IDevCycleClient {
 
         this.dvcOptions = options;
         api = new DevCycleCloudApiClient(sdkKey, options).initialize();
-        OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
         this.openFeatureProvider = new DevCycleProvider(this);
         this.evalHooksRunner = new EvalHooksRunner(dvcOptions.getHooks());
@@ -112,7 +111,7 @@ public final class DevCycleCloudClient implements IDevCycleClient {
 
         TypeEnum variableType = TypeEnum.fromClass(defaultValue.getClass());
         Variable<T> variable = null;
-        HookContext<T> context = new HookContext<T>(user, key, defaultValue);
+        HookContext<T> context = new HookContext<T>(user, key, defaultValue, null);
         ArrayList<EvalHook<T>> hooks = new ArrayList<EvalHook<T>>(evalHooksRunner.getHooks());
         ArrayList<EvalHook<T>> reversedHooks = new ArrayList<>(hooks);
         Collections.reverse(reversedHooks);

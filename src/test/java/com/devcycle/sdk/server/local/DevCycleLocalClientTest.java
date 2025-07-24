@@ -7,9 +7,12 @@ import com.devcycle.sdk.server.common.exception.DevCycleException;
 import com.devcycle.sdk.server.common.logging.IDevCycleLogger;
 import com.devcycle.sdk.server.common.model.*;
 import com.devcycle.sdk.server.helpers.LocalConfigServer;
+import com.devcycle.sdk.server.local.model.Project;
+import com.devcycle.sdk.server.local.model.Environment;
 import com.devcycle.sdk.server.helpers.TestDataFixtures;
 import com.devcycle.sdk.server.helpers.WhiteBox;
 import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
+import com.devcycle.sdk.server.local.model.ConfigMetadata;
 import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -957,5 +960,220 @@ public class DevCycleLocalClientTest {
         return DevCycleUser.builder()
                 .userId("j_test")
                 .build();
+    }
+
+    @Test
+    public void variable_withEvalHooks_metadataIsAccessibleInAfterHook() throws DevCycleException {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final boolean[] metadataChecked = {false};
+
+        client.addHook(new EvalHook<String>() {
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                // Verify metadata is accessible and properly populated
+                Assert.assertNotNull("Metadata should not be null", ctx.getMetadata());
+                
+                // Check that config metadata has the expected structure
+                ConfigMetadata metadata = ctx.getMetadata();
+                Assert.assertNotNull("Config ETag should not be null", metadata.configETag);
+                Assert.assertNotNull("Config last modified should not be null", metadata.configLastModified);
+                Assert.assertNotNull("Project metadata should not be null", metadata.project);
+                Assert.assertNotNull("Environment metadata should not be null", metadata.environment);
+                
+                // Verify basic metadata structure is present
+                Assert.assertFalse("Config ETag should not be empty", metadata.configETag.isEmpty());
+                Assert.assertFalse("Config last modified should not be empty", metadata.configLastModified.isEmpty());
+                
+                metadataChecked[0] = true;
+            }
+        });
+
+        Variable<String> result = client.variable(user, "string-var", "default string");
+        
+        Assert.assertTrue("Metadata check should have been executed", metadataChecked[0]);
+        Assert.assertNotNull("Variable should not be null", result);
+    }
+
+    @Test
+    public void variable_withEvalHooks_metadataConsistentAcrossHooks() throws DevCycleException {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final ConfigMetadata[] capturedMetadata = {null, null, null}; // before, after, finally
+
+        client.addHook(new EvalHook<String>() {
+            @Override
+            public Optional<HookContext<String>> before(HookContext<String> ctx) {
+                capturedMetadata[0] = ctx.getMetadata();
+                return Optional.empty();
+            }
+
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                capturedMetadata[1] = ctx.getMetadata();
+            }
+
+            @Override
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+                capturedMetadata[2] = ctx.getMetadata();
+            }
+        });
+
+        Variable<String> result = client.variable(user, "string-var", "default string");
+        
+        // Verify all hook stages received metadata
+        Assert.assertNotNull("Before hook should have metadata", capturedMetadata[0]);
+        Assert.assertNotNull("After hook should have metadata", capturedMetadata[1]);
+        Assert.assertNotNull("Finally hook should have metadata", capturedMetadata[2]);
+        
+        // Verify metadata is consistent across all hook stages
+        Assert.assertEquals("Before and after metadata should be the same", 
+                capturedMetadata[0].configETag, capturedMetadata[1].configETag);
+        Assert.assertEquals("Before and finally metadata should be the same", 
+                capturedMetadata[0].configETag, capturedMetadata[2].configETag);
+        Assert.assertEquals("Metadata timestamps should be consistent", 
+                capturedMetadata[0].configLastModified, capturedMetadata[1].configLastModified);
+    }
+
+    @Test
+    public void variable_withEvalHooks_metadataAccessibleInErrorHook() throws DevCycleException {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final boolean[] metadataCheckedInError = {false};
+
+        client.addHook(new EvalHook<String>() {
+            @Override
+            public Optional<HookContext<String>> before(HookContext<String> ctx) {
+                throw new RuntimeException("Test error to trigger error hook");
+            }
+
+            @Override
+            public void error(HookContext<String> ctx, Throwable error) {
+                // Verify metadata is accessible even in error hook
+                Assert.assertNotNull("Metadata should be accessible in error hook", ctx.getMetadata());
+                ConfigMetadata metadata = ctx.getMetadata();
+                Assert.assertNotNull("Config ETag should not be null in error hook", metadata.configETag);
+                Assert.assertNotNull("Config last modified should not be null in error hook", metadata.configLastModified);
+                Assert.assertNotNull("Project metadata should not be null in error hook", metadata.project);
+                Assert.assertNotNull("Environment metadata should not be null in error hook", metadata.environment);
+                metadataCheckedInError[0] = true;
+            }
+        });
+
+        Variable<String> result = client.variable(user, "string-var", "default string");
+        
+        Assert.assertTrue("Metadata should have been checked in error hook", metadataCheckedInError[0]);
+        Assert.assertNotNull("Variable should not be null even after error", result);
+    }
+
+    @Test
+    public void variable_withEvalHooks_metadataReflectsCurrentConfig() throws DevCycleException {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final ConfigMetadata[] capturedMetadata = {null};
+
+        client.addHook(new EvalHook<String>() {
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable) {
+                capturedMetadata[0] = ctx.getMetadata();
+            }
+        });
+
+        Variable<String> result = client.variable(user, "string-var", "default string");
+        
+        Assert.assertNotNull("Metadata should be captured", capturedMetadata[0]);
+        
+        // Verify metadata reflects current config state
+        ConfigMetadata directMetadata = client.getMetadata();
+        Assert.assertNotNull("Direct metadata should not be null", directMetadata);
+        
+        // The metadata in hooks should match the current client metadata
+        Assert.assertEquals("Hook metadata ETag should match current metadata", 
+                directMetadata.configETag, capturedMetadata[0].configETag);
+        Assert.assertEquals("Hook metadata timestamp should match current metadata", 
+                directMetadata.configLastModified, capturedMetadata[0].configLastModified);
+        Assert.assertEquals("Hook metadata project should match current metadata", 
+                directMetadata.project, capturedMetadata[0].project);
+        Assert.assertEquals("Hook metadata environment should match current metadata", 
+                directMetadata.environment, capturedMetadata[0].environment);
+    }
+
+    @Test
+    public void variable_withMultipleHooks_allReceiveMetadata() throws DevCycleException {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        final boolean[] metadataChecked = {false, false}; // Two hooks
+
+        // First hook
+        client.addHook(new EvalHook<String>() {
+                         @Override
+             public void after(HookContext<String> ctx, Variable<String> variable) {
+                 Assert.assertNotNull("First hook should receive metadata", ctx.getMetadata());
+                 Assert.assertNotNull("First hook metadata should have project", ctx.getMetadata().project);
+                 Assert.assertNotNull("First hook metadata should have config ETag", ctx.getMetadata().configETag);
+                 metadataChecked[0] = true;
+             }
+         });
+
+         // Second hook
+         client.addHook(new EvalHook<String>() {
+             @Override
+             public void after(HookContext<String> ctx, Variable<String> variable) {
+                 Assert.assertNotNull("Second hook should receive metadata", ctx.getMetadata());
+                 Assert.assertNotNull("Second hook metadata should have environment", ctx.getMetadata().environment);
+                 Assert.assertNotNull("Second hook metadata should have last modified", ctx.getMetadata().configLastModified);
+                 metadataChecked[1] = true;
+             }
+        });
+
+        Variable<String> result = client.variable(user, "string-var", "default string");
+        
+        Assert.assertTrue("First hook should have checked metadata", metadataChecked[0]);
+        Assert.assertTrue("Second hook should have checked metadata", metadataChecked[1]);
+    }
+
+    @Test
+    public void configMetadata_canBeConstructedWithMockData() {
+        // Create mock project and environment data for testing
+        Project mockProject = new Project();
+        mockProject._id = "mock-project-id";
+        mockProject.key = "mock-project-key";
+
+        Environment mockEnvironment = new Environment();
+        mockEnvironment._id = "mock-env-id";
+        mockEnvironment.key = "mock-env-key";
+
+        // Test ConfigMetadata construction
+        ConfigMetadata metadata = new ConfigMetadata(
+                "test-etag-12345",
+                "2023-10-01T12:00:00Z",
+                mockProject,
+                mockEnvironment
+        );
+
+        // Verify metadata is properly constructed
+        Assert.assertNotNull("Metadata should not be null", metadata);
+        Assert.assertEquals("Config ETag should match", "test-etag-12345", metadata.configETag);
+        Assert.assertEquals("Config last modified should match", "2023-10-01T12:00:00Z", metadata.configLastModified);
+        Assert.assertNotNull("Project metadata should not be null", metadata.project);
+        Assert.assertNotNull("Environment metadata should not be null", metadata.environment);
+
+        // Verify that metadata can be used in HookContext
+        DevCycleUser testUser = DevCycleUser.builder().userId("test-user").build();
+        HookContext<String> contextWithMetadata = new HookContext<>(testUser, "test-key", "default", metadata);
+        
+        Assert.assertNotNull("HookContext should not be null", contextWithMetadata);
+        Assert.assertEquals("Metadata should be accessible from context", metadata, contextWithMetadata.getMetadata());
+        Assert.assertEquals("Config ETag should be accessible", "test-etag-12345", contextWithMetadata.getMetadata().configETag);
     }
 }

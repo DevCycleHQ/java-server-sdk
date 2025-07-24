@@ -29,7 +29,7 @@ public class EvalHooksRunnerTest {
 
     @Test
     public void testBeforeHook() {
-        HookContext<Boolean> context = new HookContext<>(testUser, "test-key", false);
+        HookContext<Boolean> context = new HookContext<>(testUser, "test-key", false, null);
         
         ArrayList<EvalHook<Boolean>> hooks = new ArrayList<>();
         hooks.add(new EvalHook<Boolean>() {
@@ -38,7 +38,7 @@ public class EvalHooksRunnerTest {
                 DevCycleUser modifiedUser = DevCycleUser.builder()
                     .userId("modified-user")
                     .build();
-                return Optional.of(new HookContext<>(modifiedUser, ctx.getKey(), ctx.getDefaultValue()));
+                return Optional.of(new HookContext<>(modifiedUser, ctx.getKey(), ctx.getDefaultValue(), null));
             }
         });
 
@@ -48,7 +48,7 @@ public class EvalHooksRunnerTest {
 
     @Test(expected = BeforeHookError.class)
     public void testBeforeHookError() {
-        HookContext<Boolean> context = new HookContext<>(testUser, "test-key", false);
+        HookContext<Boolean> context = new HookContext<>(testUser, "test-key", false, null);
         
         ArrayList<EvalHook<Boolean>> hooks = new ArrayList<>();
         hooks.add(new EvalHook<Boolean>() {
@@ -64,7 +64,7 @@ public class EvalHooksRunnerTest {
     @Test
     public void testAfterHook() {
         final boolean[] hookCalled = {false};
-        HookContext<Boolean> context = new HookContext<>(testUser, "test-key", false);
+        HookContext<Boolean> context = new HookContext<>(testUser, "test-key", false, null);
 
         ArrayList<EvalHook<Boolean>> hooks = new ArrayList<>();
         hooks.add(new EvalHook<Boolean>() {
@@ -81,7 +81,7 @@ public class EvalHooksRunnerTest {
 
     @Test(expected = AfterHookError.class)
     public void testAfterHookError() {
-        HookContext<Boolean> context = new HookContext<>(testUser, "test-key", false);
+        HookContext<Boolean> context = new HookContext<>(testUser, "test-key", false, null);
         
         ArrayList<EvalHook<Boolean>> hooks = new ArrayList<>();
         hooks.add(new EvalHook<Boolean>() {
@@ -97,7 +97,7 @@ public class EvalHooksRunnerTest {
     @Test
     public void testErrorHook() {
         final boolean[] hookCalled = {false};
-        HookContext<Boolean> context = new HookContext<>(testUser, "test-key", false);
+        HookContext<Boolean> context = new HookContext<>(testUser, "test-key", false, null);
         Exception testError = new Exception("Test error");
 
         ArrayList<EvalHook<Boolean>> hooks = new ArrayList<>();
@@ -116,7 +116,7 @@ public class EvalHooksRunnerTest {
     @Test
     public void testFinallyHook() {
         final boolean[] hookCalled = {false};
-        HookContext<Boolean> context = new HookContext<>(testUser, "test-key", false);
+        HookContext<Boolean> context = new HookContext<>(testUser, "test-key", false, null);
 
         ArrayList<EvalHook<Boolean>> hooks = new ArrayList<>();
         hooks.add(new EvalHook<Boolean>() {
@@ -133,7 +133,7 @@ public class EvalHooksRunnerTest {
     @Test
     public void testClearHooks() {
         final boolean[] hookCalled = {false};
-        HookContext<Boolean> context = new HookContext<>(testUser, "test-key", false);
+        HookContext<Boolean> context = new HookContext<>(testUser, "test-key", false, null);
 
         ArrayList<EvalHook<Boolean>> hooks = new ArrayList<>();
         hooks.add(new EvalHook<Boolean>() {
@@ -147,5 +147,40 @@ public class EvalHooksRunnerTest {
         ArrayList<EvalHook<Boolean>> emptyHooks = new ArrayList<>();
         hookRunner.executeAfter(emptyHooks, context, testVariable);
         Assert.assertFalse(hookCalled[0]);
+    }
+
+    @Test
+    public void testMetadataPassedThroughHooks() {
+        final Object[] capturedMetadata = {null, null, null}; // before, after, finally
+        HookContext<Boolean> context = new HookContext<>(testUser, "test-key", false, null);
+
+        ArrayList<EvalHook<Boolean>> hooks = new ArrayList<>();
+        hooks.add(new EvalHook<Boolean>() {
+            @Override
+            public Optional<HookContext<Boolean>> before(HookContext<Boolean> ctx) {
+                capturedMetadata[0] = ctx.getMetadata();
+                return Optional.empty();
+            }
+
+            @Override
+            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable) {
+                capturedMetadata[1] = ctx.getMetadata();
+            }
+
+            @Override
+            public void onFinally(HookContext<Boolean> ctx, Optional<Variable<Boolean>> variable) {
+                capturedMetadata[2] = ctx.getMetadata();
+            }
+        });
+
+        // Execute hooks and verify metadata is consistently passed through
+        HookContext<Boolean> beforeResult = hookRunner.executeBefore(hooks, context);
+        hookRunner.executeAfter(hooks, beforeResult, testVariable);
+        hookRunner.executeFinally(hooks, beforeResult, Optional.of(testVariable));
+
+        // Verify metadata is consistently null (as passed in the context)
+        Assert.assertNull("Before hook should receive null metadata", capturedMetadata[0]);
+        Assert.assertNull("After hook should receive null metadata", capturedMetadata[1]);
+        Assert.assertNull("Finally hook should receive null metadata", capturedMetadata[2]);
     }
 }

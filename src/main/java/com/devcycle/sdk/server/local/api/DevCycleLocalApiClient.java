@@ -2,8 +2,8 @@ package com.devcycle.sdk.server.local.api;
 
 import com.devcycle.sdk.server.common.api.APIUtils;
 import com.devcycle.sdk.server.common.api.IDevCycleApi;
+import com.devcycle.sdk.server.common.api.ObjectMapperUtils;
 import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 public final class DevCycleLocalApiClient {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperUtils.createDefaultObjectMapper();
     private static final String CONFIG_URL = "https://config-cdn.devcycle.com/";
     private static final int DEFAULT_TIMEOUT_MS = 10000;
     private static final int MIN_INTERVALS_MS = 1000;
@@ -25,7 +25,6 @@ public final class DevCycleLocalApiClient {
 
     private DevCycleLocalApiClient(DevCycleLocalOptions options) {
 
-        OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         okBuilder = new OkHttpClient.Builder();
 
         APIUtils.applyRestOptions(options.getRestOptions(), okBuilder);
@@ -42,7 +41,7 @@ public final class DevCycleLocalApiClient {
 
         adapterBuilder = new Retrofit.Builder()
                 .baseUrl(configUrl)
-                .addConverterFactory(JacksonConverterFactory.create());
+                .addConverterFactory(JacksonConverterFactory.create(OBJECT_MAPPER));
     }
 
     public DevCycleLocalApiClient(String sdkKey, DevCycleLocalOptions options) {
