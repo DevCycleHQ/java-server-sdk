@@ -1,15 +1,16 @@
 package com.devcycle.sdk.server.common.model;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 
 @Data
 @Builder
@@ -31,6 +32,9 @@ public class Variable<T> {
 
     @Builder.Default
     private Boolean isDefaulted = false;
+
+    @Schema(description = "Evaluation reason")
+    private EvalReason eval;
 
     public enum TypeEnum {
         STRING("String"),

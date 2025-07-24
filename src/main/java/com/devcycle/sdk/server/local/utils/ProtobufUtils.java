@@ -1,15 +1,24 @@
 package com.devcycle.sdk.server.local.utils;
 
-import com.devcycle.sdk.server.common.model.DevCycleUser;
-import com.devcycle.sdk.server.common.model.Variable;
-import com.devcycle.sdk.server.local.protobuf.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import com.devcycle.sdk.server.common.model.DevCycleUser;
+import com.devcycle.sdk.server.common.model.EvalReason;
+import com.devcycle.sdk.server.common.model.Variable;
+import com.devcycle.sdk.server.local.protobuf.CustomDataType;
+import com.devcycle.sdk.server.local.protobuf.CustomDataValue;
+import com.devcycle.sdk.server.local.protobuf.DVCUser_PB;
+import com.devcycle.sdk.server.local.protobuf.EvalReason_PB;
+import com.devcycle.sdk.server.local.protobuf.NullableCustomData;
+import com.devcycle.sdk.server.local.protobuf.NullableDouble;
+import com.devcycle.sdk.server.local.protobuf.NullableString;
+import com.devcycle.sdk.server.local.protobuf.SDKVariable_PB;
+import com.devcycle.sdk.server.local.protobuf.VariableType_PB;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ProtobufUtils {
     public static DVCUser_PB createDVCUserPB(DevCycleUser user) {
@@ -50,6 +59,7 @@ public class ProtobufUtils {
                         .value(sdkVariable.getBoolValue())
                         .defaultValue(defaultValue)
                         .isDefaulted(false)
+                        .eval(convertToEvalReason(sdkVariable.getEval()))
                         .build();
                 break;
             case String:
@@ -59,6 +69,7 @@ public class ProtobufUtils {
                         .value(sdkVariable.getStringValue())
                         .defaultValue(defaultValue)
                         .isDefaulted(false)
+                        .eval(convertToEvalReason(sdkVariable.getEval()))
                         .build();
                 break;
             case Number:
@@ -68,6 +79,7 @@ public class ProtobufUtils {
                         .value(sdkVariable.getDoubleValue())
                         .defaultValue(defaultValue)
                         .isDefaulted(false)
+                        .eval(convertToEvalReason(sdkVariable.getEval()))
                         .build();
                 break;
             case JSON:
@@ -80,6 +92,7 @@ public class ProtobufUtils {
                         .value(jsonObject)
                         .defaultValue(defaultValue)
                         .isDefaulted(false)
+                        .eval(convertToEvalReason(sdkVariable.getEval()))
                         .build();
                 break;
             default:
@@ -143,5 +156,8 @@ public class ProtobufUtils {
         }
     }
 
+    public static EvalReason convertToEvalReason(EvalReason_PB eval) {
+        return new EvalReason(eval.getReason(), eval.getDetails(), eval.getTargetId());
+    }
 
 }

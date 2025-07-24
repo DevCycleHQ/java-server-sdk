@@ -1,9 +1,24 @@
 package com.devcycle.sdk.server.local.api;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
 import com.devcycle.sdk.server.common.api.IDevCycleClient;
 import com.devcycle.sdk.server.common.exception.BeforeHookError;
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
-import com.devcycle.sdk.server.common.model.*;
+import com.devcycle.sdk.server.common.model.BaseVariable;
+import com.devcycle.sdk.server.common.model.DevCycleEvent;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
+import com.devcycle.sdk.server.common.model.EvalHook;
+import com.devcycle.sdk.server.common.model.EvalHooksRunner;
+import com.devcycle.sdk.server.common.model.EvalReason;
+import com.devcycle.sdk.server.common.model.Feature;
+import com.devcycle.sdk.server.common.model.HookContext;
+import com.devcycle.sdk.server.common.model.PlatformData;
+import com.devcycle.sdk.server.common.model.Variable;
 import com.devcycle.sdk.server.common.model.Variable.TypeEnum;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
 import com.devcycle.sdk.server.local.managers.EnvironmentConfigManager;
@@ -18,9 +33,8 @@ import com.devcycle.sdk.server.local.utils.ProtobufUtils;
 import com.devcycle.sdk.server.openfeature.DevCycleProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.openfeature.sdk.FeatureProvider;
 
-import java.util.*;
+import dev.openfeature.sdk.FeatureProvider;
 
 public final class DevCycleLocalClient implements IDevCycleClient {
 
@@ -146,6 +160,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
             } catch (Exception e) {
                 DevCycleLogger.error("Unable to parse aggVariableDefaulted event for Variable " + key + " due to error: " + e, e);
             }
+            defaultVariable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.MISSING_CONFIG));
             return defaultVariable;
         }
 
@@ -177,11 +192,13 @@ public final class DevCycleLocalClient implements IDevCycleClient {
 
             if (variableData == null || variableData.length == 0) {
                 variable = defaultVariable;
+                variable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.USER_NOT_TARGETED));
             } else {
                 SDKVariable_PB sdkVariable = SDKVariable_PB.parseFrom(variableData);
                 if (sdkVariable.getType() != pbVariableType) {
                     DevCycleLogger.warning("Variable type mismatch, returning default value");
                     variable = defaultVariable;
+                    variable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.VARIABLE_TYPE_MISMATCH));
                 } else {
                     variable = ProtobufUtils.createVariable(sdkVariable, defaultValue);
                 }
@@ -200,6 +217,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
         } finally {
             if (variable == null) {
                 variable = defaultVariable;
+                variable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.USER_NOT_TARGETED));
             }
             evalHooksRunner.executeFinally(reversedHooks, hookContext, Optional.of(variable));
         }
