@@ -1,32 +1,42 @@
 package com.devcycle.sdk.server.cloud;
 
-import com.devcycle.sdk.server.cloud.api.DevCycleCloudClient;
-import com.devcycle.sdk.server.cloud.model.DevCycleCloudOptions;
-import com.devcycle.sdk.server.common.api.DVCApiMock;
-import com.devcycle.sdk.server.common.api.IDevCycleApi;
-import com.devcycle.sdk.server.common.exception.DevCycleException;
-import com.devcycle.sdk.server.common.model.*;
-import com.devcycle.sdk.server.helpers.WhiteBox;
-import dev.openfeature.sdk.Hook;
-import net.bytebuddy.implementation.bytecode.Throw;
+import static org.mockito.Mockito.when;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import retrofit2.Call;
+
+import com.devcycle.sdk.server.cloud.api.DevCycleCloudClient;
+import com.devcycle.sdk.server.cloud.model.DevCycleCloudOptions;
+import com.devcycle.sdk.server.common.api.DVCApiMock;
+import com.devcycle.sdk.server.common.api.IDevCycleApi;
+import com.devcycle.sdk.server.common.exception.DevCycleException;
+import com.devcycle.sdk.server.common.model.BaseVariable;
+import com.devcycle.sdk.server.common.model.DevCycleEvent;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
+import com.devcycle.sdk.server.common.model.DevCycleUserAndEvents;
+import com.devcycle.sdk.server.common.model.EvalHook;
+import com.devcycle.sdk.server.common.model.EvalReason;
+import com.devcycle.sdk.server.common.model.Feature;
+import com.devcycle.sdk.server.common.model.HookContext;
+import com.devcycle.sdk.server.common.model.Meta;
+import com.devcycle.sdk.server.common.model.PlatformData;
+import com.devcycle.sdk.server.common.model.Variable;
+import com.devcycle.sdk.server.helpers.WhiteBox;
+
 import retrofit2.mock.Calls;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.*;
-
-import static org.mockito.Mockito.when;
 
 /**
  * API tests for DevcycleApi
@@ -91,6 +101,11 @@ public class DevCycleCloudClientTest {
             assertUserDefaultsCorrect(user);
 
             Assert.assertFalse(variable.getValue());
+
+            EvalReason varEval = variable.getEval();
+            Assert.assertEquals("TARGETING_MATCH", varEval.getReason());
+            Assert.assertEquals("All Users", varEval.getDetails());
+            Assert.assertEquals("test_cloud_target_id", varEval.getTargetId());
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
@@ -567,6 +582,7 @@ public class DevCycleCloudClientTest {
                 .type(Variable.TypeEnum.STRING)
                 .isDefaulted(false)
                 .defaultValue("default string")
+                .eval(new EvalReason("TARGETING_MATCH", "All Users", "test_target_id"))
                 .build();
 
         when(apiInterface.getVariableByKey(user, "test-string", dvcOptions.getEnableEdgeDB())).thenReturn(Calls.response(expected));

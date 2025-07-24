@@ -1,5 +1,12 @@
 package com.devcycle.sdk.server.cloud.api;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import com.devcycle.sdk.server.cloud.model.DevCycleCloudOptions;
 import com.devcycle.sdk.server.common.api.IDevCycleApi;
 import com.devcycle.sdk.server.common.api.IDevCycleClient;
@@ -8,18 +15,28 @@ import com.devcycle.sdk.server.common.exception.AfterHookError;
 import com.devcycle.sdk.server.common.exception.BeforeHookError;
 import com.devcycle.sdk.server.common.exception.DevCycleException;
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
-import com.devcycle.sdk.server.common.model.*;
+import com.devcycle.sdk.server.common.model.BaseVariable;
+import com.devcycle.sdk.server.common.model.DevCycleEvent;
+import com.devcycle.sdk.server.common.model.DevCycleResponse;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
+import com.devcycle.sdk.server.common.model.DevCycleUserAndEvents;
+import com.devcycle.sdk.server.common.model.ErrorResponse;
+import com.devcycle.sdk.server.common.model.EvalHook;
+import com.devcycle.sdk.server.common.model.EvalHooksRunner;
+import com.devcycle.sdk.server.common.model.EvalReason;
+import com.devcycle.sdk.server.common.model.Feature;
+import com.devcycle.sdk.server.common.model.HookContext;
+import com.devcycle.sdk.server.common.model.HttpResponseCode;
+import com.devcycle.sdk.server.common.model.Variable;
 import com.devcycle.sdk.server.common.model.Variable.TypeEnum;
 import com.devcycle.sdk.server.openfeature.DevCycleProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+
 import dev.openfeature.sdk.FeatureProvider;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.io.IOException;
-import java.util.*;
 
 public final class DevCycleCloudClient implements IDevCycleClient {
 
@@ -134,8 +151,8 @@ public final class DevCycleCloudClient implements IDevCycleClient {
                 throw beforeError;
             }
 
-            evalHooksRunner.executeAfter(reversedHooks, context, variable);
             variable.setIsDefaulted(false);
+            evalHooksRunner.executeAfter(reversedHooks, context, variable);
         } catch (Throwable exception) {
             if (!(exception instanceof BeforeHookError || exception instanceof AfterHookError)) {
                 variable = (Variable<T>) Variable.builder()
@@ -145,6 +162,7 @@ public final class DevCycleCloudClient implements IDevCycleClient {
                         .defaultValue(defaultValue)
                         .isDefaulted(true)
                         .build();
+                variable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.USER_NOT_TARGETED));
             }
 
             evalHooksRunner.executeError(reversedHooks, context, exception);

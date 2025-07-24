@@ -1,15 +1,17 @@
 package com.devcycle.sdk.server.helpers;
 
-import com.devcycle.sdk.server.common.model.BaseVariable;
-import com.devcycle.sdk.server.common.model.DevCycleResponse;
-import com.devcycle.sdk.server.common.model.Feature;
-import com.devcycle.sdk.server.common.model.Variable;
-import retrofit2.Call;
-import retrofit2.mock.Calls;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import com.devcycle.sdk.server.common.model.BaseVariable;
+import com.devcycle.sdk.server.common.model.DevCycleResponse;
+import com.devcycle.sdk.server.common.model.EvalReason;
+import com.devcycle.sdk.server.common.model.Feature;
+import com.devcycle.sdk.server.common.model.Variable;
+
+import retrofit2.Call;
+import retrofit2.mock.Calls;
 
 public final class TestResponse {
 
@@ -84,6 +86,7 @@ public final class TestResponse {
                 .key("test-false")
                 .value(false)
                 .type(Variable.TypeEnum.BOOLEAN)
+                .eval(new EvalReason("TARGETING_MATCH", "All Users", "test_cloud_target_id"))
                 .build();
 
         return Calls.response(variable);
