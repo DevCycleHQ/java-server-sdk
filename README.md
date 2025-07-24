@@ -32,7 +32,7 @@ ldd --version
 You can use the SDK in your Gradle project by adding the following to *build.gradle*:
 
 ```yaml
-implementation("com.devcycle:java-server-sdk:2.6.3")
+implementation("com.devcycle:java-server-sdk:2.7.0")
 ```
 
 ### Maven
@@ -43,7 +43,7 @@ You can use the SDK in your Maven project by adding the following to your *pom.x
 <dependency>
     <groupId>com.devcycle</groupId>
     <artifactId>java-server-sdk</artifactId>
-    <version>2.6.3</version>
+    <version>2.7.0</version>
     <scope>compile</scope>
 </dependency>
 ```

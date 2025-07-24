@@ -31,7 +31,7 @@ public class PlatformData {
 
     @Schema(description = "DevCycle SDK Version")
     @Builder.Default
-    private String sdkVersion = "2.6.3";
+    private String sdkVersion = "2.7.0";
 
     @Schema(description = "DevCycle SDK Platform")
     private String sdkPlatform = null;
