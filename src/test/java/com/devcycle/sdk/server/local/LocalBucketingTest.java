@@ -1,5 +1,15 @@
 package com.devcycle.sdk.server.local;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
+
 import com.devcycle.sdk.server.common.model.DevCycleEvent;
 import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.common.model.PlatformData;
@@ -8,15 +18,6 @@ import com.devcycle.sdk.server.local.model.FlushPayload;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 @RunWith(MockitoJUnitRunner.class)
 public class LocalBucketingTest {
@@ -73,13 +74,21 @@ public class LocalBucketingTest {
 
     @Test
     public void testEventQueue() throws JsonProcessingException {
-        DevCycleEvent event = DevCycleEvent.builder().type("test").target("target").build();
+        DevCycleEvent customEvent = DevCycleEvent.builder()
+            .type("test")
+            .target("target")
+            .build();
+        DevCycleEvent aggEvent = DevCycleEvent.builder()
+                .type("aggVariableDefaulted")
+                .target("string-var")
+                .metaData(Map.of("evalReason", "DEFAULT"))
+                .build();
 
         localBucketing.initEventQueue(apiKey, UUID.randomUUID().toString(),"{}");
 
         // Add 2 events, aggregated by same target (should create 1 event with eventCount 2)
-        localBucketing.queueEvent(apiKey, mapper.writeValueAsString(getUser()), mapper.writeValueAsString(event));
-        localBucketing.queueAggregateEvent(apiKey, mapper.writeValueAsString(event), varMap);
+        localBucketing.queueEvent(apiKey, mapper.writeValueAsString(getUser()), mapper.writeValueAsString(customEvent));
+        localBucketing.queueAggregateEvent(apiKey, mapper.writeValueAsString(aggEvent), varMap);
         FlushPayload[] payloads = localBucketing.flushEventQueue(apiKey);
         Assert.assertEquals(payloads.length, 1);
         Assert.assertEquals(payloads[0].eventCount, 2);
@@ -99,7 +108,7 @@ public class LocalBucketingTest {
         Assert.assertEquals(payloads.length, 0); // failed events deleted
 
         // Add another event
-        localBucketing.queueEvent(apiKey, mapper.writeValueAsString(getUser()), mapper.writeValueAsString(event));
+        localBucketing.queueEvent(apiKey, mapper.writeValueAsString(getUser()), mapper.writeValueAsString(customEvent));
         payloads = localBucketing.flushEventQueue(apiKey);
         Assert.assertEquals(payloads.length, 1);
 

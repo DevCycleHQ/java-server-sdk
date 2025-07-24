@@ -1,39 +1,43 @@
 package com.devcycle.sdk.server.local;
 
-import com.devcycle.sdk.server.cloud.api.DevCycleCloudClient;
-import com.devcycle.sdk.server.cloud.model.DevCycleCloudOptions;
-import com.devcycle.sdk.server.common.api.IRestOptions;
-import com.devcycle.sdk.server.common.exception.DevCycleException;
-import com.devcycle.sdk.server.common.logging.IDevCycleLogger;
-import com.devcycle.sdk.server.common.model.*;
-import com.devcycle.sdk.server.helpers.LocalConfigServer;
-import com.devcycle.sdk.server.local.model.Project;
-import com.devcycle.sdk.server.local.model.Environment;
-import com.devcycle.sdk.server.helpers.TestDataFixtures;
-import com.devcycle.sdk.server.helpers.WhiteBox;
-import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
-import com.devcycle.sdk.server.local.model.ConfigMetadata;
-import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.After;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
-import retrofit2.mock.Calls;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.X509TrustManager;
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.*;
 
-import static org.mockito.Mockito.when;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import com.devcycle.sdk.server.common.api.IRestOptions;
+import com.devcycle.sdk.server.common.exception.DevCycleException;
+import com.devcycle.sdk.server.common.logging.IDevCycleLogger;
+import com.devcycle.sdk.server.common.model.BaseVariable;
+import com.devcycle.sdk.server.common.model.DevCycleEvent;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
+import com.devcycle.sdk.server.common.model.EvalHook;
+import com.devcycle.sdk.server.common.model.EvalReason;
+import com.devcycle.sdk.server.common.model.Feature;
+import com.devcycle.sdk.server.common.model.HookContext;
+import com.devcycle.sdk.server.common.model.Variable;
+import com.devcycle.sdk.server.helpers.LocalConfigServer;
+import com.devcycle.sdk.server.helpers.TestDataFixtures;
+import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
+import com.devcycle.sdk.server.local.model.ConfigMetadata;
+import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
+import com.devcycle.sdk.server.local.model.Environment;
+import com.devcycle.sdk.server.local.model.Project;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DevCycleLocalClientTest {
@@ -151,6 +155,11 @@ public class DevCycleLocalClientTest {
         var = client.variable(user, "string-var", "default string");
         Assert.assertNotNull(var);
         Assert.assertEquals("variationOn", var.getValue());
+
+        EvalReason varEval = var.getEval();
+        Assert.assertEquals("TARGETING_MATCH", varEval.getReason());
+        Assert.assertEquals("All Users", varEval.getDetails());
+        Assert.assertEquals("63125321d31c601f992288bc", varEval.getTargetId());
     }
 
     @Test
@@ -162,6 +171,11 @@ public class DevCycleLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertFalse(var.getIsDefaulted());
         Assert.assertEquals(true, var.getValue());
+
+        EvalReason varEval = var.getEval();
+        Assert.assertEquals("TARGETING_MATCH", varEval.getReason());
+        Assert.assertEquals("All Users", varEval.getDetails());
+        Assert.assertEquals("63125321d31c601f992288bc", varEval.getTargetId());
     }
 
     @Test
@@ -172,6 +186,11 @@ public class DevCycleLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertFalse(var.getIsDefaulted());
         Assert.assertEquals(12345.0, var.getValue().doubleValue(), 0.0);
+
+        EvalReason varEval = var.getEval();
+        Assert.assertEquals("TARGETING_MATCH", varEval.getReason());
+        Assert.assertEquals("All Users", varEval.getDetails());
+        Assert.assertEquals("63125321d31c601f992288bc", varEval.getTargetId());
     }
 
     @Test
@@ -192,6 +211,11 @@ public class DevCycleLocalClientTest {
         Assert.assertEquals("This variation is on", variableData.get("displayText"));
         Assert.assertEquals(true, variableData.get("showDialog"));
         Assert.assertEquals(100, variableData.get("maxUsers"));
+
+        EvalReason varEval = var.getEval();
+        Assert.assertEquals("TARGETING_MATCH", varEval.getReason());
+        Assert.assertEquals("All Users", varEval.getDetails());
+        Assert.assertEquals("63125321d31c601f992288bc", varEval.getTargetId());
     }
 
     @Test
@@ -203,6 +227,7 @@ public class DevCycleLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertTrue(var.getIsDefaulted());
         Assert.assertEquals("default string", var.getValue());
+        Assert.assertEquals(EvalReason.DefaultReasonDetailsEnum.MISSING_CONFIG.getValue(), var.getEval().getDetails());
     }
 
     @Test
@@ -226,6 +251,11 @@ public class DevCycleLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertFalse(var.getIsDefaulted());
         Assert.assertEquals("variationOn", var.getValue());
+
+        EvalReason varEval = var.getEval();
+        Assert.assertEquals("TARGETING_MATCH", varEval.getReason());
+        Assert.assertEquals("All Users", varEval.getDetails());
+        Assert.assertEquals("63125321d31c601f992288bc", varEval.getTargetId());
     }
 
     @Test
@@ -243,6 +273,11 @@ public class DevCycleLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertFalse(var.getIsDefaulted());
         Assert.assertEquals("↑↑↓↓←→←→BA 🤖", var.getValue());
+
+        EvalReason varEval = var.getEval();
+        Assert.assertEquals("TARGETING_MATCH", varEval.getReason());
+        Assert.assertEquals("Custom Data -> should-bucket", varEval.getDetails());
+        Assert.assertEquals("638680d659f1b81cc9e6c5ab", varEval.getTargetId());
     }
 
     @Test
@@ -251,6 +286,11 @@ public class DevCycleLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertTrue(var.getIsDefaulted());
         Assert.assertEquals(true, var.getValue());
+
+        EvalReason varEval = var.getEval();
+        Assert.assertEquals("DEFAULT", varEval.getReason());
+        Assert.assertEquals("User Not Targeted", varEval.getDetails());
+        Assert.assertNull(varEval.getTargetId());
     }
 
     @Test
@@ -259,6 +299,11 @@ public class DevCycleLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertTrue(var.getIsDefaulted());
         Assert.assertEquals(true, var.getValue());
+
+        EvalReason varEval = var.getEval();
+        Assert.assertEquals("DEFAULT", varEval.getReason());
+        Assert.assertEquals("User Not Targeted", varEval.getDetails());
+        Assert.assertNull(varEval.getTargetId());
     }
 
     @Test
@@ -371,6 +416,11 @@ public class DevCycleLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertFalse(var.getIsDefaulted());
         Assert.assertEquals("↑↑↓↓←→←→BA 🤖", var.getValue());
+
+        EvalReason varEval = var.getEval();
+        Assert.assertEquals("TARGETING_MATCH", varEval.getReason());
+        Assert.assertEquals("Custom Data -> should-bucket", varEval.getDetails());
+        Assert.assertEquals("638680d659f1b81cc9e6c5ab", varEval.getTargetId());
     }
 
     @Test
@@ -664,6 +714,7 @@ public class DevCycleLocalClientTest {
                 .type(Variable.TypeEnum.STRING)
                 .isDefaulted(false)
                 .defaultValue("default string")
+                .eval(new EvalReason("TARGETING_MATCH", "All Users", "63125321d31c601f992288bc"))
                 .build();
 
         Variable<String> result = client.variable(user, "string-var", "default string");
@@ -934,6 +985,7 @@ public class DevCycleLocalClientTest {
                 .type(Variable.TypeEnum.STRING)
                 .isDefaulted(false)
                 .defaultValue("default string")
+                .eval(new EvalReason("TARGETING_MATCH", "All Users", "63125321d31c601f992288bc"))
                 .build();
 
         Variable<String> result = client.variable(user, "string-var", "default string");
