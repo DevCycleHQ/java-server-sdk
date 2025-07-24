@@ -1,5 +1,11 @@
 package com.devcycle.sdk.server.local.managers;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import com.devcycle.sdk.server.common.api.IDevCycleApi;
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.devcycle.sdk.server.common.model.DevCycleEvent;
@@ -13,14 +19,9 @@ import com.devcycle.sdk.server.local.model.EventsBatch;
 import com.devcycle.sdk.server.local.model.FlushPayload;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class EventQueueManager {
 

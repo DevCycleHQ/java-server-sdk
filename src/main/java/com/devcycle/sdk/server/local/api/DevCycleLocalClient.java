@@ -155,12 +155,17 @@ public final class DevCycleLocalClient implements IDevCycleClient {
 
         if (!isInitialized()) {
             DevCycleLogger.info("Variable called before DevCycleLocalClient has initialized, returning default value");
+            defaultVariable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.MISSING_CONFIG));
             try {
-                eventQueueManager.queueAggregateEvent(DevCycleEvent.builder().type("aggVariableDefaulted").target(key).build(), null);
+                eventQueueManager.queueAggregateEvent(DevCycleEvent.builder()
+                    .type("aggVariableDefaulted")
+                    .target(key)
+                    .metaData(Map.of("evalReason", defaultVariable.getEval().getReason()))
+                    .build(),
+                null);
             } catch (Exception e) {
                 DevCycleLogger.error("Unable to parse aggVariableDefaulted event for Variable " + key + " due to error: " + e, e);
             }
-            defaultVariable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.MISSING_CONFIG));
             return defaultVariable;
         }
 

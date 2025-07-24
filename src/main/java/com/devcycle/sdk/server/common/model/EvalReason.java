@@ -17,16 +17,21 @@ public class EvalReason {
     @JsonProperty("reason")
     private String reason;
     
-    @Schema(description = "Details", required = false)
+    @Schema(description = "Details")
     @JsonProperty("details")
     private String details;
 
-    @Schema(description = "Target ID", required = false)
-    @JsonProperty("targetId")
+    @Schema(description = "Target ID")
+    @JsonProperty("target_id")
     private String targetId;
 
+    private EvalReason(String reason, String details) {
+        this.reason = reason;
+        this.details = details;
+    }
+
     public static EvalReason defaultReason(DefaultReasonDetailsEnum details) {
-        return new EvalReason("DEFAULT", details.getValue(), null);
+        return new EvalReason("DEFAULT", details.getValue());
     }
 
     public String getReason() {

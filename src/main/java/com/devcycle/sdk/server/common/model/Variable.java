@@ -33,6 +33,10 @@ public class Variable<T> {
     @Builder.Default
     private Boolean isDefaulted = false;
 
+    @Builder.Default
+    @Deprecated()
+    private String evalReason = null;
+
     @Schema(description = "Evaluation reason")
     private EvalReason eval;
 
