@@ -1,6 +1,7 @@
 package com.devcycle.sdk.server.common.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -23,6 +24,7 @@ public class EvalReason {
 
     @Schema(description = "Target ID")
     @JsonProperty("target_id")
+    @JsonInclude(value=JsonInclude.Include.NON_EMPTY, content=JsonInclude.Include.NON_NULL)
     private String targetId;
 
     private EvalReason(String reason, String details) {
@@ -41,7 +43,7 @@ public class EvalReason {
     public enum DefaultReasonDetailsEnum {
         MISSING_CONFIG("Missing Config"),
         USER_NOT_TARGETED("User Not Targeted"),
-        VARIABLE_TYPE_MISMATCH("Type Mismatch"),
+        VARIABLE_TYPE_MISMATCH("Variable Type Mismatch"),
         ERROR("Error");
 
         private final String value;

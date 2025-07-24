@@ -116,10 +116,13 @@ public class EventQueueManager {
             return;
         }
 
+        String eventString = OBJECT_MAPPER.writeValueAsString(event);
+
         if (bucketedConfig != null) {
-            this.localBucketing.queueAggregateEvent(this.sdkKey, OBJECT_MAPPER.writeValueAsString(event), OBJECT_MAPPER.writeValueAsString(bucketedConfig.variableVariationMap));
+            String variableVariationMapString = OBJECT_MAPPER.writeValueAsString(bucketedConfig.variableVariationMap);
+            this.localBucketing.queueAggregateEvent(this.sdkKey, eventString, variableVariationMapString);
         } else {
-            this.localBucketing.queueAggregateEvent(this.sdkKey, OBJECT_MAPPER.writeValueAsString(event), "{}");
+            this.localBucketing.queueAggregateEvent(this.sdkKey, eventString, "{}");
         }
     }
 

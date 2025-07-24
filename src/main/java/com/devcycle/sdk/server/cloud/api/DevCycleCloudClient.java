@@ -162,7 +162,12 @@ public final class DevCycleCloudClient implements IDevCycleClient {
                         .defaultValue(defaultValue)
                         .isDefaulted(true)
                         .build();
-                variable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.USER_NOT_TARGETED));
+
+                if (exception.getMessage().equals("Variable type mismatch, returning default value")) {
+                    variable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.VARIABLE_TYPE_MISMATCH));
+                } else {
+                    variable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.USER_NOT_TARGETED));
+                }
             }
 
             evalHooksRunner.executeError(reversedHooks, context, exception);
