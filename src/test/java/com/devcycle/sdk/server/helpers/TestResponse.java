@@ -58,6 +58,7 @@ public final class TestResponse {
                 .value(false)
                 .type(Variable.TypeEnum.BOOLEAN)
                 .eval(new EvalReason("SPLIT", "Random Distribution | User Id", "test_cloud_target_id"))
+                .featureId("62fbf6566f1ba302829f9e32")
                 .build());
         variables.put("test-true", BaseVariable.builder()
                 .id(UUID.randomUUID().toString())
@@ -65,6 +66,7 @@ public final class TestResponse {
                 .value(true)
                 .type(Variable.TypeEnum.BOOLEAN)
                 .eval(new EvalReason("SPLIT", "Random Distribution | User Id", "test_cloud_target_id"))
+                .featureId("62fbf6566f1ba302829f9e32")
                 .build());
         variables.put("test-number", BaseVariable.builder()
                 .id(UUID.randomUUID().toString())
@@ -72,6 +74,7 @@ public final class TestResponse {
                 .value(100)
                 .type(Variable.TypeEnum.NUMBER)
                 .eval(new EvalReason("SPLIT", "Random Distribution | User Id", "test_cloud_target_id"))
+                .featureId("62fbf6566f1ba302829f9e32")
                 .build());
         variables.put("test-json", BaseVariable.builder()
                 .id(UUID.randomUUID().toString())
@@ -79,6 +82,7 @@ public final class TestResponse {
                 .value("{'some':'json''}")
                 .type(Variable.TypeEnum.JSON)
                 .eval(new EvalReason("SPLIT", "Random Distribution | User Id", "test_cloud_target_id"))
+                .featureId("62fbf6566f1ba302829f9e32")
                 .build());
 
         return Calls.response(variables);

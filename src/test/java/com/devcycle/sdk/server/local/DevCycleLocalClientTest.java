@@ -377,6 +377,11 @@ public class DevCycleLocalClientTest {
         Assert.assertEquals(variables.get("num-var").getId(), "65272363125123fca69d3a7d");
         Assert.assertEquals(variables.get("json-var").getId(), "64372363125123fca69d3f7b");
         Assert.assertEquals(variables.size(), 4);
+
+        Assert.assertEquals(variables.get("string-var").getFeatureId(), "62fbf6566f1ba302829f9e32");
+        Assert.assertEquals(variables.get("a-cool-new-feature").getFeatureId(), "62fbf6566f1ba302829f9e32");
+        Assert.assertEquals(variables.get("num-var").getFeatureId(), "62fbf6566f1ba302829f9e32");
+        Assert.assertEquals(variables.get("json-var").getFeatureId(), "62fbf6566f1ba302829f9e32");
     }
 
     @Test

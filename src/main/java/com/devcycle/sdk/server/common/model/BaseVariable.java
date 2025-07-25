@@ -31,4 +31,8 @@ public class BaseVariable {
 
     @Schema(description = "Evaluation reason")
     private EvalReason eval;
+
+    @Schema(description = "Feature ID")
+    @JsonProperty("_feature")
+    private String featureId;
 }

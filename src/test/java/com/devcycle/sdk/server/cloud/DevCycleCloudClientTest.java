@@ -161,7 +161,7 @@ public class DevCycleCloudClientTest {
     }
 
     @Test
-    public void getVariablesTest() throws DevCycleException {
+    public void allVariablesTest() throws DevCycleException {
         DevCycleUser user = DevCycleUser.builder()
                 .userId("j_test")
                 .build();
@@ -177,6 +177,7 @@ public class DevCycleCloudClientTest {
         BaseVariable testNumber = variables.get("test-number");
         Assert.assertNotNull(testNumber);
         Assert.assertEquals(100, (int) testNumber.getValue());
+        Assert.assertEquals("62fbf6566f1ba302829f9e32", testNumber.getFeatureId());
         Assert.assertEquals(Variable.TypeEnum.NUMBER, testNumber.getType());
         Assert.assertEquals("SPLIT", testNumber.getEval().getReason());
         Assert.assertEquals("Random Distribution | User Id", testNumber.getEval().getDetails());
