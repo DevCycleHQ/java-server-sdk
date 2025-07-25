@@ -117,13 +117,11 @@ public final class DevCycleCloudClient implements IDevCycleClient {
         validateUser(user);
 
         if (key == null || key.equals("")) {
-            ErrorResponse errorResponse = new ErrorResponse(500, "Missing parameter: key", null);
-            throw new IllegalArgumentException("Missing parameter: key");
+            throw new IllegalArgumentException(ErrorResponse.ErrorMessage.MISSING_PARAMETER.getMessage("key"));
         }
 
         if (defaultValue == null) {
-            ErrorResponse errorResponse = new ErrorResponse(500, "Missing parameter: defaultValue", null);
-            throw new IllegalArgumentException("Missing parameter: defaultValue");
+            throw new IllegalArgumentException(ErrorResponse.ErrorMessage.MISSING_PARAMETER.getMessage("defaultValue"));
         }
 
         TypeEnum variableType = TypeEnum.fromClass(defaultValue.getClass());
@@ -145,7 +143,7 @@ public final class DevCycleCloudClient implements IDevCycleClient {
             Call<Variable> response = api.getVariableByKey(user, key, dvcOptions.getEnableEdgeDB());
             variable = getResponseWithRetries(response, 5);
             if (variable.getType() != variableType) {
-                throw new IllegalArgumentException("Variable type mismatch, returning default value");
+                throw new IllegalArgumentException(ErrorResponse.ErrorMessage.VARIABLE_TYPE_MISMATCH.getMessage());
             }
             if (beforeError != null) {
                 throw beforeError;
@@ -163,7 +161,7 @@ public final class DevCycleCloudClient implements IDevCycleClient {
                         .isDefaulted(true)
                         .build();
 
-                if (exception.getMessage().equals("Variable type mismatch, returning default value")) {
+                if (exception.getMessage().equals(ErrorResponse.ErrorMessage.VARIABLE_TYPE_MISMATCH.getMessage())) {
                     variable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.VARIABLE_TYPE_MISMATCH));
                 } else {
                     variable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.ERROR));
@@ -227,7 +225,7 @@ public final class DevCycleCloudClient implements IDevCycleClient {
         validateUser(user);
 
         if (event == null || event.getType() == null || event.getType().equals("")) {
-            throw new IllegalArgumentException("Invalid DevCycleEvent");
+            throw new IllegalArgumentException(ErrorResponse.ErrorMessage.INVALID_EVENT.getMessage());
         }
 
         DevCycleUserAndEvents userAndEvents = DevCycleUserAndEvents.builder()
@@ -338,10 +336,10 @@ public final class DevCycleCloudClient implements IDevCycleClient {
 
     private void validateUser(DevCycleUser user) {
         if (user == null) {
-            throw new IllegalArgumentException("DevCycleUser cannot be null");
+            throw new IllegalArgumentException(ErrorResponse.ErrorMessage.NULL_USER.getMessage());
         }
         if (user.getUserId().equals("")) {
-            throw new IllegalArgumentException("userId cannot be empty");
+            throw new IllegalArgumentException(ErrorResponse.ErrorMessage.USER_ID_MISSING.getMessage());
         }
     }
 }

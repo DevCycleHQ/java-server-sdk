@@ -12,6 +12,7 @@ import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.devcycle.sdk.server.common.model.BaseVariable;
 import com.devcycle.sdk.server.common.model.DevCycleEvent;
 import com.devcycle.sdk.server.common.model.DevCycleUser;
+import com.devcycle.sdk.server.common.model.ErrorResponse;
 import com.devcycle.sdk.server.common.model.EvalHook;
 import com.devcycle.sdk.server.common.model.EvalHooksRunner;
 import com.devcycle.sdk.server.common.model.EvalReason;
@@ -137,11 +138,11 @@ public final class DevCycleLocalClient implements IDevCycleClient {
         validateUser(user);
 
         if (key == null || key.equals("")) {
-            throw new IllegalArgumentException("Missing parameter: key");
+            throw new IllegalArgumentException(ErrorResponse.ErrorMessage.MISSING_PARAMETER.getMessage("key"));
         }
 
         if (defaultValue == null) {
-            throw new IllegalArgumentException("Missing parameter: defaultValue");
+            throw new IllegalArgumentException(ErrorResponse.ErrorMessage.MISSING_PARAMETER.getMessage("defaultValue"));
         }
 
         TypeEnum variableType = TypeEnum.fromClass(defaultValue.getClass());
@@ -266,7 +267,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
         validateUser(user);
 
         if (event == null || event.getType().equals("")) {
-            throw new IllegalArgumentException("Invalid DevCycleEvent");
+            throw new IllegalArgumentException(ErrorResponse.ErrorMessage.INVALID_EVENT.getMessage());
         }
 
         try {
@@ -347,10 +348,10 @@ public final class DevCycleLocalClient implements IDevCycleClient {
 
     private void validateUser(DevCycleUser user) {
         if (user == null) {
-            throw new IllegalArgumentException("DevCycleUser cannot be null");
+            throw new IllegalArgumentException(ErrorResponse.ErrorMessage.NULL_USER.getMessage());
         }
         if (user.getUserId().equals("")) {
-            throw new IllegalArgumentException("userId cannot be empty");
+            throw new IllegalArgumentException(ErrorResponse.ErrorMessage.USER_ID_MISSING.getMessage());
         }
     }
 
