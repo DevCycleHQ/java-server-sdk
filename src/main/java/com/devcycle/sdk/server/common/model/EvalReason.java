@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 @AllArgsConstructor
 @RequiredArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class EvalReason {
     @Schema(description = "Evaluation reason", required = true)
     @JsonProperty("reason")
@@ -24,7 +25,6 @@ public class EvalReason {
 
     @Schema(description = "Target ID")
     @JsonProperty("target_id")
-    @JsonInclude(value=JsonInclude.Include.NON_EMPTY, content=JsonInclude.Include.NON_NULL)
     private String targetId;
 
     private EvalReason(String reason, String details) {
