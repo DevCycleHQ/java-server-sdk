@@ -1,18 +1,30 @@
 package com.devcycle.sdk.server.openfeature;
 
+import java.math.BigDecimal;
+import java.util.Map;
+import java.util.Optional;
+
 import com.devcycle.sdk.server.common.api.IDevCycleClient;
 import com.devcycle.sdk.server.common.exception.DevCycleException;
 import com.devcycle.sdk.server.common.model.DevCycleEvent;
 import com.devcycle.sdk.server.common.model.DevCycleUser;
+import com.devcycle.sdk.server.common.model.EvalReason;
 import com.devcycle.sdk.server.common.model.Variable;
-import dev.openfeature.sdk.*;
-import dev.openfeature.sdk.exceptions.ProviderNotReadyError;
-import dev.openfeature.sdk.exceptions.GeneralError;
-import dev.openfeature.sdk.exceptions.TypeMismatchError;
 
-import java.math.BigDecimal;
-import java.util.Map;
-import java.util.Optional;
+import dev.openfeature.sdk.ErrorCode;
+import dev.openfeature.sdk.EvaluationContext;
+import dev.openfeature.sdk.FeatureProvider;
+import dev.openfeature.sdk.ImmutableMetadata;
+import dev.openfeature.sdk.ImmutableMetadata.ImmutableMetadataBuilder;
+import dev.openfeature.sdk.Metadata;
+import dev.openfeature.sdk.ProviderEvaluation;
+import dev.openfeature.sdk.Reason;
+import dev.openfeature.sdk.Structure;
+import dev.openfeature.sdk.TrackingEventDetails;
+import dev.openfeature.sdk.Value;
+import dev.openfeature.sdk.exceptions.GeneralError;
+import dev.openfeature.sdk.exceptions.ProviderNotReadyError;
+import dev.openfeature.sdk.exceptions.TypeMismatchError;
 
 public class DevCycleProvider implements FeatureProvider {
     private static final String PROVIDER_NAME = "DevCycle";
@@ -97,19 +109,36 @@ public class DevCycleProvider implements FeatureProvider {
             DevCycleUser user = DevCycleUser.fromEvaluationContext(ctx);
 
             Variable<Object> variable = devcycleClient.variable(user, key, defaultValue.asStructure().asObjectMap());
+            
 
             if (variable == null || variable.getIsDefaulted()) {
+                ImmutableMetadata flagMetadata = null;
+                if (variable != null && variable.getEval() != null) {
+                    EvalReason eval = variable.getEval();
+                    flagMetadata = getFlagMetadata(eval);
+                }
                 return ProviderEvaluation.<Value>builder()
                         .value(defaultValue)
                         .reason(Reason.DEFAULT.toString())
+                        .flagMetadata(flagMetadata)
                         .build();
             } else {
                 if (variable.getValue() instanceof Map) {
                     // JSON objects are managed as Map implementations and must be converted to an OpenFeature structure
                     Value objectValue = new Value(Structure.mapToStructure((Map) variable.getValue()));
+
+                    ImmutableMetadata flagMetadata = null;
+                    String evalReason = Reason.TARGETING_MATCH.toString();
+                    if (variable.getEval() != null) {
+                        EvalReason eval = variable.getEval();
+                        evalReason = eval.getReason();
+                        flagMetadata = getFlagMetadata(eval);
+                    }
+
                     return ProviderEvaluation.<Value>builder()
                             .value(objectValue)
-                            .reason(Reason.TARGETING_MATCH.toString())
+                            .reason(evalReason)
+                            .flagMetadata(flagMetadata)
                             .build();
                 } else {
                     throw new TypeMismatchError("DevCycle variable for key " + key + " is not a JSON object");
@@ -136,9 +165,15 @@ public class DevCycleProvider implements FeatureProvider {
             Variable<T> variable = devcycleClient.variable(user, key, defaultValue);
 
             if (variable == null || variable.getIsDefaulted()) {
+                ImmutableMetadata flagMetadata = null;
+                if (variable != null && variable.getEval() != null) {
+                    EvalReason eval = variable.getEval();
+                    flagMetadata = getFlagMetadata(eval);
+                }
                 return ProviderEvaluation.<T>builder()
                         .value(defaultValue)
                         .reason(Reason.DEFAULT.toString())
+                        .flagMetadata(flagMetadata)
                         .build();
             } else {
                 T value = variable.getValue();
@@ -149,9 +184,18 @@ public class DevCycleProvider implements FeatureProvider {
                     value = (T) Integer.valueOf(numVal.intValue());
                 }
 
+                ImmutableMetadata flagMetadata = null;
+                String evalReason = Reason.TARGETING_MATCH.toString();
+                if (variable.getEval() != null) {
+                    EvalReason eval = variable.getEval();
+                    evalReason = eval.getReason();
+                    flagMetadata = getFlagMetadata(eval);
+                }
+
                 return ProviderEvaluation.<T>builder()
                         .value(value)
-                        .reason(Reason.TARGETING_MATCH.toString())
+                        .reason(evalReason)
+                        .flagMetadata(flagMetadata)
                         .build();
             }
         } catch (IllegalArgumentException e) {
@@ -205,5 +249,18 @@ public class DevCycleProvider implements FeatureProvider {
         Map<String, Object> metaData = details.asObjectMap();
         metaData.remove("value");
         return metaData;
+    }
+
+    private ImmutableMetadata getFlagMetadata(EvalReason evalReason) {
+        ImmutableMetadataBuilder flagMetadataBuilder = ImmutableMetadata.builder();
+
+        if (evalReason.getDetails() != null) {
+            flagMetadataBuilder.addString("evalReasonDetails", evalReason.getDetails());
+        }
+
+        if (evalReason.getTargetId() != null) {
+            flagMetadataBuilder.addString("evalReasonTargetId", evalReason.getTargetId());
+        }
+        return flagMetadataBuilder.build();
     }
 }
