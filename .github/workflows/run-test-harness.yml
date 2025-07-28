@@ -16,4 +16,3 @@ jobs:
         with:
           sdks-to-test: java
           sdk-github-sha: ${{github.event.pull_request.head.sha}}
-          sdk-capabilities: '{ "Java": ["cloud", "edgeDB", "clientCustomData", "v2Config", "allVariables", "allFeatures", "variablesFeatureId", "evalReason", "cloudEvalReason", "eventsEvalReason"]}'
