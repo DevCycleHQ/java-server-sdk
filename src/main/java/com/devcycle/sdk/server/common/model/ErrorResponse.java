@@ -13,6 +13,7 @@
 package com.devcycle.sdk.server.common.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,4 +34,22 @@ public class ErrorResponse {
 
     @Schema(description = "Additional error information detailing the error reasoning")
     private Object data;
+
+    public enum ErrorMessage {
+        MISSING_PARAMETER("Missing parameter: %s"),
+        NULL_USER("DevCycleUser cannot be null"),
+        USER_ID_MISSING("userId cannot be empty"),
+        INVALID_EVENT("Invalid DevCycleEvent"),
+        VARIABLE_TYPE_MISMATCH("Variable type mismatch, returning default value");
+
+        private final String message;
+
+        ErrorMessage(String message) {
+            this.message = message;
+        }
+
+        public String getMessage(String... args) {
+            return String.format(message, args);
+        }
+    }
 }

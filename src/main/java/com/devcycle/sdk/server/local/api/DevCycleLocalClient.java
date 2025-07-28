@@ -1,9 +1,25 @@
 package com.devcycle.sdk.server.local.api;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
 import com.devcycle.sdk.server.common.api.IDevCycleClient;
 import com.devcycle.sdk.server.common.exception.BeforeHookError;
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
-import com.devcycle.sdk.server.common.model.*;
+import com.devcycle.sdk.server.common.model.BaseVariable;
+import com.devcycle.sdk.server.common.model.DevCycleEvent;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
+import com.devcycle.sdk.server.common.model.ErrorResponse;
+import com.devcycle.sdk.server.common.model.EvalHook;
+import com.devcycle.sdk.server.common.model.EvalHooksRunner;
+import com.devcycle.sdk.server.common.model.EvalReason;
+import com.devcycle.sdk.server.common.model.Feature;
+import com.devcycle.sdk.server.common.model.HookContext;
+import com.devcycle.sdk.server.common.model.PlatformData;
+import com.devcycle.sdk.server.common.model.Variable;
 import com.devcycle.sdk.server.common.model.Variable.TypeEnum;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
 import com.devcycle.sdk.server.local.managers.EnvironmentConfigManager;
@@ -18,9 +34,8 @@ import com.devcycle.sdk.server.local.utils.ProtobufUtils;
 import com.devcycle.sdk.server.openfeature.DevCycleProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.openfeature.sdk.FeatureProvider;
 
-import java.util.*;
+import dev.openfeature.sdk.FeatureProvider;
 
 public final class DevCycleLocalClient implements IDevCycleClient {
 
@@ -123,11 +138,11 @@ public final class DevCycleLocalClient implements IDevCycleClient {
         validateUser(user);
 
         if (key == null || key.equals("")) {
-            throw new IllegalArgumentException("Missing parameter: key");
+            throw new IllegalArgumentException(ErrorResponse.ErrorMessage.MISSING_PARAMETER.getMessage("key"));
         }
 
         if (defaultValue == null) {
-            throw new IllegalArgumentException("Missing parameter: defaultValue");
+            throw new IllegalArgumentException(ErrorResponse.ErrorMessage.MISSING_PARAMETER.getMessage("defaultValue"));
         }
 
         TypeEnum variableType = TypeEnum.fromClass(defaultValue.getClass());
@@ -141,8 +156,14 @@ public final class DevCycleLocalClient implements IDevCycleClient {
 
         if (!isInitialized()) {
             DevCycleLogger.info("Variable called before DevCycleLocalClient has initialized, returning default value");
+            defaultVariable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.MISSING_CONFIG));
             try {
-                eventQueueManager.queueAggregateEvent(DevCycleEvent.builder().type("aggVariableDefaulted").target(key).build(), null);
+                eventQueueManager.queueAggregateEvent(DevCycleEvent.builder()
+                    .type("aggVariableDefaulted")
+                    .target(key)
+                    .metaData(Map.of("evalReason", defaultVariable.getEval().getReason()))
+                    .build(),
+                null);
             } catch (Exception e) {
                 DevCycleLogger.error("Unable to parse aggVariableDefaulted event for Variable " + key + " due to error: " + e, e);
             }
@@ -177,11 +198,13 @@ public final class DevCycleLocalClient implements IDevCycleClient {
 
             if (variableData == null || variableData.length == 0) {
                 variable = defaultVariable;
+                variable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.USER_NOT_TARGETED));
             } else {
                 SDKVariable_PB sdkVariable = SDKVariable_PB.parseFrom(variableData);
                 if (sdkVariable.getType() != pbVariableType) {
                     DevCycleLogger.warning("Variable type mismatch, returning default value");
                     variable = defaultVariable;
+                    variable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.VARIABLE_TYPE_MISMATCH));
                 } else {
                     variable = ProtobufUtils.createVariable(sdkVariable, defaultValue);
                 }
@@ -200,6 +223,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
         } finally {
             if (variable == null) {
                 variable = defaultVariable;
+                variable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.USER_NOT_TARGETED));
             }
             evalHooksRunner.executeFinally(reversedHooks, hookContext, Optional.of(variable));
         }
@@ -243,7 +267,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
         validateUser(user);
 
         if (event == null || event.getType().equals("")) {
-            throw new IllegalArgumentException("Invalid DevCycleEvent");
+            throw new IllegalArgumentException(ErrorResponse.ErrorMessage.INVALID_EVENT.getMessage());
         }
 
         try {
@@ -324,10 +348,10 @@ public final class DevCycleLocalClient implements IDevCycleClient {
 
     private void validateUser(DevCycleUser user) {
         if (user == null) {
-            throw new IllegalArgumentException("DevCycleUser cannot be null");
+            throw new IllegalArgumentException(ErrorResponse.ErrorMessage.NULL_USER.getMessage());
         }
         if (user.getUserId().equals("")) {
-            throw new IllegalArgumentException("userId cannot be empty");
+            throw new IllegalArgumentException(ErrorResponse.ErrorMessage.USER_ID_MISSING.getMessage());
         }
     }
 

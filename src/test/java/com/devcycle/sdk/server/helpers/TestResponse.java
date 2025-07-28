@@ -1,15 +1,17 @@
 package com.devcycle.sdk.server.helpers;
 
-import com.devcycle.sdk.server.common.model.BaseVariable;
-import com.devcycle.sdk.server.common.model.DevCycleResponse;
-import com.devcycle.sdk.server.common.model.Feature;
-import com.devcycle.sdk.server.common.model.Variable;
-import retrofit2.Call;
-import retrofit2.mock.Calls;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import com.devcycle.sdk.server.common.model.BaseVariable;
+import com.devcycle.sdk.server.common.model.DevCycleResponse;
+import com.devcycle.sdk.server.common.model.EvalReason;
+import com.devcycle.sdk.server.common.model.Feature;
+import com.devcycle.sdk.server.common.model.Variable;
+
+import retrofit2.Call;
+import retrofit2.mock.Calls;
 
 public final class TestResponse {
 
@@ -55,36 +57,55 @@ public final class TestResponse {
                 .key("test-false")
                 .value(false)
                 .type(Variable.TypeEnum.BOOLEAN)
+                .eval(new EvalReason("SPLIT", "Random Distribution | User Id", "test_cloud_target_id"))
+                .featureId("62fbf6566f1ba302829f9e32")
                 .build());
         variables.put("test-true", BaseVariable.builder()
                 .id(UUID.randomUUID().toString())
                 .key("test-true")
                 .value(true)
                 .type(Variable.TypeEnum.BOOLEAN)
+                .eval(new EvalReason("SPLIT", "Random Distribution | User Id", "test_cloud_target_id"))
+                .featureId("62fbf6566f1ba302829f9e32")
                 .build());
         variables.put("test-number", BaseVariable.builder()
                 .id(UUID.randomUUID().toString())
                 .key("test-number")
                 .value(100)
                 .type(Variable.TypeEnum.NUMBER)
+                .eval(new EvalReason("SPLIT", "Random Distribution | User Id", "test_cloud_target_id"))
+                .featureId("62fbf6566f1ba302829f9e32")
                 .build());
         variables.put("test-json", BaseVariable.builder()
                 .id(UUID.randomUUID().toString())
                 .key("test-json")
                 .value("{'some':'json''}")
                 .type(Variable.TypeEnum.JSON)
+                .eval(new EvalReason("SPLIT", "Random Distribution | User Id", "test_cloud_target_id"))
+                .featureId("62fbf6566f1ba302829f9e32")
                 .build());
 
         return Calls.response(variables);
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> Call<Variable> getVariableByKey() {
-        Variable<T> variable = (Variable<T>) Variable.builder()
+    public static <T> Call<Variable> getVariableByKey(String key) {
+        Variable<T> variable = null;
+        if (key.equals("type-mismatch")) {
+            variable = (Variable<T>) Variable.builder()
+                .key("type-mismatch")
+                .value(100)
+                .type(Variable.TypeEnum.NUMBER)
+                .eval(new EvalReason("TARGETING_MATCH", "All Users", "test_cloud_target_id"))
+                .build();
+        } else {
+                variable = (Variable<T>) Variable.builder()
                 .key("test-false")
                 .value(false)
                 .type(Variable.TypeEnum.BOOLEAN)
+                .eval(new EvalReason("TARGETING_MATCH", "All Users", "test_cloud_target_id"))
                 .build();
+        }
 
         return Calls.response(variable);
     }

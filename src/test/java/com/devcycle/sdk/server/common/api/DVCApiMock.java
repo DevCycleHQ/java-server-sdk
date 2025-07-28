@@ -1,11 +1,18 @@
 package com.devcycle.sdk.server.common.api;
 
-import com.devcycle.sdk.server.common.model.*;
+import java.util.Map;
+
+import com.devcycle.sdk.server.common.model.BaseVariable;
+import com.devcycle.sdk.server.common.model.DevCycleResponse;
+import com.devcycle.sdk.server.common.model.DevCycleUser;
+import com.devcycle.sdk.server.common.model.DevCycleUserAndEvents;
+import com.devcycle.sdk.server.common.model.Feature;
+import com.devcycle.sdk.server.common.model.ProjectConfig;
+import com.devcycle.sdk.server.common.model.Variable;
 import com.devcycle.sdk.server.helpers.TestResponse;
 import com.devcycle.sdk.server.local.model.EventsBatch;
-import retrofit2.Call;
 
-import java.util.Map;
+import retrofit2.Call;
 
 public class DVCApiMock implements IDevCycleApi {
 
@@ -16,7 +23,7 @@ public class DVCApiMock implements IDevCycleApi {
 
     @Override
     public Call<Variable> getVariableByKey(DevCycleUser user, String key, Boolean enabledEdgeDB) {
-        return TestResponse.getVariableByKey();
+        return TestResponse.getVariableByKey(key);
     }
 
     @Override
