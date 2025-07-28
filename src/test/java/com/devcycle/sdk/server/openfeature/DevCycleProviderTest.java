@@ -1,19 +1,33 @@
 package com.devcycle.sdk.server.openfeature;
 
-import com.devcycle.sdk.server.common.api.IDevCycleClient;
-import com.devcycle.sdk.server.common.model.Variable;
-import dev.openfeature.sdk.*;
-import dev.openfeature.sdk.exceptions.ProviderNotReadyError;
-import dev.openfeature.sdk.exceptions.TargetingKeyMissingError;
-import dev.openfeature.sdk.exceptions.TypeMismatchError;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.*;
+import com.devcycle.sdk.server.common.api.IDevCycleClient;
+import com.devcycle.sdk.server.common.model.EvalReason;
+import com.devcycle.sdk.server.common.model.Variable;
 
-import static org.mockito.Mockito.*;
+import dev.openfeature.sdk.ErrorCode;
+import dev.openfeature.sdk.ImmutableContext;
+import dev.openfeature.sdk.ProviderEvaluation;
+import dev.openfeature.sdk.Reason;
+import dev.openfeature.sdk.Structure;
+import dev.openfeature.sdk.Value;
+import dev.openfeature.sdk.exceptions.ProviderNotReadyError;
+import dev.openfeature.sdk.exceptions.TargetingKeyMissingError;
+import dev.openfeature.sdk.exceptions.TypeMismatchError;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DevCycleProviderTest {
@@ -90,7 +104,7 @@ public class DevCycleProviderTest {
         IDevCycleClient dvcClient = mock(IDevCycleClient.class);
         when(dvcClient.isInitialized()).thenReturn(true);
 
-        when(dvcClient.variable(any(), any(), any())).thenReturn(Variable.builder().key("some-flag").value("unused value 1").defaultValue("default value").isDefaulted(true).type(Variable.TypeEnum.STRING).build());
+        when(dvcClient.variable(any(), any(), any())).thenReturn(Variable.builder().key("some-flag").value("unused value 1").defaultValue("default value").isDefaulted(true).type(Variable.TypeEnum.STRING).eval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.USER_NOT_TARGETED)).build());
 
         DevCycleProvider provider = new DevCycleProvider(dvcClient);
 
@@ -99,6 +113,8 @@ public class DevCycleProviderTest {
         Assert.assertEquals(result.getValue(), "default value");
         Assert.assertEquals(result.getReason(), Reason.DEFAULT.toString());
         Assert.assertNull(result.getErrorCode());
+        Assert.assertNotNull(result.getFlagMetadata());
+        Assert.assertEquals(result.getFlagMetadata().getString("evalReasonDetails"), EvalReason.DefaultReasonDetailsEnum.USER_NOT_TARGETED.getValue());
     }
 
     @Test
@@ -115,6 +131,25 @@ public class DevCycleProviderTest {
         Assert.assertEquals(result.getValue(), true);
         Assert.assertEquals(result.getReason(), Reason.TARGETING_MATCH.toString());
         Assert.assertNull(result.getErrorCode());
+    }
+
+    @Test
+    public void testResolveBooleanVariableWithDevCycleEvalReason() {
+        IDevCycleClient dvcClient = mock(IDevCycleClient.class);
+        when(dvcClient.isInitialized()).thenReturn(true);
+
+        when(dvcClient.variable(any(), any(), any())).thenReturn(Variable.builder().key("some-flag").value(true).defaultValue(false).type(Variable.TypeEnum.BOOLEAN).eval(new EvalReason("SPLIT", "User ID", "bool_target_id")).build());
+
+        DevCycleProvider provider = new DevCycleProvider(dvcClient);
+
+        ProviderEvaluation<Boolean> result = provider.resolvePrimitiveVariable("some-flag", false, new ImmutableContext("user-1234"));
+        Assert.assertNotNull(result);
+        Assert.assertEquals(result.getValue(), true);
+        Assert.assertEquals(result.getReason(), "SPLIT");
+        Assert.assertNull(result.getErrorCode());
+        Assert.assertNotNull(result.getFlagMetadata());
+        Assert.assertEquals(result.getFlagMetadata().getString("evalReasonDetails"), "User ID");
+        Assert.assertEquals(result.getFlagMetadata().getString("evalReasonTargetId"), "bool_target_id");
     }
 
     @Test
@@ -248,5 +283,39 @@ public class DevCycleProviderTest {
 
         Assert.assertEquals(result.getReason(), Reason.TARGETING_MATCH.toString());
         Assert.assertNull(result.getErrorCode());
+    }
+
+    @Test
+    public void testGetObjectEvaluationWithDevCycleEvalReason() {
+        Map<String, Object> jsonData = new LinkedHashMap<>();
+        jsonData.put("strVal", "some string");
+        jsonData.put("boolVal", true);
+        jsonData.put("numVal", 123);
+
+        Map<String, Object> defaultJsonData = new LinkedHashMap<>();
+
+        IDevCycleClient dvcClient = mock(IDevCycleClient.class);
+        when(dvcClient.isInitialized()).thenReturn(true);
+        when(dvcClient.variable(any(), any(), any())).thenReturn(Variable.builder().key("some-flag").value(jsonData).defaultValue(defaultJsonData).type(Variable.TypeEnum.JSON).eval(new EvalReason("SPLIT", "User ID", "json_target_id")).build());
+
+        DevCycleProvider provider = new DevCycleProvider(dvcClient);
+
+        Value defaultValue = new Value(Structure.mapToStructure(defaultJsonData));
+
+        ProviderEvaluation<Value> result = provider.getObjectEvaluation("some-flag", defaultValue, new ImmutableContext("user-1234"));
+        Assert.assertNotNull(result);
+        Assert.assertNotNull(result.getValue());
+        Assert.assertTrue(result.getValue().isStructure());
+
+        result.getValue().asStructure().asObjectMap().forEach((k, v) -> {
+            Assert.assertTrue(jsonData.containsKey(k));
+            Assert.assertEquals(jsonData.get(k), v);
+        });
+
+        Assert.assertEquals(result.getReason(), "SPLIT");
+        Assert.assertNull(result.getErrorCode());
+        Assert.assertNotNull(result.getFlagMetadata());
+        Assert.assertEquals(result.getFlagMetadata().getString("evalReasonDetails"), "User ID");
+        Assert.assertEquals(result.getFlagMetadata().getString("evalReasonTargetId"), "json_target_id");
     }
 }
