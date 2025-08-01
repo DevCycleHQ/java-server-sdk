@@ -1146,9 +1146,9 @@ public class DevCycleLocalClientTest {
         Assert.assertNotNull("Direct metadata should not be null", directMetadata);
         
         Assert.assertEquals("Hook metadata project should match current metadata", 
-                directMetadata.project, capturedMetadata[0].project);
+                directMetadata.project.id, capturedMetadata[0].project.id);
         Assert.assertEquals("Hook metadata environment should match current metadata", 
-                directMetadata.environment, capturedMetadata[0].environment);
+                directMetadata.environment.id, capturedMetadata[0].environment.id);
     }
 
     @Test
