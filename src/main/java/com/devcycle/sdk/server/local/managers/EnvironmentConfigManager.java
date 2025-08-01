@@ -39,7 +39,8 @@ public final class EnvironmentConfigManager {
     private final DevCycleLocalOptions options;
 
     private ProjectConfig config;
-    private ConfigMetadata configMetadata;
+    private String configETag = "";
+    private String configLastModified = "";
 
     private final String sdkKey;
     private final int pollingIntervalMS;
@@ -73,9 +74,7 @@ public final class EnvironmentConfigManager {
                 }
             } catch (DevCycleException e) {
                 DevCycleLogger.error("Failed to load config: " + e.getMessage(), e);
-            } catch (Exception e) {
-                DevCycleLogger.error("Unexpected error during config fetch: " + e.getMessage(), e);
-            }
+            } 
         }
     };
 
@@ -84,15 +83,7 @@ public final class EnvironmentConfigManager {
     }
 
     private ProjectConfig getConfig() throws DevCycleException {        
-        // Handle initial request where configMetadata might be null
-        String etag = null;
-        String lastModified = null;
-        if (this.configMetadata != null) {
-            etag = this.configMetadata.configETag;
-            lastModified = this.configMetadata.configLastModified;
-        }
-
-        Call<ProjectConfig> config = this.configApiClient.getConfig(this.sdkKey, etag, lastModified);
+        Call<ProjectConfig> config = this.configApiClient.getConfig(this.sdkKey, this.configETag, this.configLastModified);
         ProjectConfig fetchedConfig = getResponseWithRetries(config, 1);
         this.config = fetchedConfig;
         
@@ -204,16 +195,13 @@ public final class EnvironmentConfigManager {
             String currentETag = response.headers().get("ETag");
             String headerLastModified = response.headers().get("Last-Modified");
 
-            // Check if we should skip this config due to older timestamp (only if configMetadata exists)
-            if (this.configMetadata != null && 
-                !this.configMetadata.configLastModified.isEmpty() && 
-                headerLastModified != null && !headerLastModified.isEmpty()) {
+            if (!this.configLastModified.isEmpty() && headerLastModified != null && !headerLastModified.isEmpty()) {
                 ZonedDateTime parsedLastModified = ZonedDateTime.parse(
                         headerLastModified,
                         DateTimeFormatter.RFC_1123_DATE_TIME
                 );
                 ZonedDateTime configLastModified = ZonedDateTime.parse(
-                        this.configMetadata.configLastModified,
+                        this.configLastModified,
                         DateTimeFormatter.RFC_1123_DATE_TIME
                 );
 
@@ -229,23 +217,18 @@ public final class EnvironmentConfigManager {
                 localBucketing.storeConfig(sdkKey, mapper.writeValueAsString(config));
             } catch (JsonProcessingException e) {
                 if (this.config != null) {
-                    String currentConfigInfo = (this.configMetadata != null) ? 
-                        " etag " + this.configMetadata.configETag + " last-modified: " + this.configMetadata.configLastModified :
-                        "";
-                    DevCycleLogger.error("Unable to parse config with etag: " + currentETag + ". Using cache," + currentConfigInfo);
+                    DevCycleLogger.error("Unable to parse config with etag: " + currentETag + ". Using cache, etag " + this.configETag + " last-modified: " + this.configLastModified);
                     return this.config;
                 } else {
                     errorResponse.setMessage(e.getMessage());
                     throw new DevCycleException(HttpResponseCode.SERVER_ERROR, errorResponse);
                 }
             }
-            this.configMetadata = new ConfigMetadata(currentETag, headerLastModified, config.getProject(), config.getEnvironment());
+            this.configETag = currentETag;
+            this.configLastModified = headerLastModified;
             return response.body();
         } else if (httpResponseCode == HttpResponseCode.NOT_MODIFIED) {
-            String cacheInfo = (this.configMetadata != null) ? 
-                " etag: " + this.configMetadata.configETag + " last-modified: " + this.configMetadata.configLastModified :
-                " (no metadata available)";
-            DevCycleLogger.debug("Config not modified, using cache," + cacheInfo);
+            DevCycleLogger.debug("Config not modified, using cache, etag: " + this.configETag + " last-modified: " + this.configLastModified);
             return this.config;
         } else {
             if (response.errorBody() != null) {
@@ -291,6 +274,12 @@ public final class EnvironmentConfigManager {
     }
 
     public ConfigMetadata getConfigMetadata() {
-        return configMetadata;
+        String configMetadata = localBucketing.getConfigMetadata(this.sdkKey);
+        try {
+            return OBJECT_MAPPER.readValue(configMetadata, ConfigMetadata.class);
+        } catch (JsonProcessingException e) {
+            DevCycleLogger.warning("Unable to parse config metadata: " + e.getMessage());
+            return new ConfigMetadata(null, null);
+        }
     }
 }
