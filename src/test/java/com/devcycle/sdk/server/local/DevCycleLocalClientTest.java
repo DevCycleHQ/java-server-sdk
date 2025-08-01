@@ -37,7 +37,9 @@ import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
 import com.devcycle.sdk.server.local.model.ConfigMetadata;
 import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
 import com.devcycle.sdk.server.local.model.Environment;
+import com.devcycle.sdk.server.local.model.EnvironmentMetadata;
 import com.devcycle.sdk.server.local.model.Project;
+import com.devcycle.sdk.server.local.model.ProjectMetadata;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DevCycleLocalClientTest {
@@ -1035,14 +1037,9 @@ public class DevCycleLocalClientTest {
                 
                 // Check that config metadata has the expected structure
                 ConfigMetadata metadata = ctx.getMetadata();
-                Assert.assertNotNull("Config ETag should not be null", metadata.configETag);
-                Assert.assertNotNull("Config last modified should not be null", metadata.configLastModified);
                 Assert.assertNotNull("Project metadata should not be null", metadata.project);
                 Assert.assertNotNull("Environment metadata should not be null", metadata.environment);
                 
-                // Verify basic metadata structure is present
-                Assert.assertFalse("Config ETag should not be empty", metadata.configETag.isEmpty());
-                Assert.assertFalse("Config last modified should not be empty", metadata.configLastModified.isEmpty());
                 
                 metadataChecked[0] = true;
             }
@@ -1089,11 +1086,9 @@ public class DevCycleLocalClientTest {
         
         // Verify metadata is consistent across all hook stages
         Assert.assertEquals("Before and after metadata should be the same", 
-                capturedMetadata[0].configETag, capturedMetadata[1].configETag);
+                capturedMetadata[0], capturedMetadata[1]);
         Assert.assertEquals("Before and finally metadata should be the same", 
-                capturedMetadata[0].configETag, capturedMetadata[2].configETag);
-        Assert.assertEquals("Metadata timestamps should be consistent", 
-                capturedMetadata[0].configLastModified, capturedMetadata[1].configLastModified);
+                capturedMetadata[0], capturedMetadata[2]);
     }
 
     @Test
@@ -1115,8 +1110,6 @@ public class DevCycleLocalClientTest {
                 // Verify metadata is accessible even in error hook
                 Assert.assertNotNull("Metadata should be accessible in error hook", ctx.getMetadata());
                 ConfigMetadata metadata = ctx.getMetadata();
-                Assert.assertNotNull("Config ETag should not be null in error hook", metadata.configETag);
-                Assert.assertNotNull("Config last modified should not be null in error hook", metadata.configLastModified);
                 Assert.assertNotNull("Project metadata should not be null in error hook", metadata.project);
                 Assert.assertNotNull("Environment metadata should not be null in error hook", metadata.environment);
                 metadataCheckedInError[0] = true;
@@ -1152,11 +1145,6 @@ public class DevCycleLocalClientTest {
         ConfigMetadata directMetadata = client.getMetadata();
         Assert.assertNotNull("Direct metadata should not be null", directMetadata);
         
-        // The metadata in hooks should match the current client metadata
-        Assert.assertEquals("Hook metadata ETag should match current metadata", 
-                directMetadata.configETag, capturedMetadata[0].configETag);
-        Assert.assertEquals("Hook metadata timestamp should match current metadata", 
-                directMetadata.configLastModified, capturedMetadata[0].configLastModified);
         Assert.assertEquals("Hook metadata project should match current metadata", 
                 directMetadata.project, capturedMetadata[0].project);
         Assert.assertEquals("Hook metadata environment should match current metadata", 
@@ -1177,7 +1165,6 @@ public class DevCycleLocalClientTest {
              public void after(HookContext<String> ctx, Variable<String> variable) {
                  Assert.assertNotNull("First hook should receive metadata", ctx.getMetadata());
                  Assert.assertNotNull("First hook metadata should have project", ctx.getMetadata().project);
-                 Assert.assertNotNull("First hook metadata should have config ETag", ctx.getMetadata().configETag);
                  metadataChecked[0] = true;
              }
          });
@@ -1188,7 +1175,6 @@ public class DevCycleLocalClientTest {
              public void after(HookContext<String> ctx, Variable<String> variable) {
                  Assert.assertNotNull("Second hook should receive metadata", ctx.getMetadata());
                  Assert.assertNotNull("Second hook metadata should have environment", ctx.getMetadata().environment);
-                 Assert.assertNotNull("Second hook metadata should have last modified", ctx.getMetadata().configLastModified);
                  metadataChecked[1] = true;
              }
         });
@@ -1212,16 +1198,12 @@ public class DevCycleLocalClientTest {
 
         // Test ConfigMetadata construction
         ConfigMetadata metadata = new ConfigMetadata(
-                "test-etag-12345",
-                "2023-10-01T12:00:00Z",
-                mockProject,
-                mockEnvironment
+                new ProjectMetadata(mockProject._id, mockProject.key),
+                new EnvironmentMetadata(mockEnvironment._id, mockEnvironment.key)
         );
 
         // Verify metadata is properly constructed
         Assert.assertNotNull("Metadata should not be null", metadata);
-        Assert.assertEquals("Config ETag should match", "test-etag-12345", metadata.configETag);
-        Assert.assertEquals("Config last modified should match", "2023-10-01T12:00:00Z", metadata.configLastModified);
         Assert.assertNotNull("Project metadata should not be null", metadata.project);
         Assert.assertNotNull("Environment metadata should not be null", metadata.environment);
 
@@ -1231,6 +1213,5 @@ public class DevCycleLocalClientTest {
         
         Assert.assertNotNull("HookContext should not be null", contextWithMetadata);
         Assert.assertEquals("Metadata should be accessible from context", metadata, contextWithMetadata.getMetadata());
-        Assert.assertEquals("Config ETag should be accessible", "test-etag-12345", contextWithMetadata.getMetadata().configETag);
     }
 }
