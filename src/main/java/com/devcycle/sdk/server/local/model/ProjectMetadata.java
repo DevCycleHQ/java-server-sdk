@@ -1,15 +1,16 @@
 package com.devcycle.sdk.server.local.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ProjectMetadata {
-    public final String id;
-    public final String key;
-
-    @JsonCreator
-    public ProjectMetadata(@JsonProperty("id") String id, @JsonProperty("key") String key) {
-        this.id = id;
-        this.key = key;
-    }
+    @JsonProperty("id")
+    public String id;
+    @JsonProperty("key")
+    public String key;
 }
