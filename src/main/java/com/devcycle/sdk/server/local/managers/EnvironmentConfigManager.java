@@ -279,7 +279,7 @@ public final class EnvironmentConfigManager {
             return OBJECT_MAPPER.readValue(configMetadata, ConfigMetadata.class);
         } catch (JsonProcessingException e) {
             DevCycleLogger.warning("Unable to parse config metadata: " + e.getMessage());
-            return new ConfigMetadata(null, null);
+            return new ConfigMetadata();
         }
     }
 }

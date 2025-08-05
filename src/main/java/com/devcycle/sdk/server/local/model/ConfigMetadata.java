@@ -1,16 +1,15 @@
 package com.devcycle.sdk.server.local.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ConfigMetadata {
 
-    public final ProjectMetadata project;
-    public final EnvironmentMetadata environment;
+    public ProjectMetadata project;
+    public EnvironmentMetadata environment;
 
-    @JsonCreator
-    public ConfigMetadata(@JsonProperty("project") ProjectMetadata project, @JsonProperty("environment") EnvironmentMetadata environment) {
-        this.project = project;
-        this.environment = environment;
-    }
 }
