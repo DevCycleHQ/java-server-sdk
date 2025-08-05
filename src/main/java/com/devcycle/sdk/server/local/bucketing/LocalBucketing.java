@@ -382,5 +382,15 @@ public class LocalBucketing {
 
         return sdkKeyAddresses.get(sdkKey);
     }
+
+    public String getConfigMetadata(String sdkKey) {
+        int sdkKeyAddress = getSDKKeyAddress(sdkKey);
+        Func getConfigMetadataPtr = linker.get(store, "", "getConfigMetadata").get().func();
+        WasmFunctions.Function1<Integer, Integer> getConfigMetadata = WasmFunctions.func(
+                store, getConfigMetadataPtr, I32, I32);
+
+        int resultAddress = getConfigMetadata.call(sdkKeyAddress);
+        return readWasmString(resultAddress);
+    }
 }
 

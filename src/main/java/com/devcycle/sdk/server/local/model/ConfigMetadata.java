@@ -1,16 +1,15 @@
 package com.devcycle.sdk.server.local.model;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ConfigMetadata {
 
-    public final String configETag;
-    public final String configLastModified;
-    public final ProjectMetadata project;
-    public final EnvironmentMetadata environment;
+    public ProjectMetadata project;
+    public EnvironmentMetadata environment;
 
-    public ConfigMetadata(String currentETag, String headerLastModified, Project project, Environment environment) {
-        this.configETag = currentETag;
-        this.configLastModified = headerLastModified;
-        this.project = new ProjectMetadata(project._id, project.key);
-        this.environment = new EnvironmentMetadata(environment._id, environment.key);
-    }
 }

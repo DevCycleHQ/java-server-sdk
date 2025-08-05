@@ -1,11 +1,16 @@
 package com.devcycle.sdk.server.local.model;
 
-public class EnvironmentMetadata {
-    public final String id;
-    public final String key;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-    public EnvironmentMetadata(String id, String key) {
-        this.id = id;
-        this.key = key;
-    }
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class EnvironmentMetadata {
+    @JsonProperty("id")
+    public String id;
+    @JsonProperty("key")
+    public String key;
 }
