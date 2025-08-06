@@ -1,12 +1,12 @@
 package com.devcycle.sdk.server.common.model;
 
-import com.devcycle.sdk.server.common.exception.AfterHookError;
-import com.devcycle.sdk.server.common.exception.BeforeHookError;
-import com.devcycle.sdk.server.common.logging.DevCycleLogger;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import com.devcycle.sdk.server.common.exception.AfterHookError;
+import com.devcycle.sdk.server.common.exception.BeforeHookError;
+import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 
 /**
  * A class that manages evaluation hooks for the DevCycle SDK.
