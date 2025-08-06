@@ -60,6 +60,7 @@ public class ProtobufUtils {
                         .defaultValue(defaultValue)
                         .isDefaulted(false)
                         .eval(convertToEvalReason(sdkVariable.getEval()))
+                        .featureId(sdkVariable.getFeature().getValue())
                         .build();
                 break;
             case String:
@@ -70,6 +71,7 @@ public class ProtobufUtils {
                         .defaultValue(defaultValue)
                         .isDefaulted(false)
                         .eval(convertToEvalReason(sdkVariable.getEval()))
+                        .featureId(sdkVariable.getFeature().getValue())
                         .build();
                 break;
             case Number:
@@ -80,6 +82,7 @@ public class ProtobufUtils {
                         .defaultValue(defaultValue)
                         .isDefaulted(false)
                         .eval(convertToEvalReason(sdkVariable.getEval()))
+                        .featureId(sdkVariable.getFeature().getValue())
                         .build();
                 break;
             case JSON:
@@ -93,6 +96,7 @@ public class ProtobufUtils {
                         .defaultValue(defaultValue)
                         .isDefaulted(false)
                         .eval(convertToEvalReason(sdkVariable.getEval()))
+                        .featureId(sdkVariable.getFeature().getValue())
                         .build();
                 break;
             default:

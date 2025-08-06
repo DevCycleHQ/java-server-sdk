@@ -157,6 +157,7 @@ public class DevCycleLocalClientTest {
         var = client.variable(user, "string-var", "default string");
         Assert.assertNotNull(var);
         Assert.assertEquals("variationOn", var.getValue());
+        Assert.assertEquals("62fbf6566f1ba302829f9e32", var.getFeatureId());
 
         EvalReason varEval = var.getEval();
         Assert.assertEquals("TARGETING_MATCH", varEval.getReason());
@@ -173,6 +174,7 @@ public class DevCycleLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertFalse(var.getIsDefaulted());
         Assert.assertEquals(true, var.getValue());
+        Assert.assertEquals("62fbf6566f1ba302829f9e32", var.getFeatureId());
 
         EvalReason varEval = var.getEval();
         Assert.assertEquals("TARGETING_MATCH", varEval.getReason());
@@ -188,6 +190,7 @@ public class DevCycleLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertFalse(var.getIsDefaulted());
         Assert.assertEquals(12345.0, var.getValue().doubleValue(), 0.0);
+        Assert.assertEquals("62fbf6566f1ba302829f9e32", var.getFeatureId());
 
         EvalReason varEval = var.getEval();
         Assert.assertEquals("TARGETING_MATCH", varEval.getReason());
@@ -213,6 +216,7 @@ public class DevCycleLocalClientTest {
         Assert.assertEquals("This variation is on", variableData.get("displayText"));
         Assert.assertEquals(true, variableData.get("showDialog"));
         Assert.assertEquals(100, variableData.get("maxUsers"));
+        Assert.assertEquals("62fbf6566f1ba302829f9e32", var.getFeatureId());
 
         EvalReason varEval = var.getEval();
         Assert.assertEquals("TARGETING_MATCH", varEval.getReason());
@@ -253,6 +257,7 @@ public class DevCycleLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertFalse(var.getIsDefaulted());
         Assert.assertEquals("variationOn", var.getValue());
+        Assert.assertEquals("62fbf6566f1ba302829f9e32", var.getFeatureId());
 
         EvalReason varEval = var.getEval();
         Assert.assertEquals("TARGETING_MATCH", varEval.getReason());
@@ -275,6 +280,7 @@ public class DevCycleLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertFalse(var.getIsDefaulted());
         Assert.assertEquals("↑↑↓↓←→←→BA 🤖", var.getValue());
+        Assert.assertEquals("638680d6fcb67b96878d90e6", var.getFeatureId());
 
         EvalReason varEval = var.getEval();
         Assert.assertEquals("TARGETING_MATCH", varEval.getReason());
@@ -288,6 +294,7 @@ public class DevCycleLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertTrue(var.getIsDefaulted());
         Assert.assertEquals(true, var.getValue());
+        Assert.assertNull(var.getFeatureId());
 
         EvalReason varEval = var.getEval();
         Assert.assertEquals("DEFAULT", varEval.getReason());
@@ -301,6 +308,7 @@ public class DevCycleLocalClientTest {
         Assert.assertNotNull(var);
         Assert.assertTrue(var.getIsDefaulted());
         Assert.assertEquals(true, var.getValue());
+        Assert.assertNull(var.getFeatureId());
 
         EvalReason varEval = var.getEval();
         Assert.assertEquals("DEFAULT", varEval.getReason());
@@ -722,6 +730,7 @@ public class DevCycleLocalClientTest {
                 .isDefaulted(false)
                 .defaultValue("default string")
                 .eval(new EvalReason("TARGETING_MATCH", "All Users", "63125321d31c601f992288bc"))
+                .featureId("62fbf6566f1ba302829f9e32")
                 .build();
 
         Variable<String> result = client.variable(user, "string-var", "default string");
@@ -993,6 +1002,7 @@ public class DevCycleLocalClientTest {
                 .isDefaulted(false)
                 .defaultValue("default string")
                 .eval(new EvalReason("TARGETING_MATCH", "All Users", "63125321d31c601f992288bc"))
+                .featureId("62fbf6566f1ba302829f9e32")
                 .build();
 
         Variable<String> result = client.variable(user, "string-var", "default string");

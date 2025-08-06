@@ -43,6 +43,10 @@ public class Variable<T> {
     @JsonIgnore
     private final String evalReason = null;
 
+    @Schema(description = "Feature ID")
+    @JsonProperty("_feature")
+    private String featureId;
+
     public enum TypeEnum {
         STRING("String"),
         BOOLEAN("Boolean"),
