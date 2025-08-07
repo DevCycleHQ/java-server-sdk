@@ -7,6 +7,7 @@ import java.util.Optional;
 import com.devcycle.sdk.server.common.exception.AfterHookError;
 import com.devcycle.sdk.server.common.exception.BeforeHookError;
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
+import com.devcycle.sdk.server.local.model.VariableMetadata;
 
 /**
  * A class that manages evaluation hooks for the DevCycle SDK.
@@ -81,16 +82,16 @@ public class EvalHooksRunner<T> {
      * @param variable The variable result to pass to the hooks
      * @param <T> The type of the variable value
      */
-    public void executeAfter(ArrayList<EvalHook<T>> hooks, HookContext<T> context, Variable<T> variable) {
+    public void executeAfter(ArrayList<EvalHook<T>> hooks, HookContext<T> context, Variable<T> variable, VariableMetadata variableMetadata) {
         for (EvalHook<T> hook : hooks) {
             try {
-                hook.after(context, variable);
+                hook.after(context, variable, variableMetadata);
             } catch (Exception e) {
                 throw new AfterHookError("After hook failed", e);
             }
         }
     }
-
+    
     /**
      * Runs all error hooks in reverse order.
      *
@@ -115,10 +116,10 @@ public class EvalHooksRunner<T> {
      * @param context The context to pass to the hooks
      * @param variable The variable result to pass to the hooks (may be null)
      */
-    public void executeFinally(ArrayList<EvalHook<T>> hooks, HookContext<T> context, Optional<Variable<T>> variable) {
+    public void executeFinally(ArrayList<EvalHook<T>> hooks, HookContext<T> context, Optional<Variable<T>> variable, VariableMetadata variableMetadata) {
         for (EvalHook<T> hook : hooks) {
             try {
-                hook.onFinally(context, variable);
+                hook.onFinally(context, variable, variableMetadata);
             } catch (Exception e) {
                 // Log finally hook error but don't throw
                 DevCycleLogger.error("Finally hook failed: " + e.getMessage(), e);

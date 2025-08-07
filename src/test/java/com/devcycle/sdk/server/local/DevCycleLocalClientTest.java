@@ -40,6 +40,7 @@ import com.devcycle.sdk.server.local.model.Environment;
 import com.devcycle.sdk.server.local.model.EnvironmentMetadata;
 import com.devcycle.sdk.server.local.model.Project;
 import com.devcycle.sdk.server.local.model.ProjectMetadata;
+import com.devcycle.sdk.server.local.model.VariableMetadata;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DevCycleLocalClientTest {
@@ -458,13 +459,13 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
                 Assert.assertTrue(beforeCalled[0]);
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
                 Assert.assertTrue(afterCalled[0]);
             }
@@ -495,7 +496,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
             }
 
@@ -505,7 +506,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
             }
         });
@@ -538,7 +539,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
                 throw new RuntimeException("Test after hook error");
             }
@@ -549,7 +550,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
             }
         });
@@ -582,7 +583,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
             }
 
@@ -592,7 +593,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
                 throw new RuntimeException("Test finally hook error");
             }
@@ -625,7 +626,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
             }
 
@@ -636,7 +637,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
             }
         });
@@ -675,7 +676,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 hook1AfterCalled[0] = true;
             }
 
@@ -685,7 +686,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 hook1FinallyCalled[0] = true;
             }
         });
@@ -699,7 +700,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 hook2AfterCalled[0] = true;
                 throw new RuntimeException("Test hook2 after error");
             }
@@ -710,7 +711,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 hook2FinallyCalled[0] = true;
             }
         });
@@ -758,7 +759,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
             }
 
@@ -770,7 +771,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
             }
         });
@@ -803,7 +804,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
             }
 
@@ -815,7 +816,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
             }
         });
@@ -848,7 +849,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {   
                 afterCalled[0] = true;
             }
 
@@ -858,7 +859,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
                 throw new RuntimeException("Test finally hook error after previous error");
             }
@@ -892,7 +893,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
             }
 
@@ -903,7 +904,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
             }
         });
@@ -937,12 +938,12 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
             }
 
@@ -959,12 +960,12 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[1] = true;
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[1] = true;
             }
 
@@ -1031,7 +1032,7 @@ public class DevCycleLocalClientTest {
 
         client.addHook(new EvalHook<String>() {
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 // Verify metadata is accessible and properly populated
                 Assert.assertNotNull("Metadata should not be null", ctx.getMetadata());
                 
@@ -1067,12 +1068,12 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 capturedMetadata[1] = ctx.getMetadata();
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 capturedMetadata[2] = ctx.getMetadata();
             }
         });
@@ -1132,7 +1133,7 @@ public class DevCycleLocalClientTest {
 
         client.addHook(new EvalHook<String>() {
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 capturedMetadata[0] = ctx.getMetadata();
             }
         });
@@ -1162,7 +1163,7 @@ public class DevCycleLocalClientTest {
         // First hook
         client.addHook(new EvalHook<String>() {
                          @Override
-             public void after(HookContext<String> ctx, Variable<String> variable) {
+             public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                  Assert.assertNotNull("First hook should receive metadata", ctx.getMetadata());
                  Assert.assertNotNull("First hook metadata should have project", ctx.getMetadata().project);
                  metadataChecked[0] = true;
@@ -1172,7 +1173,7 @@ public class DevCycleLocalClientTest {
          // Second hook
          client.addHook(new EvalHook<String>() {
              @Override
-             public void after(HookContext<String> ctx, Variable<String> variable) {
+             public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                  Assert.assertNotNull("Second hook should receive metadata", ctx.getMetadata());
                  Assert.assertNotNull("Second hook metadata should have environment", ctx.getMetadata().environment);
                  metadataChecked[1] = true;

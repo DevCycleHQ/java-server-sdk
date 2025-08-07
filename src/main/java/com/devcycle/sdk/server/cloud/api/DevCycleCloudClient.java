@@ -150,7 +150,7 @@ public final class DevCycleCloudClient implements IDevCycleClient {
             }
 
             variable.setIsDefaulted(false);
-            evalHooksRunner.executeAfter(reversedHooks, context, variable);
+            evalHooksRunner.executeAfter(reversedHooks, context, variable, null);
         } catch (Throwable exception) {
             if (!(exception instanceof BeforeHookError || exception instanceof AfterHookError)) {
                 variable = (Variable<T>) Variable.builder()
@@ -170,7 +170,7 @@ public final class DevCycleCloudClient implements IDevCycleClient {
 
             evalHooksRunner.executeError(reversedHooks, context, exception);
         } finally {
-            evalHooksRunner.executeFinally(reversedHooks, context, Optional.ofNullable(variable));
+            evalHooksRunner.executeFinally(reversedHooks, context, Optional.ofNullable(variable), null);
         }
         return variable;
     }

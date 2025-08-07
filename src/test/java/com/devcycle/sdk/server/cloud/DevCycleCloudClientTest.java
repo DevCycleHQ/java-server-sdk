@@ -35,6 +35,7 @@ import com.devcycle.sdk.server.common.model.Meta;
 import com.devcycle.sdk.server.common.model.PlatformData;
 import com.devcycle.sdk.server.common.model.Variable;
 import com.devcycle.sdk.server.helpers.WhiteBox;
+import com.devcycle.sdk.server.local.model.VariableMetadata;
 
 import retrofit2.mock.Calls;
 
@@ -271,13 +272,13 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable) {
+            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
                 Assert.assertTrue(beforeCalled[0]);
             }
 
             @Override
-            public void onFinally(HookContext<Boolean> ctx, Optional<Variable<Boolean>> variable) {
+            public void onFinally(HookContext<Boolean> ctx, Optional<Variable<Boolean>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
                 Assert.assertTrue(afterCalled[0]);
             }
@@ -311,7 +312,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable) {
+            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
             }
 
@@ -321,7 +322,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<Boolean> ctx, Optional<Variable<Boolean>>  variable) {
+            public void onFinally(HookContext<Boolean> ctx, Optional<Variable<Boolean>>  variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
             }
         });
@@ -354,7 +355,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable) {
+            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
             }
 
@@ -364,7 +365,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<Boolean> ctx, Optional<Variable<Boolean>>  variable) {
+            public void onFinally(HookContext<Boolean> ctx, Optional<Variable<Boolean>>  variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
             }
         });
@@ -407,7 +408,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
                 throw new RuntimeException("Test after hook error");
             }
@@ -418,7 +419,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
             }
         });
@@ -461,7 +462,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
             }
 
@@ -471,7 +472,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
                 throw new RuntimeException("Test finally hook error");
             }
@@ -514,7 +515,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
             }
 
@@ -525,7 +526,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
             }
         });
@@ -573,7 +574,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 hook1AfterCalled[0] = true;
             }
 
@@ -583,7 +584,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 hook1FinallyCalled[0] = true;
             }
         });
@@ -597,7 +598,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 hook2AfterCalled[0] = true;
                 throw new RuntimeException("Test hook2 after error");
             }
@@ -608,7 +609,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 hook2FinallyCalled[0] = true;
             }
         });
@@ -659,7 +660,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
             }
 
@@ -670,7 +671,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
             }
         });
@@ -713,7 +714,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
             }
 
@@ -723,7 +724,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
                 throw new RuntimeException("Test finally hook error after previous error");
             }
@@ -767,7 +768,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
             }
 
@@ -778,7 +779,7 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
             }
         });
@@ -822,12 +823,12 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[0] = true;
             }
 
@@ -844,12 +845,12 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable) {
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[1] = true;
             }
 
             @Override
-            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable) {
+            public void onFinally(HookContext<String> ctx, Optional<Variable<String>> variable, VariableMetadata variableMetadata) {
                 finallyCalled[1] = true;
             }
 
@@ -908,7 +909,7 @@ public class DevCycleCloudClientTest {
 
         api.addHook(new EvalHook<Boolean>() {
             @Override
-            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable) {
+            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable, VariableMetadata variableMetadata) {
                 // Cloud client should have null metadata since it doesn't manage local config
                 Assert.assertNull("Cloud client metadata should be null", ctx.getMetadata());
                 metadataChecked[0] = true;
@@ -947,12 +948,12 @@ public class DevCycleCloudClientTest {
             }
 
             @Override
-            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable) {
+            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable, VariableMetadata variableMetadata) {
                 metadataWasNull[1] = (ctx.getMetadata() == null);
             }
 
             @Override
-            public void onFinally(HookContext<Boolean> ctx, Optional<Variable<Boolean>> variable) {
+            public void onFinally(HookContext<Boolean> ctx, Optional<Variable<Boolean>> variable, VariableMetadata variableMetadata) {
                 metadataWasNull[2] = (ctx.getMetadata() == null);
             }
         });
@@ -1024,7 +1025,7 @@ public class DevCycleCloudClientTest {
         // First hook
         api.addHook(new EvalHook<Boolean>() {
             @Override
-            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable) {
+            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable, VariableMetadata variableMetadata) {
                 Assert.assertNull("First hook should receive null metadata in cloud client", ctx.getMetadata());
                 metadataChecked[0] = true;
             }
@@ -1033,7 +1034,7 @@ public class DevCycleCloudClientTest {
         // Second hook
         api.addHook(new EvalHook<Boolean>() {
             @Override
-            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable) {
+            public void after(HookContext<Boolean> ctx, Variable<Boolean> variable, VariableMetadata variableMetadata) {
                 Assert.assertNull("Second hook should receive null metadata in cloud client", ctx.getMetadata());
                 metadataChecked[1] = true;
             }

@@ -27,6 +27,7 @@ import com.devcycle.sdk.server.local.managers.EventQueueManager;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.devcycle.sdk.server.local.model.ConfigMetadata;
 import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
+import com.devcycle.sdk.server.local.model.VariableMetadata;
 import com.devcycle.sdk.server.local.protobuf.SDKVariable_PB;
 import com.devcycle.sdk.server.local.protobuf.VariableForUserParams_PB;
 import com.devcycle.sdk.server.local.protobuf.VariableType_PB;
@@ -181,6 +182,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
 
         HookContext<T> hookContext = new HookContext<T>(user, key, defaultValue, getMetadata());
         Variable<T> variable = null;
+        VariableMetadata variableMetadata = null;
         ArrayList<EvalHook<T>> hooks = new ArrayList<EvalHook<T>>(evalHooksRunner.getHooks());
         ArrayList<EvalHook<T>> reversedHooks = new ArrayList<EvalHook<T>>(evalHooksRunner.getHooks());
         Collections.reverse(reversedHooks);
@@ -207,12 +209,13 @@ public final class DevCycleLocalClient implements IDevCycleClient {
                     variable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.VARIABLE_TYPE_MISMATCH));
                 } else {
                     variable = ProtobufUtils.createVariable(sdkVariable, defaultValue);
+                    variableMetadata = new VariableMetadata(sdkVariable.getFeature().getValue());
                 }
             }
             if (beforeError != null) {
                 throw beforeError;
             }
-            evalHooksRunner.executeAfter(reversedHooks, hookContext, variable);
+            evalHooksRunner.executeAfter(reversedHooks, hookContext, variable, variableMetadata);
         } catch (Throwable e) {
             if (!(e instanceof BeforeHookError)) {
                 DevCycleLogger.error("Unable to evaluate Variable " + key + " due to error: " + e, e);
@@ -225,7 +228,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
                 variable = defaultVariable;
                 variable.setEval(EvalReason.defaultReason(EvalReason.DefaultReasonDetailsEnum.USER_NOT_TARGETED));
             }
-            evalHooksRunner.executeFinally(reversedHooks, hookContext, Optional.of(variable));
+            evalHooksRunner.executeFinally(reversedHooks, hookContext, Optional.ofNullable(variable), variableMetadata);
         }
         return variable;
     }
