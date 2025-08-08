@@ -1,17 +1,18 @@
 package com.devcycle.sdk.server.common.model;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 @Data
 @Builder
@@ -34,6 +35,7 @@ public class PlatformData {
     private String sdkVersion = "2.8.1";
 
     @Schema(description = "DevCycle SDK Platform")
+    @Builder.Default
     private String sdkPlatform = null;
 
     @Schema(description = "Hostname where the SDK is running")
