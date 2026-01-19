@@ -325,7 +325,9 @@ public final class DevCycleLocalClient implements IDevCycleClient {
         this.evalHooksRunner.clearHooks();
     }
 
-    private DevCycleProvider openFeatureProvider = null;
+    // volatile is required for thread-safe lazy initialization with double-checked locking.
+    // Lazy init ensures the "java-of" platform data is only set when OpenFeature is actually used.
+    private volatile DevCycleProvider openFeatureProvider;
 
     /**
      * @return the OpenFeature provider for this client.
@@ -333,9 +335,13 @@ public final class DevCycleLocalClient implements IDevCycleClient {
     @Override
     public FeatureProvider getOpenFeatureProvider() {
         if (openFeatureProvider == null) {
-            openFeatureProvider = new DevCycleProvider(this);
-            PlatformData platformData = PlatformData.builder().sdkPlatform("java-of").build();
-            localBucketing.setPlatformData(platformData.toString());
+            synchronized (this) {
+                if (openFeatureProvider == null) {
+                    PlatformData platformData = PlatformData.builder().sdkPlatform("java-of").build();
+                    localBucketing.setPlatformData(platformData.toString());
+                    openFeatureProvider = new DevCycleProvider(this);
+                }
+            }
         }
         return openFeatureProvider;
     }
