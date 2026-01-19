@@ -325,7 +325,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
         this.evalHooksRunner.clearHooks();
     }
 
-    private static DevCycleProvider openFeatureProvider = null;
+    private DevCycleProvider openFeatureProvider = null;
 
     /**
      * @return the OpenFeature provider for this client.
@@ -333,13 +333,9 @@ public final class DevCycleLocalClient implements IDevCycleClient {
     @Override
     public FeatureProvider getOpenFeatureProvider() {
         if (openFeatureProvider == null) {
-            synchronized (DevCycleLocalClient.class) {
-                if (openFeatureProvider == null) {
-                    openFeatureProvider = new DevCycleProvider(this);
-                }
-                PlatformData platformData = PlatformData.builder().sdkPlatform("java-of").build();
-                localBucketing.setPlatformData(platformData.toString());
-            }
+            openFeatureProvider = new DevCycleProvider(this);
+            PlatformData platformData = PlatformData.builder().sdkPlatform("java-of").build();
+            localBucketing.setPlatformData(platformData.toString());
         }
         return openFeatureProvider;
     }
