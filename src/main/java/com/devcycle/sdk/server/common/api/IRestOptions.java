@@ -1,8 +1,12 @@
 package com.devcycle.sdk.server.common.api;
 
+import okhttp3.Authenticator;
+
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.X509TrustManager;
+import java.net.Proxy;
+import java.net.ProxySelector;
 import java.util.Map;
 
 /**
@@ -29,4 +33,25 @@ public interface IRestOptions {
      * @return A custom HostnameVerifier to use when making requests. Return null if the default HostnameVerifier can be used
      */
     HostnameVerifier getHostnameVerifier();
+
+    /**
+     * @return a Proxy to use when making requests. Return null if the default Proxy selector can be used
+     */
+    default Proxy getProxy() {
+        return null;
+    }
+
+    /**
+     * @return a ProxySelector to use when making requests. Return null if the default Proxy selector can be used.
+     */
+    default ProxySelector getProxySelector() {
+        return null;
+    }
+
+    /**
+     * @return an Authenticator to use when making requests. Return null if the default Authenticator can be used.
+     */
+    default Authenticator getProxyAuthenticator(){
+        return null;
+    }
 }

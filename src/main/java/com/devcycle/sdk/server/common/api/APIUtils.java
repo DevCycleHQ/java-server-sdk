@@ -10,6 +10,16 @@ public class APIUtils {
                 builder.hostnameVerifier(restOptions.getHostnameVerifier());
             }
 
+            if (restOptions.getProxy() != null) {
+                builder.proxy(restOptions.getProxy());
+            }
+            if (restOptions.getProxyAuthenticator() != null) {
+                builder.proxyAuthenticator(restOptions.getProxyAuthenticator());
+            }
+            if (restOptions.getProxySelector() != null) {
+                builder.proxySelector(restOptions.getProxySelector());
+            }
+
             if (restOptions.getSocketFactory() != null && restOptions.getTrustManager() != null) {
                 builder.sslSocketFactory(restOptions.getSocketFactory(), restOptions.getTrustManager());
             }
