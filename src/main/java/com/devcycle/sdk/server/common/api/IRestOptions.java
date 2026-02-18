@@ -37,15 +37,21 @@ public interface IRestOptions {
     /**
      * @return a Proxy to use when making requests. Return null if the default Proxy selector can be used
      */
-    Proxy getProxy();
+    default Proxy getProxy() {
+        return null;
+    }
 
     /**
-     * @return a ProxySelector to use when making requests. Return null if the default Proxy selector can be used. Requires the proxy() method to be implemented as well.
+     * @return a ProxySelector to use when making requests. Return null if the default Proxy selector can be used.
      */
-    ProxySelector getProxySelector();
+    default ProxySelector getProxySelector() {
+        return null;
+    }
 
     /**
-     * @return an Authenticator to use when making requests. Return null if the default Authenticator can be used. Requires the proxy() method to be implemented as well.
+     * @return an Authenticator to use when making requests. Return null if the default Authenticator can be used.
      */
-    Authenticator getProxyAuthenticator();
+    default Authenticator getProxyAuthenticator(){
+        return null;
+    }
 }
