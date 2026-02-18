@@ -1,46 +1,25 @@
 package com.devcycle.sdk.server.local;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import com.devcycle.sdk.server.common.api.IRestOptions;
+import com.devcycle.sdk.server.common.exception.DevCycleException;
+import com.devcycle.sdk.server.common.logging.IDevCycleLogger;
+import com.devcycle.sdk.server.common.model.*;
+import com.devcycle.sdk.server.helpers.LocalConfigServer;
+import com.devcycle.sdk.server.helpers.TestDataFixtures;
+import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
+import com.devcycle.sdk.server.local.model.*;
+import okhttp3.Authenticator;
+import org.junit.*;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.X509TrustManager;
-
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
-
-import com.devcycle.sdk.server.common.api.IRestOptions;
-import com.devcycle.sdk.server.common.exception.DevCycleException;
-import com.devcycle.sdk.server.common.logging.IDevCycleLogger;
-import com.devcycle.sdk.server.common.model.BaseVariable;
-import com.devcycle.sdk.server.common.model.DevCycleEvent;
-import com.devcycle.sdk.server.common.model.DevCycleUser;
-import com.devcycle.sdk.server.common.model.EvalHook;
-import com.devcycle.sdk.server.common.model.EvalReason;
-import com.devcycle.sdk.server.common.model.Feature;
-import com.devcycle.sdk.server.common.model.HookContext;
-import com.devcycle.sdk.server.common.model.Variable;
-import com.devcycle.sdk.server.helpers.LocalConfigServer;
-import com.devcycle.sdk.server.helpers.TestDataFixtures;
-import com.devcycle.sdk.server.local.api.DevCycleLocalClient;
-import com.devcycle.sdk.server.local.model.ConfigMetadata;
-import com.devcycle.sdk.server.local.model.DevCycleLocalOptions;
-import com.devcycle.sdk.server.local.model.Environment;
-import com.devcycle.sdk.server.local.model.EnvironmentMetadata;
-import com.devcycle.sdk.server.local.model.Project;
-import com.devcycle.sdk.server.local.model.ProjectMetadata;
-import com.devcycle.sdk.server.local.model.VariableMetadata;
+import java.math.BigDecimal;
+import java.net.Proxy;
+import java.net.ProxySelector;
+import java.util.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DevCycleLocalClientTest {
@@ -93,6 +72,21 @@ public class DevCycleLocalClientTest {
 
         @Override
         public HostnameVerifier getHostnameVerifier() {
+            return null;
+        }
+
+        @Override
+        public Proxy getProxy() {
+            return null;
+        }
+
+        @Override
+        public ProxySelector getProxySelector() {
+            return null;
+        }
+
+        @Override
+        public Authenticator getProxyAuthenticator() {
             return null;
         }
     };
@@ -849,7 +843,7 @@ public class DevCycleLocalClientTest {
             }
 
             @Override
-            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {   
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 afterCalled[0] = true;
             }
 
@@ -1035,19 +1029,19 @@ public class DevCycleLocalClientTest {
             public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
                 // Verify metadata is accessible and properly populated
                 Assert.assertNotNull("Metadata should not be null", ctx.getMetadata());
-                
+
                 // Check that config metadata has the expected structure
                 ConfigMetadata metadata = ctx.getMetadata();
                 Assert.assertNotNull("Project metadata should not be null", metadata.project);
                 Assert.assertNotNull("Environment metadata should not be null", metadata.environment);
-                
-                
+
+
                 metadataChecked[0] = true;
             }
         });
 
         Variable<String> result = client.variable(user, "string-var", "default string");
-        
+
         Assert.assertTrue("Metadata check should have been executed", metadataChecked[0]);
         Assert.assertNotNull("Variable should not be null", result);
     }
@@ -1079,16 +1073,16 @@ public class DevCycleLocalClientTest {
         });
 
         Variable<String> result = client.variable(user, "string-var", "default string");
-        
+
         // Verify all hook stages received metadata
         Assert.assertNotNull("Before hook should have metadata", capturedMetadata[0]);
         Assert.assertNotNull("After hook should have metadata", capturedMetadata[1]);
         Assert.assertNotNull("Finally hook should have metadata", capturedMetadata[2]);
-        
+
         // Verify metadata is consistent across all hook stages
-        Assert.assertEquals("Before and after metadata should be the same", 
+        Assert.assertEquals("Before and after metadata should be the same",
                 capturedMetadata[0], capturedMetadata[1]);
-        Assert.assertEquals("Before and finally metadata should be the same", 
+        Assert.assertEquals("Before and finally metadata should be the same",
                 capturedMetadata[0], capturedMetadata[2]);
     }
 
@@ -1118,7 +1112,7 @@ public class DevCycleLocalClientTest {
         });
 
         Variable<String> result = client.variable(user, "string-var", "default string");
-        
+
         Assert.assertTrue("Metadata should have been checked in error hook", metadataCheckedInError[0]);
         Assert.assertNotNull("Variable should not be null even after error", result);
     }
@@ -1139,16 +1133,16 @@ public class DevCycleLocalClientTest {
         });
 
         Variable<String> result = client.variable(user, "string-var", "default string");
-        
+
         Assert.assertNotNull("Metadata should be captured", capturedMetadata[0]);
-        
+
         // Verify metadata reflects current config state
         ConfigMetadata directMetadata = client.getMetadata();
         Assert.assertNotNull("Direct metadata should not be null", directMetadata);
-        
-        Assert.assertEquals("Hook metadata project should match current metadata", 
+
+        Assert.assertEquals("Hook metadata project should match current metadata",
                 directMetadata.project.id, capturedMetadata[0].project.id);
-        Assert.assertEquals("Hook metadata environment should match current metadata", 
+        Assert.assertEquals("Hook metadata environment should match current metadata",
                 directMetadata.environment.id, capturedMetadata[0].environment.id);
     }
 
@@ -1162,26 +1156,26 @@ public class DevCycleLocalClientTest {
 
         // First hook
         client.addHook(new EvalHook<String>() {
-                         @Override
-             public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
-                 Assert.assertNotNull("First hook should receive metadata", ctx.getMetadata());
-                 Assert.assertNotNull("First hook metadata should have project", ctx.getMetadata().project);
-                 metadataChecked[0] = true;
-             }
-         });
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
+                Assert.assertNotNull("First hook should receive metadata", ctx.getMetadata());
+                Assert.assertNotNull("First hook metadata should have project", ctx.getMetadata().project);
+                metadataChecked[0] = true;
+            }
+        });
 
-         // Second hook
-         client.addHook(new EvalHook<String>() {
-             @Override
-             public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
-                 Assert.assertNotNull("Second hook should receive metadata", ctx.getMetadata());
-                 Assert.assertNotNull("Second hook metadata should have environment", ctx.getMetadata().environment);
-                 metadataChecked[1] = true;
-             }
+        // Second hook
+        client.addHook(new EvalHook<String>() {
+            @Override
+            public void after(HookContext<String> ctx, Variable<String> variable, VariableMetadata variableMetadata) {
+                Assert.assertNotNull("Second hook should receive metadata", ctx.getMetadata());
+                Assert.assertNotNull("Second hook metadata should have environment", ctx.getMetadata().environment);
+                metadataChecked[1] = true;
+            }
         });
 
         Variable<String> result = client.variable(user, "string-var", "default string");
-        
+
         Assert.assertTrue("First hook should have checked metadata", metadataChecked[0]);
         Assert.assertTrue("Second hook should have checked metadata", metadataChecked[1]);
     }
@@ -1211,7 +1205,7 @@ public class DevCycleLocalClientTest {
         // Verify that metadata can be used in HookContext
         DevCycleUser testUser = DevCycleUser.builder().userId("test-user").build();
         HookContext<String> contextWithMetadata = new HookContext<>(testUser, "test-key", "default", metadata);
-        
+
         Assert.assertNotNull("HookContext should not be null", contextWithMetadata);
         Assert.assertEquals("Metadata should be accessible from context", metadata, contextWithMetadata.getMetadata());
     }
