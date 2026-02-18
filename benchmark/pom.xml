@@ -33,7 +33,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jmh.version>1.36</jmh.version>
         <javac.target>11</javac.target>
-        <java.server.sdk.version>2.9.1</java.server.sdk.version>
+        <java.server.sdk.version>2.9.2</java.server.sdk.version>
         <uberjar.name>java-server-sdk-benchmarks</uberjar.name>
     </properties>
 
