@@ -16,9 +16,21 @@ Currently Supported Platforms are:
 
 In addition the benchmark tool requires [Maven](https://maven.apache.org/) to be installed.
 
+## WASM / `LocalBucketing` microbenchmarks (Gradle)
+
+From the **repository root** (not this directory), run:
+
+```bash
+./gradlew jmh
+```
+
+This runs JMH benchmarks in `src/jmh/java/.../WasmInterfaceBenchmark.java` against `LocalBucketing` (the WASM boundary): `generateBucketedConfigForUserUTF8` and `variableForUser_PB`, using `fixture_small_config.json` and `fixture_large_config.json` under `src/jmh/resources/`. Results are written under `build/results/jmh/`.
+
+The harness uses `LocalBucketing.forWasmtime()` and `LocalBucketing.forChicory()` so **both** runtimes are measured in one JMH run (`wasmRuntime` parameter). You do not need `DEVCYCLE_USE_CHICORY` for this benchmark.
+
 ## How Does it Work?
 
-The benchmark itself is defined in `SDKBenchmark.java`. It is configured to test a single boolean variable evaluation repeatedly based on the config defined in `resources/fixture_large_config.json`
+The Maven benchmark is defined in `SDKBenchmark.java`. It is configured to test a single boolean variable evaluation repeatedly based on the config defined in `resources/fixture_large_config.json`
 
 A local web server (see `MockServer.java`) is created to replicate DevCycle config and event services and support the SDK client.
 

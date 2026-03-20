@@ -8,23 +8,14 @@ This version of the DevCycle SDK works with Java 11 and above.
 
 Using the Java SDK library requires [Maven](https://maven.apache.org/) or [Gradle](https://gradle.org/) >= 7.6+ to be installed.
 
-An x86_64 or aarch64 JDK is required for Local Bucketing with the DevCycle Java SDK.
+Local bucketing runs the bucketing WebAssembly module using **wasmtime-java** (default) or **[Chicory](https://chicory.dev/)** (pure Java). Pick at **process startup** with the environment variable **`DEVCYCLE_USE_CHICORY`**:
 
-Currently Supported Platforms are:
+- **Unset or any other value:** wasmtime-java (JNI; on Linux requires **glibc** and a supported arch for the bundled native library).
+- **`1`**, **`true`**, or **`yes`** (case-insensitive): Chicory only for WASM execution (no WASM JNI; suitable for **Alpine Linux / musl**).
 
-| OS             | Arch      |
-|----------------|-----------|
-| Linux (ELF)    | x86_64    |
-| Linux (ELF)    | aarch64   |
-| Mac OS         | x86_64    |
-| Mac OS         | aarch64   |
-| Windows        | x86_64    |
+Both runtimes are on the classpath; only the selected one is used for `LocalBucketing`.
 
-In addition, the environment must support GLIBC v2.16 or higher.  You can use the following command to check your GLIBC version:
-
-```bash
-ldd --version
-``` 
+Use a [supported JDK](https://adoptium.net/) for your OS and CPU architecture.
 
 ## Installation
 
