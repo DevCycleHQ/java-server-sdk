@@ -5,6 +5,7 @@ import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
 import com.devcycle.sdk.server.local.model.FlushPayload;
 import com.devcycle.sdk.server.local.utils.ByteConversionUtils;
+import com.dylibso.chicory.compiler.MachineFactoryCompiler;
 import com.dylibso.chicory.runtime.ExportFunction;
 import com.dylibso.chicory.runtime.HostFunction;
 import com.dylibso.chicory.runtime.ImportValues;
@@ -32,19 +33,36 @@ import static com.dylibso.chicory.wasm.types.ValType.F64;
 import static com.dylibso.chicory.wasm.types.ValType.I32;
 
 final class ChicoryLocalBucketing implements LocalBucketingBackend {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = createObjectMapper();
+    private static final ObjectMapper BUCKETED_CONFIG_MAPPER = createBucketedConfigMapper();
+    private static final ObjectMapper FLUSH_PAYLOAD_MAPPER = createFlushPayloadMapper();
     private final int WASM_OBJECT_ID_STRING = 1;
     private final int WASM_OBJECT_ID_UINT8ARRAY = 9;
     private final Instance instance;
+    private final Memory memory;
     private final Set<Integer> pinnedAddresses;
     private final HashMap<String, Integer> sdkKeyAddresses;
     @SuppressWarnings("unused")
     private final HashMap<com.devcycle.sdk.server.common.model.Variable.TypeEnum, Integer> variableTypeMap =
             new HashMap<>();
+    private final ExportFunction newExport;
+    private final ExportFunction setConfigDataExport;
+    private final ExportFunction setPlatformDataExport;
+    private final ExportFunction setClientCustomDataExport;
+    private final ExportFunction generateBucketedConfigForUserExport;
+    private final ExportFunction variableForUserPBExport;
+    private final ExportFunction initEventQueueExport;
+    private final ExportFunction queueEventExport;
+    private final ExportFunction queueAggregateEventExport;
+    private final ExportFunction flushEventQueueExport;
+    private final ExportFunction onPayloadFailureExport;
+    private final ExportFunction onPayloadSuccessExport;
+    private final ExportFunction eventQueueSizeExport;
+    private final ExportFunction pinExport;
+    private final ExportFunction unpinExport;
+    private final ExportFunction getConfigMetadataExport;
 
     ChicoryLocalBucketing() {
-        OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-
         pinnedAddresses = new HashSet<>();
         sdkKeyAddresses = new HashMap<>();
 
@@ -62,12 +80,55 @@ final class ChicoryLocalBucketing implements LocalBucketingBackend {
         var module = Parser.parse(wasmBytes);
         ImportValues imports = buildHostImports();
         this.instance =
-                Instance.builder(module).withImportValues(imports).withStart(false).build();
+                Instance.builder(module)
+                        .withImportValues(imports)
+                        .withMachineFactory(MachineFactoryCompiler::compile)
+                        .withStart(false)
+                        .build();
+        this.memory = instance.memory();
+        this.newExport = instance.export("__new");
+        this.setConfigDataExport = instance.export("setConfigDataUTF8");
+        this.setPlatformDataExport = instance.export("setPlatformDataUTF8");
+        this.setClientCustomDataExport = instance.export("setClientCustomDataUTF8");
+        this.generateBucketedConfigForUserExport = instance.export("generateBucketedConfigForUserUTF8");
+        this.variableForUserPBExport = instance.export("variableForUser_PB");
+        this.initEventQueueExport = instance.export("initEventQueue");
+        this.queueEventExport = instance.export("queueEvent");
+        this.queueAggregateEventExport = instance.export("queueAggregateEvent");
+        this.flushEventQueueExport = instance.export("flushEventQueue");
+        this.onPayloadFailureExport = instance.export("onPayloadFailure");
+        this.onPayloadSuccessExport = instance.export("onPayloadSuccess");
+        this.eventQueueSizeExport = instance.export("eventQueueSize");
+        this.pinExport = instance.export("__pin");
+        this.unpinExport = instance.export("__unpin");
+        this.getConfigMetadataExport = instance.export("getConfigMetadata");
 
         variableTypeMap.put(com.devcycle.sdk.server.common.model.Variable.TypeEnum.BOOLEAN, 0);
         variableTypeMap.put(com.devcycle.sdk.server.common.model.Variable.TypeEnum.NUMBER, 1);
         variableTypeMap.put(com.devcycle.sdk.server.common.model.Variable.TypeEnum.STRING, 2);
         variableTypeMap.put(com.devcycle.sdk.server.common.model.Variable.TypeEnum.JSON, 3);
+    }
+
+    private static ObjectMapper createObjectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        return objectMapper;
+    }
+
+    private static ObjectMapper createBucketedConfigMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return objectMapper;
+    }
+
+    private static ObjectMapper createFlushPayloadMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        objectMapper.setDateFormat(df);
+        return objectMapper;
     }
 
     private ImportValues buildHostImports() {
@@ -140,14 +201,10 @@ final class ChicoryLocalBucketing implements LocalBucketingBackend {
     private int newWasmString(String param) {
         int objectIdString = 1;
 
-        ExportFunction __newExport = instance.export("__new");
         byte[] paramBytes = param.getBytes(StandardCharsets.UTF_8);
-        int paramAddress =
-                (int) __newExport.apply((long) (paramBytes.length * 2), (long) objectIdString)[0];
-
-        Memory mem = instance.memory();
+        int paramAddress = (int) newExport.apply((long) (paramBytes.length * 2), (long) objectIdString)[0];
         for (int i = 0; i < paramBytes.length; i++) {
-            mem.writeByte(paramAddress + (i * 2), paramBytes[i]);
+            memory.writeByte(paramAddress + (i * 2), paramBytes[i]);
         }
 
         return paramAddress;
@@ -160,12 +217,10 @@ final class ChicoryLocalBucketing implements LocalBucketingBackend {
     private int newUint8ArrayParameter(byte[] paramData) {
         int length = paramData.length;
 
-        ExportFunction __newExport = instance.export("__new");
-        int headerAddr = (int) __newExport.apply(12L, (long) WASM_OBJECT_ID_UINT8ARRAY)[0];
+        int headerAddr = (int) newExport.apply(12L, (long) WASM_OBJECT_ID_UINT8ARRAY)[0];
         try {
             pinParameter(headerAddr);
-            int dataBufferAddr =
-                    (int) __newExport.apply((long) length, (long) WASM_OBJECT_ID_STRING)[0];
+            int dataBufferAddr = (int) newExport.apply((long) length, (long) WASM_OBJECT_ID_STRING)[0];
 
             byte[] headerData = new byte[12];
             byte[] bufferAddrBytes = ByteConversionUtils.intToBytesLittleEndian(dataBufferAddr);
@@ -176,12 +231,11 @@ final class ChicoryLocalBucketing implements LocalBucketingBackend {
                 headerData[i + 8] = lengthBytes[i];
             }
 
-            Memory mem = instance.memory();
             for (int i = 0; i < headerData.length; i++) {
-                mem.writeByte(headerAddr + i, headerData[i]);
+                memory.writeByte(headerAddr + i, headerData[i]);
             }
             for (int i = 0; i < length; i++) {
-                mem.writeByte(dataBufferAddr + i, paramData[i]);
+                memory.writeByte(dataBufferAddr + i, paramData[i]);
             }
         } finally {
             unpinParameter(headerAddr);
@@ -190,10 +244,9 @@ final class ChicoryLocalBucketing implements LocalBucketingBackend {
     }
 
     private byte[] readFromWasmMemory(int address, int length) {
-        Memory mem = instance.memory();
         byte[] data = new byte[length];
         for (int i = 0; i < length; i++) {
-            data[i] = mem.read(address + i);
+            data[i] = memory.read(address + i);
         }
         return data;
     }
@@ -214,16 +267,14 @@ final class ChicoryLocalBucketing implements LocalBucketingBackend {
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int configAddress = newUint8ArrayParameter(config.getBytes(StandardCharsets.UTF_8));
 
-        ExportFunction setConfigData = instance.export("setConfigDataUTF8");
-        setConfigData.apply((long) sdkKeyAddress, (long) configAddress);
+        setConfigDataExport.apply((long) sdkKeyAddress, (long) configAddress);
     }
 
     @Override
     public synchronized void setPlatformData(String platformData) {
         unpinAll();
         int platformDataAddress = newUint8ArrayParameter(platformData.getBytes(StandardCharsets.UTF_8));
-        ExportFunction fn = instance.export("setPlatformDataUTF8");
-        fn.apply((long) platformDataAddress);
+        setPlatformDataExport.apply((long) platformDataAddress);
     }
 
     @Override
@@ -231,8 +282,7 @@ final class ChicoryLocalBucketing implements LocalBucketingBackend {
         unpinAll();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int customDataAddress = newUint8ArrayParameter(customData.getBytes(StandardCharsets.UTF_8));
-        ExportFunction fn = instance.export("setClientCustomDataUTF8");
-        fn.apply((long) sdkKeyAddress, (long) customDataAddress);
+        setClientCustomDataExport.apply((long) sdkKeyAddress, (long) customDataAddress);
     }
 
     @Override
@@ -244,24 +294,20 @@ final class ChicoryLocalBucketing implements LocalBucketingBackend {
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int userAddress = newUint8ArrayParameter(userString.getBytes(StandardCharsets.UTF_8));
 
-        ExportFunction generateBucketedConfigForUser = instance.export("generateBucketedConfigForUserUTF8");
         int resultAddress =
-                (int) generateBucketedConfigForUser.apply((long) sdkKeyAddress, (long) userAddress)[0];
+                (int) generateBucketedConfigForUserExport.apply((long) sdkKeyAddress, (long) userAddress)[0];
 
         byte[] bucketConfigBytes = readAssemblyScriptUint8Array(resultAddress);
         String bucketedConfigString = new String(bucketConfigBytes, StandardCharsets.UTF_8);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return objectMapper.readValue(bucketedConfigString, BucketedUserConfig.class);
+        return BUCKETED_CONFIG_MAPPER.readValue(bucketedConfigString, BucketedUserConfig.class);
     }
 
     @Override
     public synchronized byte[] getVariableForUserProtobuf(byte[] serializedParams) {
         int paramsAddr = newUint8ArrayParameter(serializedParams);
 
-        ExportFunction variableForUserPB = instance.export("variableForUser_PB");
-        int variableAddress = (int) variableForUserPB.apply((long) paramsAddr)[0];
+        int variableAddress = (int) variableForUserPBExport.apply((long) paramsAddr)[0];
 
         if (variableAddress > 0) {
             return readAssemblyScriptUint8Array(variableAddress);
@@ -276,8 +322,7 @@ final class ChicoryLocalBucketing implements LocalBucketingBackend {
         int clientUUIDAddress = newWasmString(clientUUID);
         int optionsAddress = newWasmString(options);
 
-        ExportFunction fn = instance.export("initEventQueue");
-        fn.apply((long) sdkKeyAddress, (long) clientUUIDAddress, (long) optionsAddress);
+        initEventQueueExport.apply((long) sdkKeyAddress, (long) clientUUIDAddress, (long) optionsAddress);
     }
 
     @Override
@@ -287,8 +332,7 @@ final class ChicoryLocalBucketing implements LocalBucketingBackend {
         int userAddress = getPinnedParameter(user);
         int eventAddress = newWasmString(event);
 
-        ExportFunction fn = instance.export("queueEvent");
-        fn.apply((long) sdkKeyAddress, (long) userAddress, (long) eventAddress);
+        queueEventExport.apply((long) sdkKeyAddress, (long) userAddress, (long) eventAddress);
     }
 
     @Override
@@ -298,8 +342,7 @@ final class ChicoryLocalBucketing implements LocalBucketingBackend {
         int eventAddress = getPinnedParameter(event);
         int variableVariationMapAddress = newWasmString(variableVariationMap);
 
-        ExportFunction fn = instance.export("queueAggregateEvent");
-        fn.apply((long) sdkKeyAddress, (long) eventAddress, (long) variableVariationMapAddress);
+        queueAggregateEventExport.apply((long) sdkKeyAddress, (long) eventAddress, (long) variableVariationMapAddress);
     }
 
     @Override
@@ -307,18 +350,10 @@ final class ChicoryLocalBucketing implements LocalBucketingBackend {
         unpinAll();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
 
-        ExportFunction fn = instance.export("flushEventQueue");
-        int resultAddress = (int) fn.apply((long) sdkKeyAddress)[0];
+        int resultAddress = (int) flushEventQueueExport.apply((long) sdkKeyAddress)[0];
         String flushPayloadsStr = readWasmString(resultAddress);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-        df.setTimeZone(TimeZone.getTimeZone("UTC"));
-        objectMapper.setDateFormat(df);
-
-        return objectMapper.readValue(flushPayloadsStr, FlushPayload[].class);
+        return FLUSH_PAYLOAD_MAPPER.readValue(flushPayloadsStr, FlushPayload[].class);
     }
 
     @Override
@@ -327,8 +362,7 @@ final class ChicoryLocalBucketing implements LocalBucketingBackend {
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int payloadIdAddress = newWasmString(payloadId);
 
-        ExportFunction fn = instance.export("onPayloadFailure");
-        fn.apply((long) sdkKeyAddress, (long) payloadIdAddress, retryable ? 1L : 0L);
+        onPayloadFailureExport.apply((long) sdkKeyAddress, (long) payloadIdAddress, retryable ? 1L : 0L);
     }
 
     @Override
@@ -337,8 +371,7 @@ final class ChicoryLocalBucketing implements LocalBucketingBackend {
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int payloadIdAddress = newWasmString(payloadId);
 
-        ExportFunction fn = instance.export("onPayloadSuccess");
-        fn.apply((long) sdkKeyAddress, (long) payloadIdAddress);
+        onPayloadSuccessExport.apply((long) sdkKeyAddress, (long) payloadIdAddress);
     }
 
     @Override
@@ -346,16 +379,15 @@ final class ChicoryLocalBucketing implements LocalBucketingBackend {
         unpinAll();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
 
-        ExportFunction fn = instance.export("eventQueueSize");
-        return (int) fn.apply((long) sdkKeyAddress)[0];
+        return (int) eventQueueSizeExport.apply((long) sdkKeyAddress)[0];
     }
 
     private void pinParameter(int address) {
-        instance.export("__pin").apply((long) address);
+        pinExport.apply((long) address);
     }
 
     private void unpinParameter(int address) {
-        instance.export("__unpin").apply((long) address);
+        unpinExport.apply((long) address);
     }
 
     private void unpinAll() {
@@ -385,8 +417,7 @@ final class ChicoryLocalBucketing implements LocalBucketingBackend {
     @Override
     public String getConfigMetadata(String sdkKey) {
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
-        ExportFunction getConfigMetadata = instance.export("getConfigMetadata");
-        int resultAddress = (int) getConfigMetadata.apply((long) sdkKeyAddress)[0];
+        int resultAddress = (int) getConfigMetadataExport.apply((long) sdkKeyAddress)[0];
         return readWasmString(resultAddress);
     }
 }

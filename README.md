@@ -8,7 +8,7 @@ This version of the DevCycle SDK works with Java 11 and above.
 
 Using the Java SDK library requires [Maven](https://maven.apache.org/) or [Gradle](https://gradle.org/) >= 7.6+ to be installed.
 
-Local bucketing runs the bucketing WebAssembly module using **wasmtime-java** (default) or **[Chicory](https://chicory.dev/)** (pure Java). Pick at **process startup** with the environment variable **`DEVCYCLE_USE_CHICORY`**:
+Local bucketing runs the bucketing WebAssembly module using **wasmtime-java** (default) or **[Chicory](https://chicory.dev/)** (pure Java, using Chicory's runtime compiler). Pick at **process startup** with the environment variable **`DEVCYCLE_USE_CHICORY`**:
 
 - **Unset or any other value:** wasmtime-java (JNI; on Linux requires **glibc** and a supported arch for the bundled native library).
 - **`1`**, **`true`**, or **`yes`** (case-insensitive): Chicory only for WASM execution (no WASM JNI; suitable for **Alpine Linux / musl**).

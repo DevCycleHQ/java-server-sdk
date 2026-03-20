@@ -135,6 +135,7 @@ dependencies {
 
     implementation("io.github.kawamuray.wasmtime:wasmtime-java:$wasmtime_version")
     implementation("com.dylibso.chicory:runtime:$chicory_version")
+    implementation("com.dylibso.chicory:compiler:$chicory_version")
 
     implementation("com.google.protobuf:protobuf-java:$protobuf_version")
 

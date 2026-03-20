@@ -26,7 +26,7 @@ From the **repository root** (not this directory), run:
 
 This runs JMH benchmarks in `src/jmh/java/.../WasmInterfaceBenchmark.java` against `LocalBucketing` (the WASM boundary): `generateBucketedConfigForUserUTF8` and `variableForUser_PB`, using `fixture_small_config.json` and `fixture_large_config.json` under `src/jmh/resources/`. Results are written under `build/results/jmh/`.
 
-The harness uses `LocalBucketing.forWasmtime()` and `LocalBucketing.forChicory()` so **both** runtimes are measured in one JMH run (`wasmRuntime` parameter). You do not need `DEVCYCLE_USE_CHICORY` for this benchmark.
+The harness uses `LocalBucketing.forWasmtime()` and `LocalBucketing.forChicory()` so **both** runtimes are measured in one JMH run (`wasmRuntime` parameter). The Chicory path uses Chicory's runtime compiler rather than the default interpreter. You do not need `DEVCYCLE_USE_CHICORY` for this benchmark.
 
 ## How Does it Work?
 
