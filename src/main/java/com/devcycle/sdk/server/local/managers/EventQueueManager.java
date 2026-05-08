@@ -86,11 +86,14 @@ public class EventQueueManager {
 
         int eventCount = 0;
         isFlushingEvents = true;
-        for (FlushPayload payload : flushPayloads) {
-            eventCount += payload.eventCount;
-            publishEvents(this.sdkKey, payload);
+        try {
+            for (FlushPayload payload : flushPayloads) {
+                eventCount += payload.eventCount;
+                publishEvents(this.sdkKey, payload);
+            }
+        } finally {
+            isFlushingEvents = false;
         }
-        isFlushingEvents = false;
         DevCycleLogger.debug(String.format("DevCycle Flush %d AS Events, for %d Users", eventCount, flushPayloads.length));
     }
 
