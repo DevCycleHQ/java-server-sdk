@@ -172,6 +172,26 @@ public class DevCycleProviderTest {
     }
 
     @Test
+    public void testResolveLongVariable() {
+        IDevCycleClient dvcClient = mock(IDevCycleClient.class);
+        when(dvcClient.isInitialized()).thenReturn(true);
+
+        // DevCycle stores numbers as Doubles internally, so the resolved value comes back as a Double.
+        Double variableValue = 1234.0;
+        Long defaultValue = 0L;
+
+        when(dvcClient.variable(any(), any(), any())).thenReturn(Variable.builder().key("some-flag").value(variableValue).defaultValue(0.0).type(Variable.TypeEnum.NUMBER).build());
+
+        DevCycleProvider provider = new DevCycleProvider(dvcClient);
+
+        ProviderEvaluation<Long> result = provider.getLongEvaluation("some-flag", defaultValue, new ImmutableContext("user-1234"));
+        Assert.assertNotNull(result);
+        Assert.assertEquals(result.getValue(), Long.valueOf(1234L));
+        Assert.assertEquals(result.getReason(), Reason.TARGETING_MATCH.toString());
+        Assert.assertNull(result.getErrorCode());
+    }
+
+    @Test
     public void testResolveDoubleVariable() {
         IDevCycleClient dvcClient = mock(IDevCycleClient.class);
         when(dvcClient.isInitialized()).thenReturn(true);

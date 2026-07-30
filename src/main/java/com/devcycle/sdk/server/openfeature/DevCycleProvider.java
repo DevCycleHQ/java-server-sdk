@@ -79,6 +79,29 @@ public class DevCycleProvider implements FeatureProvider {
     }
 
     @Override
+    public ProviderEvaluation<Long> getLongEvaluation(String key, Long defaultValue, EvaluationContext ctx) {
+        // DevCycle has no native long type: internally all numbers are stored as Doubles, which only
+        // represent integers exactly up to 2^53. Resolve the value through the Double-backed NUMBER type
+        // and narrow it to a Long. Values beyond 2^53 cannot be represented without precision loss.
+        ProviderEvaluation<Double> eval = resolvePrimitiveVariable(key, defaultValue.doubleValue(), ctx);
+
+        Double value = eval.getValue();
+        boolean defaulted = Reason.DEFAULT.toString().equals(eval.getReason())
+                || Reason.ERROR.toString().equals(eval.getReason());
+        // Preserve the exact default on default/error so a large default value is not lossily round-tripped.
+        Long longValue = (defaulted || value == null) ? defaultValue : Long.valueOf(value.longValue());
+
+        return ProviderEvaluation.<Long>builder()
+                .value(longValue)
+                .variant(eval.getVariant())
+                .reason(eval.getReason())
+                .errorCode(eval.getErrorCode())
+                .errorMessage(eval.getErrorMessage())
+                .flagMetadata(eval.getFlagMetadata())
+                .build();
+    }
+
+    @Override
     public ProviderEvaluation<Double> getDoubleEvaluation(String key, Double defaultValue, EvaluationContext ctx) {
         return resolvePrimitiveVariable(key, defaultValue, ctx);
     }
