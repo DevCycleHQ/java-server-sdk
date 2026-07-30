@@ -171,13 +171,18 @@ public class DevCycleProviderTest {
         Assert.assertNull(result.getErrorCode());
     }
 
+    // DevCycle has no native long type; numbers are stored as Doubles. The OpenFeature SDK's default
+    // getLongEvaluation delegates to getDoubleEvaluation (DevCycle's native number path) and safely
+    // narrows the result to a long. These tests lock in that behavior; DevCycleProvider does not
+    // override getLongEvaluation because the default already handles it correctly.
+
     @Test
-    public void testResolveLongVariable() {
+    public void testResolveLongVariableBeyondIntRange() {
         IDevCycleClient dvcClient = mock(IDevCycleClient.class);
         when(dvcClient.isInitialized()).thenReturn(true);
 
-        // DevCycle stores numbers as Doubles internally, so the resolved value comes back as a Double.
-        Double variableValue = 1234.0;
+        // 5_000_000_000 exceeds Integer.MAX_VALUE but is well within the double safe-integer range (2^53).
+        Double variableValue = 5_000_000_000.0;
         Long defaultValue = 0L;
 
         when(dvcClient.variable(any(), any(), any())).thenReturn(Variable.builder().key("some-flag").value(variableValue).defaultValue(0.0).type(Variable.TypeEnum.NUMBER).build());
@@ -186,9 +191,45 @@ public class DevCycleProviderTest {
 
         ProviderEvaluation<Long> result = provider.getLongEvaluation("some-flag", defaultValue, new ImmutableContext("user-1234"));
         Assert.assertNotNull(result);
-        Assert.assertEquals(result.getValue(), Long.valueOf(1234L));
+        Assert.assertEquals(result.getValue(), Long.valueOf(5_000_000_000L));
         Assert.assertEquals(result.getReason(), Reason.TARGETING_MATCH.toString());
         Assert.assertNull(result.getErrorCode());
+    }
+
+    @Test
+    public void testResolveLongVariableFractionalIsTypeMismatch() {
+        IDevCycleClient dvcClient = mock(IDevCycleClient.class);
+        when(dvcClient.isInitialized()).thenReturn(true);
+
+        // A non-integer number cannot be represented as a long; the default should surface a type mismatch.
+        Double variableValue = 10.5;
+        Long defaultValue = 0L;
+
+        when(dvcClient.variable(any(), any(), any())).thenReturn(Variable.builder().key("some-flag").value(variableValue).defaultValue(0.0).type(Variable.TypeEnum.NUMBER).build());
+
+        DevCycleProvider provider = new DevCycleProvider(dvcClient);
+
+        ProviderEvaluation<Long> result = provider.getLongEvaluation("some-flag", defaultValue, new ImmutableContext("user-1234"));
+        Assert.assertNotNull(result);
+        Assert.assertEquals(result.getErrorCode(), ErrorCode.TYPE_MISMATCH);
+    }
+
+    @Test
+    public void testResolveLongVariableBeyondSafeRangeIsTypeMismatch() {
+        IDevCycleClient dvcClient = mock(IDevCycleClient.class);
+        when(dvcClient.isInitialized()).thenReturn(true);
+
+        // 2^53 exceeds the double safe-integer range, so it cannot be narrowed to a long without precision loss.
+        Double variableValue = 9_007_199_254_740_992.0;
+        Long defaultValue = 0L;
+
+        when(dvcClient.variable(any(), any(), any())).thenReturn(Variable.builder().key("some-flag").value(variableValue).defaultValue(0.0).type(Variable.TypeEnum.NUMBER).build());
+
+        DevCycleProvider provider = new DevCycleProvider(dvcClient);
+
+        ProviderEvaluation<Long> result = provider.getLongEvaluation("some-flag", defaultValue, new ImmutableContext("user-1234"));
+        Assert.assertNotNull(result);
+        Assert.assertEquals(result.getErrorCode(), ErrorCode.TYPE_MISMATCH);
     }
 
     @Test
