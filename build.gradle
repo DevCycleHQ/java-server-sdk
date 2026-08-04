@@ -113,7 +113,7 @@ ext {
     junit_version = "4.13.2"
     mockito_core_version = "5.6.0"
     protobuf_version = "3.25.7"
-    openfeature_version = "1.14.2"
+    openfeature_version = "1.22.0"
     eventsource_version = "4.1.1"
 }
 
