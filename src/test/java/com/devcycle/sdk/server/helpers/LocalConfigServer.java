@@ -13,6 +13,8 @@ import java.time.format.DateTimeFormatter;
 public class LocalConfigServer {
     private final HttpServer server;
     private String configData = "";
+    private String etag = "\"test-etag-12345\"";
+    private int responseCode = 200;
 
     public LocalConfigServer(String configData, int port) throws IOException {
         this.configData = configData;
@@ -28,11 +30,17 @@ public class LocalConfigServer {
     }
 
     public void handleConfigRequest(HttpExchange exchange) throws IOException {
+        if (responseCode != 200) {
+            exchange.sendResponseHeaders(responseCode, -1);
+            exchange.close();
+            return;
+        }
+
         // Add required headers for ConfigMetadata creation
         String currentTime = ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME);
-        exchange.getResponseHeaders().set("ETag", "\"test-etag-12345\"");
+        exchange.getResponseHeaders().set("ETag", etag);
         exchange.getResponseHeaders().set("Last-Modified", currentTime);
-        
+
         byte[] responseData = configData.getBytes(StandardCharsets.UTF_8);
         exchange.sendResponseHeaders(200, responseData.length);
         OutputStream outputStream = exchange.getResponseBody();
@@ -43,6 +51,20 @@ public class LocalConfigServer {
 
     public void setConfigData(String configData) {
         this.configData = configData;
+    }
+
+    /**
+     * Change the ETag served with the config, so a subsequent poll is seen as a new config.
+     */
+    public void setETag(String etag) {
+        this.etag = etag;
+    }
+
+    /**
+     * Serve the given status code with an empty body instead of the config.
+     */
+    public void setResponseCode(int responseCode) {
+        this.responseCode = responseCode;
     }
 
     public void start() {

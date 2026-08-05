@@ -65,6 +65,35 @@ added to the `customData` property of the `DevCycleUser`.
 
 DevCycle allows the following data types for custom data values: **boolean**, **integer**, **double**, **float**, and **String**. Other data types will be ignored
 
+### Provider Events
+
+The provider emits [OpenFeature provider events](https://openfeature.dev/specification/sections/events), so
+applications can react to configuration changes and to the provider losing its connection to DevCycle.
+
+```java
+Client openFeatureClient = api.getClient();
+
+openFeatureClient.onProviderConfigurationChanged(details ->
+        System.out.println("DevCycle config updated, ETag " + details.getEventMetadata().getString("configETag")));
+openFeatureClient.onProviderStale(details ->
+        System.out.println("DevCycle config could not be refreshed: " + details.getMessage()));
+```
+
+| Event | When it is emitted |
+| --- | --- |
+| `PROVIDER_READY` | The DevCycle client has loaded a configuration. Also emitted when config fetching recovers after a failure. |
+| `PROVIDER_CONFIGURATION_CHANGED` | A newly fetched configuration differs from the one previously in use, either from polling or from a realtime update. |
+| `PROVIDER_STALE` | A configuration fetch failed while a previously fetched configuration is still being served. Evaluations continue against that cached configuration. |
+| `PROVIDER_ERROR` | A configuration fetch failed and no configuration has ever been loaded. Reported with error code `PROVIDER_FATAL` when the SDK key is unauthorized, which means the provider will not recover. |
+
+`PROVIDER_CONFIGURATION_CHANGED` does not include a `flagsChanged` list. DevCycle resolves variables per-user at
+evaluation time, so the set of variable keys whose value actually changed for a given user is not known when the
+configuration is fetched.
+
+Only the Local Bucketing client (`DevCycleLocalClient`) holds a configuration, so configuration change, stale, and
+error events apply to it. The Cloud Bucketing client (`DevCycleCloudClient`) evaluates against the DevCycle API on
+every request and becomes ready immediately.
+
 ### JSON Flag Limitations
 
 The OpenFeature spec for JSON flags allows for any type of valid JSON value to be set as the flag value.

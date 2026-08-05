@@ -3,36 +3,74 @@ package com.devcycle.sdk.server.openfeature;
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import com.devcycle.sdk.server.common.api.IDevCycleClient;
 import com.devcycle.sdk.server.common.exception.DevCycleException;
+import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.devcycle.sdk.server.common.model.DevCycleEvent;
 import com.devcycle.sdk.server.common.model.DevCycleUser;
 import com.devcycle.sdk.server.common.model.EvalReason;
 import com.devcycle.sdk.server.common.model.Variable;
+import com.devcycle.sdk.server.local.managers.ConfigUpdateListener;
 
 import dev.openfeature.sdk.ErrorCode;
 import dev.openfeature.sdk.EvaluationContext;
-import dev.openfeature.sdk.FeatureProvider;
+import dev.openfeature.sdk.EventProvider;
 import dev.openfeature.sdk.ImmutableMetadata;
 import dev.openfeature.sdk.ImmutableMetadata.ImmutableMetadataBuilder;
 import dev.openfeature.sdk.Metadata;
 import dev.openfeature.sdk.ProviderEvaluation;
+import dev.openfeature.sdk.ProviderEventDetails;
 import dev.openfeature.sdk.Reason;
 import dev.openfeature.sdk.Structure;
 import dev.openfeature.sdk.TrackingEventDetails;
 import dev.openfeature.sdk.Value;
+import dev.openfeature.sdk.exceptions.FatalError;
 import dev.openfeature.sdk.exceptions.GeneralError;
 import dev.openfeature.sdk.exceptions.ProviderNotReadyError;
 import dev.openfeature.sdk.exceptions.TypeMismatchError;
 
-public class DevCycleProvider implements FeatureProvider {
+public class DevCycleProvider extends EventProvider implements ConfigUpdateListener {
     private static final String PROVIDER_NAME = "DevCycle";
+    private static final long DEFAULT_INIT_TIMEOUT_MS = 2000;
 
     private final IDevCycleClient devcycleClient;
+    private final long initTimeoutMS;
+
+    /**
+     * Released once the client has a config to serve, or once we know it never will.
+     */
+    private final CountDownLatch initialConfigLatch = new CountDownLatch(1);
+
+    private final Object stateLock = new Object();
+
+    /**
+     * True while the last config fetch attempt was a failure, so recovery is reported once rather
+     * than emitting a duplicate event on every failed poll. Guarded by {@link #stateLock}.
+     */
+    private boolean degraded;
+
+    /**
+     * True once {@link #initialize(EvaluationContext)} has failed. The SDK will not call it again,
+     * so a later successful fetch has to emit PROVIDER_READY itself. Guarded by {@link #stateLock}.
+     */
+    private boolean initializeFailed;
+
+    /**
+     * Set when the config can never be fetched, ie. the SDK key is unauthorized. Guarded by
+     * {@link #stateLock}.
+     */
+    private DevCycleException fatalError;
 
     public DevCycleProvider(IDevCycleClient devcycleClient) {
+        this(devcycleClient, DEFAULT_INIT_TIMEOUT_MS);
+    }
+
+    DevCycleProvider(IDevCycleClient devcycleClient, long initTimeoutMS) {
         this.devcycleClient = devcycleClient;
+        this.initTimeoutMS = initTimeoutMS;
     }
 
     @Override
@@ -40,26 +78,128 @@ public class DevCycleProvider implements FeatureProvider {
         return () -> PROVIDER_NAME + " " + devcycleClient.getSDKPlatform();
     }
 
+    /**
+     * The OpenFeature SDK emits PROVIDER_READY when this returns and PROVIDER_ERROR when it throws,
+     * so this method never emits those events itself. Throwing a {@link FatalError} tells the SDK
+     * the provider is not recoverable, which is the right signal for an unauthorized SDK key.
+     */
     @Override
     public void initialize(EvaluationContext evaluationContext) throws Exception {
         if (devcycleClient.isInitialized()) {
             return;
         }
 
-        long deadline = 2 * 1000; // Delay in milliseconds
-        long start = System.currentTimeMillis();
+        initialConfigLatch.await(initTimeoutMS, TimeUnit.MILLISECONDS);
 
-        do {
-            if (deadline <= System.currentTimeMillis() - start) {
-                throw new GeneralError("DevCycle client not initialized within 2 seconds");
+        synchronized (stateLock) {
+            if (fatalError != null) {
+                throw new FatalError("DevCycle client cannot be initialized: " + fatalError.getMessage());
             }
-            Thread.sleep(5);
-        } while (!devcycleClient.isInitialized());
+
+            if (!devcycleClient.isInitialized()) {
+                initializeFailed = true;
+                throw new GeneralError("DevCycle client not initialized within " + initTimeoutMS + "ms");
+            }
+        }
     }
 
     @Override
     public void shutdown() {
+        // drains the event emitter executor owned by EventProvider
+        super.shutdown();
         devcycleClient.close();
+    }
+
+    /**
+     * Called by the DevCycle Local client when a config fetch succeeds. Not intended to be called
+     * directly.
+     */
+    @Override
+    public void onConfigLoaded(String configETag, boolean firstLoad, boolean changed) {
+        boolean recovered;
+        synchronized (stateLock) {
+            recovered = degraded || initializeFailed;
+            degraded = false;
+            initializeFailed = false;
+            if (firstLoad) {
+                initialConfigLatch.countDown();
+            }
+        }
+
+        if (recovered) {
+            // clears the ERROR or STALE state the SDK recorded for the earlier failure. Not needed
+            // on a clean first load, where the SDK emits PROVIDER_READY once initialize() returns
+            emitProviderReady(ProviderEventDetails.builder()
+                    .message("DevCycle config fetching has recovered")
+                    .eventMetadata(configEventMetadata(configETag))
+                    .build());
+        }
+
+        if (changed && !firstLoad) {
+            // flagsChanged is intentionally left unset: DevCycle resolves variables per-user at
+            // evaluation time, so the set of keys whose value changed is not knowable here
+            emitProviderConfigurationChanged(ProviderEventDetails.builder()
+                    .message("DevCycle config was updated")
+                    .eventMetadata(configEventMetadata(configETag))
+                    .build());
+        }
+    }
+
+    /**
+     * Called by the DevCycle Local client when a config fetch fails. Not intended to be called
+     * directly.
+     */
+    @Override
+    public void onConfigError(DevCycleException error, boolean fatal) {
+        boolean report;
+        synchronized (stateLock) {
+            if (fatal) {
+                if (fatalError != null) {
+                    // already reported, the SDK is holding the provider in the FATAL state
+                    return;
+                }
+                fatalError = error;
+                // unblocks initialize() so it fails immediately rather than waiting out the timeout
+                initialConfigLatch.countDown();
+            }
+            report = fatal || !degraded;
+            degraded = true;
+        }
+
+        if (fatal) {
+            emitProviderError(ProviderEventDetails.builder()
+                    .errorCode(ErrorCode.PROVIDER_FATAL)
+                    .message(error.getMessage())
+                    .build());
+            return;
+        }
+
+        if (!report) {
+            // already reported, don't emit an event for every subsequent failed poll
+            DevCycleLogger.debug("DevCycle config fetch still failing: " + error.getMessage());
+            return;
+        }
+
+        if (devcycleClient.isInitialized()) {
+            // a previously fetched config is still being served, so evaluations remain usable
+            emitProviderStale(ProviderEventDetails.builder()
+                    .message("DevCycle config could not be refreshed, serving the last known config: "
+                            + error.getMessage())
+                    .build());
+        } else {
+            emitProviderError(ProviderEventDetails.builder()
+                    .errorCode(ErrorCode.GENERAL)
+                    .message(error.getMessage())
+                    .build());
+        }
+    }
+
+    private ImmutableMetadata configEventMetadata(String configETag) {
+        ImmutableMetadataBuilder builder = ImmutableMetadata.builder();
+        if (configETag != null && !configETag.isEmpty()) {
+            builder.addString("configETag", configETag);
+        }
+        return builder.build();
     }
 
     @Override

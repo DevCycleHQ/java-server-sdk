@@ -2,6 +2,7 @@ package com.devcycle.sdk.server.openfeature;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ import dev.openfeature.sdk.ProviderEvaluation;
 import dev.openfeature.sdk.Reason;
 import dev.openfeature.sdk.Structure;
 import dev.openfeature.sdk.Value;
+import dev.openfeature.sdk.exceptions.GeneralError;
 import dev.openfeature.sdk.exceptions.ProviderNotReadyError;
 import dev.openfeature.sdk.exceptions.TargetingKeyMissingError;
 import dev.openfeature.sdk.exceptions.TypeMismatchError;
@@ -378,5 +380,27 @@ public class DevCycleProviderTest {
         Assert.assertNotNull(result.getFlagMetadata());
         Assert.assertEquals(result.getFlagMetadata().getString("evalReasonDetails"), "User ID");
         Assert.assertEquals(result.getFlagMetadata().getString("evalReasonTargetId"), "json_target_id");
+    }
+
+    @Test
+    public void testShutdownClosesClient() {
+        IDevCycleClient dvcClient = mock(IDevCycleClient.class);
+        DevCycleProvider provider = new DevCycleProvider(dvcClient);
+
+        // EventProvider.shutdown() is concrete, so the override has to close the client as well as
+        // draining the emitter executor via super.shutdown()
+        provider.shutdown();
+
+        verify(dvcClient).close();
+    }
+
+    @Test
+    public void testInitializeThrowsWhenClientNeverInitializes() {
+        IDevCycleClient dvcClient = mock(IDevCycleClient.class);
+        when(dvcClient.isInitialized()).thenReturn(false);
+
+        DevCycleProvider provider = new DevCycleProvider(dvcClient, 50);
+
+        Assert.assertThrows(GeneralError.class, () -> provider.initialize(new ImmutableContext("test-1234")));
     }
 }

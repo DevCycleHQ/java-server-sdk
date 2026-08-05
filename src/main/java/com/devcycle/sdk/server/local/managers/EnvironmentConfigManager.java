@@ -23,6 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -37,6 +38,7 @@ public final class EnvironmentConfigManager {
     private SSEManager sseManager;
     private boolean isSSEConnected = false;
     private final DevCycleLocalOptions options;
+    private final ConfigUpdateListener configUpdateListener;
 
     private ProjectConfig config;
     private String configETag = "";
@@ -49,9 +51,15 @@ public final class EnvironmentConfigManager {
     private boolean pollingEnabled = true;
 
     public EnvironmentConfigManager(String sdkKey, LocalBucketing localBucketing, DevCycleLocalOptions options) {
+        this(sdkKey, localBucketing, options, null);
+    }
+
+    public EnvironmentConfigManager(String sdkKey, LocalBucketing localBucketing, DevCycleLocalOptions options,
+            ConfigUpdateListener configUpdateListener) {
         this.sdkKey = sdkKey;
         this.localBucketing = localBucketing;
         this.options = options;
+        this.configUpdateListener = configUpdateListener;
 
         configApiClient = new DevCycleLocalApiClient(sdkKey, options).initialize();
 
@@ -75,7 +83,8 @@ public final class EnvironmentConfigManager {
                 }
             } catch (DevCycleException e) {
                 DevCycleLogger.error("Failed to load config: " + e.getMessage(), e);
-            } 
+                notifyConfigError(e);
+            }
         }
     };
 
@@ -83,11 +92,19 @@ public final class EnvironmentConfigManager {
         return config != null;
     }
 
-    private ProjectConfig getConfig() throws DevCycleException {        
+    private ProjectConfig getConfig() throws DevCycleException {
+        boolean firstLoad = this.config == null;
+        String previousETag = this.configETag;
+
         Call<ProjectConfig> config = this.configApiClient.getConfig(this.sdkKey, this.configETag, this.configLastModified);
         ProjectConfig fetchedConfig = getResponseWithRetries(config, 1);
         this.config = fetchedConfig;
-        
+
+        if (this.config != null) {
+            // a 304, or a config older than the one already stored, leaves the ETag untouched
+            notifyConfigLoaded(firstLoad, !Objects.equals(previousETag, this.configETag));
+        }
+
         if (!this.options.isDisableRealtimeUpdates() && this.config != null && this.config.getSse() != null) {
             try {
                 URI uri = new URI(this.config.getSse().getHostname() + this.config.getSse().getPath());
@@ -100,6 +117,30 @@ public final class EnvironmentConfigManager {
             }
         }
         return this.config;
+    }
+
+    private void notifyConfigLoaded(boolean firstLoad, boolean changed) {
+        if (configUpdateListener == null) {
+            return;
+        }
+        try {
+            configUpdateListener.onConfigLoaded(this.configETag, firstLoad, changed);
+        } catch (Exception e) {
+            DevCycleLogger.warning("Config update listener threw an exception: " + e.getMessage());
+        }
+    }
+
+    private void notifyConfigError(DevCycleException error) {
+        if (configUpdateListener == null) {
+            return;
+        }
+        HttpResponseCode responseCode = error.getHttpResponseCode();
+        boolean fatal = responseCode == HttpResponseCode.UNAUTHORIZED || responseCode == HttpResponseCode.FORBIDDEN;
+        try {
+            configUpdateListener.onConfigError(error, fatal);
+        } catch (Exception e) {
+            DevCycleLogger.warning("Config update listener threw an exception: " + e.getMessage());
+        }
     }
 
     private Void handleSSEMessage(MessageEvent messageEvent) {
