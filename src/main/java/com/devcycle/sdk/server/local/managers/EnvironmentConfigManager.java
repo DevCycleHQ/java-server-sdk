@@ -45,7 +45,7 @@ public final class EnvironmentConfigManager {
     private final String sdkKey;
     private final int pollingIntervalMS;
     // Once SSE is connected, polling only acts as a backstop for missed messages
-    private static final int SSE_POLL_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+    private static final int SSE_POLL_INTERVAL_MS = (int) TimeUnit.MINUTES.toMillis(15); // 15 minutes
     private boolean pollingEnabled = true;
 
     public EnvironmentConfigManager(String sdkKey, LocalBucketing localBucketing, DevCycleLocalOptions options) {
