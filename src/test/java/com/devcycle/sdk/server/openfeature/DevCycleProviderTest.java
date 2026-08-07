@@ -181,7 +181,7 @@ public class DevCycleProviderTest {
         IDevCycleClient dvcClient = mock(IDevCycleClient.class);
         when(dvcClient.isInitialized()).thenReturn(true);
 
-        // 5_000_000_000 exceeds Integer.MAX_VALUE but is well within the double safe-integer range (2^53).
+        // 5_000_000_000 exceeds Integer.MAX_VALUE but is well within the double safe-integer range (2^53 - 1).
         Double variableValue = 5_000_000_000.0;
         Long defaultValue = 0L;
 
@@ -219,7 +219,7 @@ public class DevCycleProviderTest {
         IDevCycleClient dvcClient = mock(IDevCycleClient.class);
         when(dvcClient.isInitialized()).thenReturn(true);
 
-        // 2^53 exceeds the double safe-integer range, so it cannot be narrowed to a long without precision loss.
+        // 2^53 exceeds the double max safe integer (2^53 - 1), so it cannot be narrowed to a long without precision loss.
         Double variableValue = 9_007_199_254_740_992.0;
         Long defaultValue = 0L;
 
