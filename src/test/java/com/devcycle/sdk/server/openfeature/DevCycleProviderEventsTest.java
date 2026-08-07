@@ -23,7 +23,8 @@ import java.util.concurrent.atomic.AtomicReference;
  * Integration tests for the provider events emitted off the back of the Local SDK config lifecycle
  */
 public class DevCycleProviderEventsTest {
-    private static final int PORT = 9010;
+    // port 0 lets the OS pick a free ephemeral port, getHostRootURL() reports the one chosen
+    private static final int PORT = 0;
     private static final int POLL_INTERVAL_MS = 1000;
     private static final int EVENT_TIMEOUT_SECONDS = 20;
 

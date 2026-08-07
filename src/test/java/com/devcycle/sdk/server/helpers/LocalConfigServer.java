@@ -12,9 +12,10 @@ import java.time.format.DateTimeFormatter;
 
 public class LocalConfigServer {
     private final HttpServer server;
-    private String configData = "";
-    private String etag = "\"test-etag-12345\"";
-    private int responseCode = 200;
+    // volatile: written by the test thread, read by the HttpServer handler thread
+    private volatile String configData = "";
+    private volatile String etag = "\"test-etag-12345\"";
+    private volatile int responseCode = 200;
 
     public LocalConfigServer(String configData, int port) throws IOException {
         this.configData = configData;

@@ -23,10 +23,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public final class EnvironmentConfigManager {
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperUtils.createDefaultObjectMapper();
@@ -38,7 +41,16 @@ public final class EnvironmentConfigManager {
     private SSEManager sseManager;
     private boolean isSSEConnected = false;
     private final DevCycleLocalOptions options;
-    private final ConfigUpdateListener configUpdateListener;
+
+    /**
+     * Copy-on-write so the polling and SSE threads can iterate while a listener is being added.
+     */
+    private final List<ConfigUpdateListener> configUpdateListeners = new CopyOnWriteArrayList<>();
+
+    /**
+     * Retained so a listener registered after an unrecoverable failure still learns about it.
+     */
+    private volatile DevCycleException fatalConfigError;
 
     private ProjectConfig config;
     private String configETag = "";
@@ -51,15 +63,9 @@ public final class EnvironmentConfigManager {
     private boolean pollingEnabled = true;
 
     public EnvironmentConfigManager(String sdkKey, LocalBucketing localBucketing, DevCycleLocalOptions options) {
-        this(sdkKey, localBucketing, options, null);
-    }
-
-    public EnvironmentConfigManager(String sdkKey, LocalBucketing localBucketing, DevCycleLocalOptions options,
-            ConfigUpdateListener configUpdateListener) {
         this.sdkKey = sdkKey;
         this.localBucketing = localBucketing;
         this.options = options;
-        this.configUpdateListener = configUpdateListener;
 
         configApiClient = new DevCycleLocalApiClient(sdkKey, options).initialize();
 
@@ -119,25 +125,40 @@ public final class EnvironmentConfigManager {
         return this.config;
     }
 
-    private void notifyConfigLoaded(boolean firstLoad, boolean changed) {
-        if (configUpdateListener == null) {
-            return;
+    /**
+     * Register a listener for the config lifecycle. If the config has already failed
+     * unrecoverably, the listener is told immediately rather than waiting for the next attempt.
+     */
+    public void addConfigUpdateListener(ConfigUpdateListener listener) {
+        configUpdateListeners.add(listener);
+
+        DevCycleException fatal = fatalConfigError;
+        if (fatal != null) {
+            notifyListener(listener, l -> l.onConfigError(fatal, true));
         }
-        try {
-            configUpdateListener.onConfigLoaded(this.configETag, firstLoad, changed);
-        } catch (Exception e) {
-            DevCycleLogger.warning("Config update listener threw an exception: " + e.getMessage());
+    }
+
+    private void notifyConfigLoaded(boolean firstLoad, boolean changed) {
+        for (ConfigUpdateListener listener : configUpdateListeners) {
+            notifyListener(listener, l -> l.onConfigLoaded(this.configETag, firstLoad, changed));
         }
     }
 
     private void notifyConfigError(DevCycleException error) {
-        if (configUpdateListener == null) {
-            return;
-        }
         HttpResponseCode responseCode = error.getHttpResponseCode();
         boolean fatal = responseCode == HttpResponseCode.UNAUTHORIZED || responseCode == HttpResponseCode.FORBIDDEN;
+        if (fatal) {
+            fatalConfigError = error;
+        }
+
+        for (ConfigUpdateListener listener : configUpdateListeners) {
+            notifyListener(listener, l -> l.onConfigError(error, fatal));
+        }
+    }
+
+    private void notifyListener(ConfigUpdateListener listener, Consumer<ConfigUpdateListener> notification) {
         try {
-            configUpdateListener.onConfigError(error, fatal);
+            notification.accept(listener);
         } catch (Exception e) {
             DevCycleLogger.warning("Config update listener threw an exception: " + e.getMessage());
         }

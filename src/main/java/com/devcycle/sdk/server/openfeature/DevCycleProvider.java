@@ -89,7 +89,13 @@ public class DevCycleProvider extends EventProvider implements ConfigUpdateListe
             return;
         }
 
-        initialConfigLatch.await(initTimeoutMS, TimeUnit.MILLISECONDS);
+        try {
+            initialConfigLatch.await(initTimeoutMS, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            // await() clears the interrupt flag, restore it so callers can still see the interrupt
+            Thread.currentThread().interrupt();
+            throw e;
+        }
 
         synchronized (stateLock) {
             if (fatalError != null) {

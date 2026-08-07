@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import com.devcycle.sdk.server.common.api.IDevCycleClient;
 import com.devcycle.sdk.server.common.exception.BeforeHookError;
-import com.devcycle.sdk.server.common.exception.DevCycleException;
 import com.devcycle.sdk.server.common.logging.DevCycleLogger;
 import com.devcycle.sdk.server.common.model.BaseVariable;
 import com.devcycle.sdk.server.common.model.DevCycleEvent;
@@ -23,7 +22,6 @@ import com.devcycle.sdk.server.common.model.PlatformData;
 import com.devcycle.sdk.server.common.model.Variable;
 import com.devcycle.sdk.server.common.model.Variable.TypeEnum;
 import com.devcycle.sdk.server.local.bucketing.LocalBucketing;
-import com.devcycle.sdk.server.local.managers.ConfigUpdateListener;
 import com.devcycle.sdk.server.local.managers.EnvironmentConfigManager;
 import com.devcycle.sdk.server.local.managers.EventQueueManager;
 import com.devcycle.sdk.server.local.model.BucketedUserConfig;
@@ -50,34 +48,6 @@ public final class DevCycleLocalClient implements IDevCycleClient {
     // raw type here is okay because we're using a generic type for the variable
     private EvalHooksRunner evalHooksRunner;
 
-    /**
-     * Forwards config lifecycle callbacks to the OpenFeature provider, if one has been created, so
-     * it can emit the corresponding provider events. Invoked on the config polling and SSE threads.
-     */
-    private final ConfigUpdateListener configUpdateListener = new ConfigUpdateListener() {
-        @Override
-        public void onConfigLoaded(String etag, boolean firstLoad, boolean changed) {
-            DevCycleProvider provider = openFeatureProvider;
-            if (provider != null) {
-                provider.onConfigLoaded(etag, firstLoad, changed);
-            }
-        }
-
-        @Override
-        public void onConfigError(DevCycleException error, boolean fatal) {
-            if (fatal) {
-                // retained so it can be replayed to a provider created after the failure
-                fatalConfigError = error;
-            }
-            DevCycleProvider provider = openFeatureProvider;
-            if (provider != null) {
-                provider.onConfigError(error, fatal);
-            }
-        }
-    };
-
-    private volatile DevCycleException fatalConfigError;
-
     public DevCycleLocalClient(String sdkKey) {
         this(sdkKey, DevCycleLocalOptions.builder().build());
     }
@@ -101,7 +71,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
 
         localBucketing.setPlatformData(PlatformData.builder().build().toString());
 
-        configManager = new EnvironmentConfigManager(sdkKey, localBucketing, dvcOptions, configUpdateListener);
+        configManager = new EnvironmentConfigManager(sdkKey, localBucketing, dvcOptions);
         this.sdkKey = sdkKey;
         try {
             eventQueueManager = new EventQueueManager(sdkKey, localBucketing, clientUUID, dvcOptions);
@@ -355,8 +325,7 @@ public final class DevCycleLocalClient implements IDevCycleClient {
         this.evalHooksRunner.clearHooks();
     }
 
-    // volatile: read from the config polling and SSE threads via configUpdateListener
-    private volatile DevCycleProvider openFeatureProvider;
+    private DevCycleProvider openFeatureProvider;
 
     /**
      * @return the OpenFeature provider for this client.
@@ -367,12 +336,8 @@ public final class DevCycleLocalClient implements IDevCycleClient {
         localBucketing.setPlatformData(platformData.toString());
         if (openFeatureProvider == null) {
             openFeatureProvider = new DevCycleProvider(this);
-            DevCycleException fatal = fatalConfigError;
-            if (fatal != null) {
-                // the config failed fatally before this provider existed, so replay it rather than
-                // leaving the provider to wait out its initialization timeout
-                openFeatureProvider.onConfigError(fatal, true);
-            }
+            // the provider listens for config updates itself so it can emit provider events
+            configManager.addConfigUpdateListener(openFeatureProvider);
         }
         return openFeatureProvider;
     }
