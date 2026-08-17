@@ -35,8 +35,9 @@ public class LocalBucketing {
     AtomicReference<Memory> memRef; // reference to start of WASM's memory
     private final Set<Integer> pinnedAddresses;
     private final HashMap<String, Integer> sdkKeyAddresses;
-    private final HashMap<Variable.TypeEnum, Integer> variableTypeMap = new HashMap<Variable.TypeEnum, Integer>();
+    private final HashMap<Variable.TypeEnum, Integer> variableTypeMap = new HashMap<>();
     private final Logger logger = Logger.getLogger(LocalBucketing.class.getName());
+    private static final HashMap<String, String> configMetadataCache = new HashMap<>();
 
     public LocalBucketing() {
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -202,6 +203,7 @@ public class LocalBucketing {
         Func setConfigDataPtr = linker.get(store, "", "setConfigDataUTF8").get().func();
         WasmFunctions.Consumer2<Integer, Integer> fn = WasmFunctions.consumer(store, setConfigDataPtr, I32, I32);
         fn.accept(sdkKeyAddress, configAddress);
+        configMetadataCache.put(sdkKey, internalGetConfigMetadata(sdkKeyAddress));
     }
 
     public synchronized void setPlatformData(String platformData) {
@@ -384,7 +386,17 @@ public class LocalBucketing {
     }
 
     public String getConfigMetadata(String sdkKey) {
-        int sdkKeyAddress = getSDKKeyAddress(sdkKey);
+        if (configMetadataCache.containsKey(sdkKey)) {
+            return configMetadataCache.get(sdkKey);
+        } else {
+            int sdkKeyAddress = getSDKKeyAddress(sdkKey);
+            String metadata = internalGetConfigMetadata(sdkKeyAddress);
+            configMetadataCache.put(sdkKey, metadata);
+            return metadata;
+        }
+    }
+
+    private String internalGetConfigMetadata(int sdkKeyAddress) {
         Func getConfigMetadataPtr = linker.get(store, "", "getConfigMetadata").get().func();
         WasmFunctions.Function1<Integer, Integer> getConfigMetadata = WasmFunctions.func(
                 store, getConfigMetadataPtr, I32, I32);
