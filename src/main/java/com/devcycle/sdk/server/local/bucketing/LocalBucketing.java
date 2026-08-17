@@ -34,6 +34,7 @@ public class LocalBucketing {
     Linker linker; // used to read/write to WASM
     AtomicReference<Memory> memRef; // reference to start of WASM's memory
     private final Set<Integer> pinnedAddresses;
+    private final Set<Integer> pinnedEventIds;
     private final HashMap<String, Integer> sdkKeyAddresses;
     private final HashMap<Variable.TypeEnum, Integer> variableTypeMap = new HashMap<>();
     private final Logger logger = Logger.getLogger(LocalBucketing.class.getName());
@@ -43,6 +44,7 @@ public class LocalBucketing {
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
         pinnedAddresses = new HashSet<>();
+        pinnedEventIds = new HashSet<>();
         sdkKeyAddresses = new HashMap<>();
 
         store = Store.withoutData();
@@ -196,7 +198,7 @@ public class LocalBucketing {
     }
 
     public synchronized void storeConfig(String sdkKey, String config) {
-        unpinAll();
+        unPinAllEventIds();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int configAddress = newUint8ArrayParameter(config.getBytes(StandardCharsets.UTF_8));
 
@@ -207,7 +209,7 @@ public class LocalBucketing {
     }
 
     public synchronized void setPlatformData(String platformData) {
-        unpinAll();
+        unPinAllEventIds();
         int platformDataAddress = newUint8ArrayParameter(platformData.getBytes(StandardCharsets.UTF_8));
         Func setPlatformDataPtr = linker.get(store, "", "setPlatformDataUTF8").get().func();
         WasmFunctions.Consumer1<Integer> fn = WasmFunctions.consumer(store, setPlatformDataPtr, I32);
@@ -215,7 +217,7 @@ public class LocalBucketing {
     }
 
     public synchronized void setClientCustomData(String sdkKey, String customData) {
-        unpinAll();
+        unPinAllEventIds();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int customDataAddress = newUint8ArrayParameter(customData.getBytes(StandardCharsets.UTF_8));
         Func setCustomClientDataPtr = linker.get(store, "", "setClientCustomDataUTF8").get().func();
@@ -224,7 +226,7 @@ public class LocalBucketing {
     }
 
     public synchronized BucketedUserConfig generateBucketedConfig(String sdkKey, DevCycleUser user) throws JsonProcessingException {
-        unpinAll();
+        unPinAllEventIds();
         String userString = OBJECT_MAPPER.writeValueAsString(user);
 
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
@@ -263,7 +265,7 @@ public class LocalBucketing {
     }
 
     public synchronized void initEventQueue(String sdkKey, String clientUUID, String options) {
-        unpinAll();
+        unPinAllEventIds();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int clientUUIDAddress = newWasmString(clientUUID);
         int optionsAddress = newWasmString(options);
@@ -274,9 +276,9 @@ public class LocalBucketing {
     }
 
     public synchronized void queueEvent(String sdkKey, String user, String event) {
-        unpinAll();
+        unPinAllEventIds();
         int sdkKeyAddress = newWasmString(sdkKey);
-        int userAddress = getPinnedParameter(user);
+        int userAddress = getPinnedEventId(user);
         int eventAddress = newWasmString(event);
 
         Func queueEventPtr = linker.get(store, "", "queueEvent").get().func();
@@ -285,9 +287,9 @@ public class LocalBucketing {
     }
 
     public synchronized void queueAggregateEvent(String sdkKey, String event, String variableVariationMap) {
-        unpinAll();
+        unPinAllEventIds();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
-        int eventAddress = getPinnedParameter(event);
+        int eventAddress = getPinnedEventId(event);
         int variableVariationMapAddress = newWasmString(variableVariationMap);
 
         Func queueAggregateEventPtr = linker.get(store, "", "queueAggregateEvent").get().func();
@@ -296,7 +298,7 @@ public class LocalBucketing {
     }
 
     public synchronized FlushPayload[] flushEventQueue(String sdkKey) throws JsonProcessingException {
-        unpinAll();
+        unPinAllEventIds();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
 
         Func flushEventQueuePtr = linker.get(store, "", "flushEventQueue").get().func();
@@ -319,7 +321,7 @@ public class LocalBucketing {
     }
 
     public synchronized void onPayloadFailure(String sdkKey, String payloadId, boolean retryable) {
-        unpinAll();
+        unPinAllEventIds();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int payloadIdAddress = newWasmString(payloadId);
 
@@ -329,7 +331,7 @@ public class LocalBucketing {
     }
 
     public synchronized void onPayloadSuccess(String sdkKey, String payloadId) {
-        unpinAll();
+        unPinAllEventIds();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int payloadIdAddress = newWasmString(payloadId);
 
@@ -339,7 +341,7 @@ public class LocalBucketing {
     }
 
     public synchronized int getEventQueueSize(String sdkKey) {
-        unpinAll();
+        unPinAllEventIds();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
 
         Func getEventQueueSizePtr = linker.get(store, "", "eventQueueSize").get().func();
@@ -361,17 +363,35 @@ public class LocalBucketing {
         unpin.accept(address);
     }
 
-    private void unpinAll() {
+    private void unPinAllEventIds() {
+        for (int address : pinnedEventIds) {
+            unpinParameter(address);
+        }
+        pinnedEventIds.clear();
+    }
+
+    private void unPinAllParameters() {
         for (int address : pinnedAddresses) {
             unpinParameter(address);
         }
+        for (int address : pinnedEventIds) {
+            unpinParameter(address);
+        }
         pinnedAddresses.clear();
+        pinnedEventIds.clear();
     }
 
     private int getPinnedParameter(String param) {
         int address = newWasmString(param);
         pinParameter(address);
         pinnedAddresses.add(address);
+        return address;
+    }
+
+    private int getPinnedEventId(String param) {
+        int address = newWasmString(param);
+        pinParameter(address);
+        pinnedEventIds.add(address);
         return address;
     }
 
