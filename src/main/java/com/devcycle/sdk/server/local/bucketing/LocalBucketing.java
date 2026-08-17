@@ -38,7 +38,7 @@ public class LocalBucketing {
     private final HashMap<String, Integer> sdkKeyAddresses;
     private final HashMap<Variable.TypeEnum, Integer> variableTypeMap = new HashMap<>();
     private final Logger logger = Logger.getLogger(LocalBucketing.class.getName());
-    private static final HashMap<String, String> configMetadataCache = new HashMap<>();
+    private final Map<String, String> configMetadataCache = new HashMap<>();
 
     public LocalBucketing() {
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
