@@ -119,9 +119,6 @@ public class LocalBucketing {
      * {@code bucketing-lib.release.wasm} is pinned by the build, so a missing export means a broken
      * build and should fail loudly and immediately.
      *
-     * <p>Runtime error behaviour is otherwise unchanged: WASM traps still surface as
-     * {@code WasmtimeException} from the calling method, and a trap does not invalidate these
-     * bindings. See {@code LocalBucketingErrorHandlingTest}.
      */
     private Func export(String name) {
         return linker.get(store, "", name)
