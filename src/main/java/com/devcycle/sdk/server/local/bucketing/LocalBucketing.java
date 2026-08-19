@@ -40,6 +40,23 @@ public class LocalBucketing {
     private final Logger logger = Logger.getLogger(LocalBucketing.class.getName());
     private final Map<String, String> configMetadataCache = new HashMap<>();
 
+    private final WasmFunctions.Function2<Integer, Integer, Integer> newFn;
+    private final WasmFunctions.Consumer1<Integer> pinFn;
+    private final WasmFunctions.Consumer1<Integer> unpinFn;
+    private final WasmFunctions.Function1<Integer, Integer> variableForUserPBFn;
+    private final WasmFunctions.Consumer2<Integer, Integer> setConfigDataFn;
+    private final WasmFunctions.Consumer1<Integer> setPlatformDataFn;
+    private final WasmFunctions.Consumer2<Integer, Integer> setClientCustomDataFn;
+    private final WasmFunctions.Function2<Integer, Integer, Integer> generateBucketedConfigFn;
+    private final WasmFunctions.Consumer3<Integer, Integer, Integer> initEventQueueFn;
+    private final WasmFunctions.Consumer3<Integer, Integer, Integer> queueEventFn;
+    private final WasmFunctions.Consumer3<Integer, Integer, Integer> queueAggregateEventFn;
+    private final WasmFunctions.Function1<Integer, Integer> flushEventQueueFn;
+    private final WasmFunctions.Consumer3<Integer, Integer, Integer> onPayloadFailureFn;
+    private final WasmFunctions.Consumer2<Integer, Integer> onPayloadSuccessFn;
+    private final WasmFunctions.Function1<Integer, Integer> eventQueueSizeFn;
+    private final WasmFunctions.Function1<Integer, Integer> getConfigMetadataFn;
+
     public LocalBucketing() {
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
@@ -64,11 +81,53 @@ public class LocalBucketing {
         Memory mem = linker.get(store, "", "memory").get().memory();
         memRef.set(mem);
 
+        newFn = WasmFunctions.func(store, export("__new"), I32, I32, I32);
+        pinFn = WasmFunctions.consumer(store, export("__pin"), I32);
+        unpinFn = WasmFunctions.consumer(store, export("__unpin"), I32);
+        variableForUserPBFn = WasmFunctions.func(store, export("variableForUser_PB"), I32, I32);
+        setConfigDataFn = WasmFunctions.consumer(store, export("setConfigDataUTF8"), I32, I32);
+        setPlatformDataFn = WasmFunctions.consumer(store, export("setPlatformDataUTF8"), I32);
+        setClientCustomDataFn = WasmFunctions.consumer(store, export("setClientCustomDataUTF8"), I32, I32);
+        generateBucketedConfigFn =
+                WasmFunctions.func(store, export("generateBucketedConfigForUserUTF8"), I32, I32, I32);
+        initEventQueueFn = WasmFunctions.consumer(store, export("initEventQueue"), I32, I32, I32);
+        queueEventFn = WasmFunctions.consumer(store, export("queueEvent"), I32, I32, I32);
+        queueAggregateEventFn = WasmFunctions.consumer(store, export("queueAggregateEvent"), I32, I32, I32);
+        flushEventQueueFn = WasmFunctions.func(store, export("flushEventQueue"), I32, I32);
+        onPayloadFailureFn = WasmFunctions.consumer(store, export("onPayloadFailure"), I32, I32, I32);
+        onPayloadSuccessFn = WasmFunctions.consumer(store, export("onPayloadSuccess"), I32, I32);
+        eventQueueSizeFn = WasmFunctions.func(store, export("eventQueueSize"), I32, I32);
+        getConfigMetadataFn = WasmFunctions.func(store, export("getConfigMetadata"), I32, I32);
+
         // WASM time seems problematic for getting global values so we'll just hardcode them
         variableTypeMap.put(Variable.TypeEnum.BOOLEAN, 0);
         variableTypeMap.put(Variable.TypeEnum.NUMBER, 1);
         variableTypeMap.put(Variable.TypeEnum.STRING, 2);
         variableTypeMap.put(Variable.TypeEnum.JSON, 3);
+    }
+
+    /**
+     * Resolves a WASM export once, at construction time.
+     *
+     * <p>The returned {@link Func} owns a native handle that is only released by
+     * {@code Func.dispose()}, so these must not be fetched per call.
+     *
+     * <p>Resolving here rather than per call moves a missing-export failure from first use to
+     * construction. That is deliberate: {@code DevCycleLocalClient.variable} catches
+     * {@link Throwable} and falls back to the default value, so a missing export used to be
+     * swallowed into silently-defaulted flags for the lifetime of the process. The bundled
+     * {@code bucketing-lib.release.wasm} is pinned by the build, so a missing export means a broken
+     * build and should fail loudly and immediately.
+     *
+     * <p>Runtime error behaviour is otherwise unchanged: WASM traps still surface as
+     * {@code WasmtimeException} from the calling method, and a trap does not invalidate these
+     * bindings. See {@code LocalBucketingErrorHandlingTest}.
+     */
+    private Func export(String name) {
+        return linker.get(store, "", name)
+                .orElseThrow(() -> new IllegalStateException(
+                        "bucketing-lib.release.wasm is missing the '" + name + "' export"))
+                .func();
     }
 
     private Collection<Extern> setImportsOnLinker() {
@@ -102,12 +161,8 @@ public class LocalBucketing {
 
         int objectIdString = 1; // id 1 represents string class in wasm
 
-        Func __newPtr = linker.get(store, "", "__new").get().func(); // get pointer to __new function
-        WasmFunctions.Function2<Integer, Integer, Integer> __new = WasmFunctions.func(
-                store, __newPtr, I32, I32, I32); // load __new function
-
         byte[] paramBytes = param.getBytes(StandardCharsets.UTF_8);
-        int paramAddress = __new.call(paramBytes.length * 2, objectIdString); // allocate memory in store for a string with this length and get start address
+        int paramAddress = newFn.call(paramBytes.length * 2, objectIdString); // allocate memory in store for a string with this length and get start address
 
         ByteBuffer buf = memRef.get().buffer(store);
         for (int i = 0; i < paramBytes.length; i++) {
@@ -136,14 +191,10 @@ public class LocalBucketing {
     private int newUint8ArrayParameter(byte[] paramData) {
         int length = paramData.length;
 
-        Func __newPtr = linker.get(store, "", "__new").get().func(); // get pointer to __new function
-        WasmFunctions.Function2<Integer, Integer, Integer> __new = WasmFunctions.func(
-                store, __newPtr, I32, I32, I32); // load __new function
-
-        int headerAddr = __new.call(12, WASM_OBJECT_ID_UINT8ARRAY);
+        int headerAddr = newFn.call(12, WASM_OBJECT_ID_UINT8ARRAY);
         try {
             pinParameter(headerAddr);
-            int dataBufferAddr = __new.call(length, WASM_OBJECT_ID_STRING);
+            int dataBufferAddr = newFn.call(length, WASM_OBJECT_ID_STRING);
 
             byte[] headerData = new byte[12];
             byte[] bufferAddrBytes = ByteConversionUtils.intToBytesLittleEndian(dataBufferAddr);
@@ -202,27 +253,21 @@ public class LocalBucketing {
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int configAddress = newUint8ArrayParameter(config.getBytes(StandardCharsets.UTF_8));
 
-        Func setConfigDataPtr = linker.get(store, "", "setConfigDataUTF8").get().func();
-        WasmFunctions.Consumer2<Integer, Integer> fn = WasmFunctions.consumer(store, setConfigDataPtr, I32, I32);
-        fn.accept(sdkKeyAddress, configAddress);
+        setConfigDataFn.accept(sdkKeyAddress, configAddress);
         configMetadataCache.put(sdkKey, internalGetConfigMetadata(sdkKeyAddress));
     }
 
     public synchronized void setPlatformData(String platformData) {
         unPinAllEventIds();
         int platformDataAddress = newUint8ArrayParameter(platformData.getBytes(StandardCharsets.UTF_8));
-        Func setPlatformDataPtr = linker.get(store, "", "setPlatformDataUTF8").get().func();
-        WasmFunctions.Consumer1<Integer> fn = WasmFunctions.consumer(store, setPlatformDataPtr, I32);
-        fn.accept(platformDataAddress);
+        setPlatformDataFn.accept(platformDataAddress);
     }
 
     public synchronized void setClientCustomData(String sdkKey, String customData) {
         unPinAllEventIds();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int customDataAddress = newUint8ArrayParameter(customData.getBytes(StandardCharsets.UTF_8));
-        Func setCustomClientDataPtr = linker.get(store, "", "setClientCustomDataUTF8").get().func();
-        WasmFunctions.Consumer2<Integer, Integer> fn = WasmFunctions.consumer(store, setCustomClientDataPtr, I32, I32);
-        fn.accept(sdkKeyAddress, customDataAddress);
+        setClientCustomDataFn.accept(sdkKeyAddress, customDataAddress);
     }
 
     public synchronized BucketedUserConfig generateBucketedConfig(String sdkKey, DevCycleUser user) throws JsonProcessingException {
@@ -232,11 +277,7 @@ public class LocalBucketing {
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int userAddress = newUint8ArrayParameter(userString.getBytes(StandardCharsets.UTF_8));
 
-        Func generateBucketedConfigForUserPtr = linker.get(store, "", "generateBucketedConfigForUserUTF8").get().func();
-        WasmFunctions.Function2<Integer, Integer, Integer> generateBucketedConfigForUser = WasmFunctions.func(
-                store, generateBucketedConfigForUserPtr, I32, I32, I32);
-
-        int resultAddress = generateBucketedConfigForUser.call(sdkKeyAddress, userAddress);
+        int resultAddress = generateBucketedConfigFn.call(sdkKeyAddress, userAddress);
 
         byte[] bucketConfigBytes = readAssemblyScriptUint8Array(resultAddress);
         String bucketedConfigString = new String(bucketConfigBytes, StandardCharsets.UTF_8);
@@ -250,11 +291,7 @@ public class LocalBucketing {
     public synchronized byte[] getVariableForUserProtobuf(byte[] serializedParams) {
         int paramsAddr = newUint8ArrayParameter(serializedParams);
 
-        Func getVariablePtr = linker.get(store, "", "variableForUser_PB").get().func();
-        WasmFunctions.Function1<Integer, Integer> variableForUserPB = WasmFunctions.func(
-                store, getVariablePtr, I32, I32);
-
-        int variableAddress = variableForUserPB.call(paramsAddr);
+        int variableAddress = variableForUserPBFn.call(paramsAddr);
 
         byte[] varBytes = null;
         if (variableAddress > 0) {
@@ -270,9 +307,7 @@ public class LocalBucketing {
         int clientUUIDAddress = newWasmString(clientUUID);
         int optionsAddress = newWasmString(options);
 
-        Func initEventQueuePtr = linker.get(store, "", "initEventQueue").get().func();
-        WasmFunctions.Consumer3<Integer, Integer, Integer> fn = WasmFunctions.consumer(store, initEventQueuePtr, I32, I32, I32);
-        fn.accept(sdkKeyAddress, clientUUIDAddress, optionsAddress);
+        initEventQueueFn.accept(sdkKeyAddress, clientUUIDAddress, optionsAddress);
     }
 
     public synchronized void queueEvent(String sdkKey, String user, String event) {
@@ -281,9 +316,7 @@ public class LocalBucketing {
         int userAddress = getPinnedEventId(user);
         int eventAddress = newWasmString(event);
 
-        Func queueEventPtr = linker.get(store, "", "queueEvent").get().func();
-        WasmFunctions.Consumer3<Integer, Integer, Integer> fn = WasmFunctions.consumer(store, queueEventPtr, I32, I32, I32);
-        fn.accept(sdkKeyAddress, userAddress, eventAddress);
+        queueEventFn.accept(sdkKeyAddress, userAddress, eventAddress);
     }
 
     public synchronized void queueAggregateEvent(String sdkKey, String event, String variableVariationMap) {
@@ -292,20 +325,14 @@ public class LocalBucketing {
         int eventAddress = getPinnedEventId(event);
         int variableVariationMapAddress = newWasmString(variableVariationMap);
 
-        Func queueAggregateEventPtr = linker.get(store, "", "queueAggregateEvent").get().func();
-        WasmFunctions.Consumer3<Integer, Integer, Integer> fn = WasmFunctions.consumer(store, queueAggregateEventPtr, I32, I32, I32);
-        fn.accept(sdkKeyAddress, eventAddress, variableVariationMapAddress);
+        queueAggregateEventFn.accept(sdkKeyAddress, eventAddress, variableVariationMapAddress);
     }
 
     public synchronized FlushPayload[] flushEventQueue(String sdkKey) throws JsonProcessingException {
         unPinAllEventIds();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
 
-        Func flushEventQueuePtr = linker.get(store, "", "flushEventQueue").get().func();
-        WasmFunctions.Function1<Integer, Integer> fn = WasmFunctions.func(
-                store, flushEventQueuePtr, I32, I32);
-
-        int resultAddress = fn.call(sdkKeyAddress);
+        int resultAddress = flushEventQueueFn.call(sdkKeyAddress);
         String flushPayloadsStr = readWasmString(resultAddress);
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -325,9 +352,7 @@ public class LocalBucketing {
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int payloadIdAddress = newWasmString(payloadId);
 
-        Func onPayloadFailurePtr = linker.get(store, "", "onPayloadFailure").get().func();
-        WasmFunctions.Consumer3<Integer, Integer, Integer> fn = WasmFunctions.consumer(store, onPayloadFailurePtr, I32, I32, I32);
-        fn.accept(sdkKeyAddress, payloadIdAddress, retryable ? 1 : 0);
+        onPayloadFailureFn.accept(sdkKeyAddress, payloadIdAddress, retryable ? 1 : 0);
     }
 
     public synchronized void onPayloadSuccess(String sdkKey, String payloadId) {
@@ -335,32 +360,22 @@ public class LocalBucketing {
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
         int payloadIdAddress = newWasmString(payloadId);
 
-        Func onPayloadSuccessPtr = linker.get(store, "", "onPayloadSuccess").get().func();
-        WasmFunctions.Consumer2<Integer, Integer> fn = WasmFunctions.consumer(store, onPayloadSuccessPtr, I32, I32);
-        fn.accept(sdkKeyAddress, payloadIdAddress);
+        onPayloadSuccessFn.accept(sdkKeyAddress, payloadIdAddress);
     }
 
     public synchronized int getEventQueueSize(String sdkKey) {
         unPinAllEventIds();
         int sdkKeyAddress = getSDKKeyAddress(sdkKey);
 
-        Func getEventQueueSizePtr = linker.get(store, "", "eventQueueSize").get().func();
-        WasmFunctions.Function1<Integer, Integer> getEventQueueSize = WasmFunctions.func(
-                store, getEventQueueSizePtr, I32, I32);
-
-        return getEventQueueSize.call(sdkKeyAddress);
+        return eventQueueSizeFn.call(sdkKeyAddress);
     }
 
     private void pinParameter(int address) {
-        Func pinPtr = linker.get(store, "", "__pin").get().func();
-        WasmFunctions.Consumer1<Integer> pin = WasmFunctions.consumer(store, pinPtr, I32);
-        pin.accept(address);
+        pinFn.accept(address);
     }
 
     private void unpinParameter(int address) {
-        Func unpinPtr = linker.get(store, "", "__unpin").get().func();
-        WasmFunctions.Consumer1<Integer> unpin = WasmFunctions.consumer(store, unpinPtr, I32);
-        unpin.accept(address);
+        unpinFn.accept(address);
     }
 
     private void unPinAllEventIds() {
@@ -417,11 +432,7 @@ public class LocalBucketing {
     }
 
     private String internalGetConfigMetadata(int sdkKeyAddress) {
-        Func getConfigMetadataPtr = linker.get(store, "", "getConfigMetadata").get().func();
-        WasmFunctions.Function1<Integer, Integer> getConfigMetadata = WasmFunctions.func(
-                store, getConfigMetadataPtr, I32, I32);
-
-        int resultAddress = getConfigMetadata.call(sdkKeyAddress);
+        int resultAddress = getConfigMetadataFn.call(sdkKeyAddress);
         return readWasmString(resultAddress);
     }
 }
