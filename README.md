@@ -28,6 +28,8 @@ ldd --version
 
 ## Installation
 
+<!-- x-release-please-start-version -->
+
 ### Gradle
 You can use the SDK in your Gradle project by adding the following to *build.gradle*:
 
@@ -47,6 +49,8 @@ You can use the SDK in your Maven project by adding the following to your *pom.x
     <scope>compile</scope>
 </dependency>
 ```
+
+<!-- x-release-please-end -->
 
 ## DNS Caching
 The JVM, by default, caches DNS for infinity. DevCycle servers are load balanced and dynamic. To address this concern,
