@@ -37,23 +37,7 @@ import dev.openfeature.sdk.exceptions.TypeMismatchError;
 public class DevCycleProviderTest {
 
     @Test
-    public void testTrackWithNullDetails() throws Exception {
-        IDevCycleClient dvcClient = mock(IDevCycleClient.class);
-        when(dvcClient.isInitialized()).thenReturn(true);
-
-        DevCycleProvider provider = new DevCycleProvider(dvcClient);
-        provider.track("checkout-completed", new ImmutableContext("user-1234"), null);
-
-        ArgumentCaptor<DevCycleEvent> event = ArgumentCaptor.forClass(DevCycleEvent.class);
-        verify(dvcClient).track(any(), event.capture());
-
-        Assert.assertEquals("checkout-completed", event.getValue().getType());
-        Assert.assertNull(event.getValue().getValue());
-        Assert.assertEquals(new HashMap<>(), event.getValue().getMetaData());
-    }
-
-    @Test
-    public void testOpenFeatureClientTrackWithoutDetails() throws Exception {
+    public void testTrackWithoutDetails() throws Exception {
         IDevCycleClient dvcClient = mock(IDevCycleClient.class);
         when(dvcClient.isInitialized()).thenReturn(true);
 
@@ -64,6 +48,8 @@ public class DevCycleProviderTest {
         ArgumentCaptor<DevCycleEvent> event = ArgumentCaptor.forClass(DevCycleEvent.class);
         verify(dvcClient).track(any(), event.capture());
         Assert.assertEquals("checkout-completed", event.getValue().getType());
+        Assert.assertNull(event.getValue().getValue());
+        Assert.assertEquals(new HashMap<>(), event.getValue().getMetaData());
     }
 
     @Test
