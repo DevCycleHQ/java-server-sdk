@@ -21,7 +21,7 @@ java {
 
 group = "com.devcycle"
 archivesBaseName = "java-server-sdk"
-version = "2.10.0" // x-release-please-version
+version = "2.10.1" // x-release-please-version
 
 mavenPublishing {
     coordinates("com.devcycle", "java-server-sdk", version)
