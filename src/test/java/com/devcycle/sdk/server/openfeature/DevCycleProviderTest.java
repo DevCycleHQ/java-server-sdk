@@ -2,6 +2,7 @@ package com.devcycle.sdk.server.openfeature;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -13,14 +14,17 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import com.devcycle.sdk.server.common.api.IDevCycleClient;
+import com.devcycle.sdk.server.common.model.DevCycleEvent;
 import com.devcycle.sdk.server.common.model.EvalReason;
 import com.devcycle.sdk.server.common.model.Variable;
 
 import dev.openfeature.sdk.ErrorCode;
 import dev.openfeature.sdk.ImmutableContext;
+import dev.openfeature.sdk.OpenFeatureAPI;
 import dev.openfeature.sdk.ProviderEvaluation;
 import dev.openfeature.sdk.Reason;
 import dev.openfeature.sdk.Structure;
@@ -31,6 +35,22 @@ import dev.openfeature.sdk.exceptions.TypeMismatchError;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DevCycleProviderTest {
+
+    @Test
+    public void testTrackWithoutDetails() throws Exception {
+        IDevCycleClient dvcClient = mock(IDevCycleClient.class);
+        when(dvcClient.isInitialized()).thenReturn(true);
+
+        String domain = "track-without-details";
+        OpenFeatureAPI.getInstance().setProviderAndWait(domain, new DevCycleProvider(dvcClient));
+        OpenFeatureAPI.getInstance().getClient(domain).track("checkout-completed", new ImmutableContext("user-1234"));
+
+        ArgumentCaptor<DevCycleEvent> event = ArgumentCaptor.forClass(DevCycleEvent.class);
+        verify(dvcClient).track(any(), event.capture());
+        Assert.assertEquals("checkout-completed", event.getValue().getType());
+        Assert.assertNull(event.getValue().getValue());
+        Assert.assertEquals(new HashMap<>(), event.getValue().getMetaData());
+    }
 
     @Test
     public void testResolveClientNotInitialized() {
