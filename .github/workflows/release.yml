@@ -16,15 +16,17 @@ jobs:
   release-please:
     name: Release Please
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      # AUTOMATION_USER_TOKEN, not GITHUB_TOKEN: PRs opened by GITHUB_TOKEN don't trigger CI.
+      # Uses GITHUB_TOKEN, so CI does not run on the release PR by itself.
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         id: release
-        with:
-          token: ${{ secrets.AUTOMATION_USER_TOKEN }}
 
   publish:
     name: Publish to Maven Central
