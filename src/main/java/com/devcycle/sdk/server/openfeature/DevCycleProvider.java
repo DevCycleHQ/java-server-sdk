@@ -16,6 +16,7 @@ import dev.openfeature.sdk.EvaluationContext;
 import dev.openfeature.sdk.FeatureProvider;
 import dev.openfeature.sdk.ImmutableMetadata;
 import dev.openfeature.sdk.ImmutableMetadata.ImmutableMetadataBuilder;
+import dev.openfeature.sdk.ImmutableTrackingEventDetails;
 import dev.openfeature.sdk.Metadata;
 import dev.openfeature.sdk.ProviderEvaluation;
 import dev.openfeature.sdk.Reason;
@@ -212,6 +213,11 @@ public class DevCycleProvider implements FeatureProvider {
     public void track(String eventName, EvaluationContext context, TrackingEventDetails details) {
         if (!devcycleClient.isInitialized()) {
             throw new ProviderNotReadyError("DevCycle client not initialized");
+        }
+
+        // OpenFeature passes null details when Client.track() is called without them
+        if (details == null) {
+            details = new ImmutableTrackingEventDetails();
         }
 
         DevCycleUser user = DevCycleUser.fromEvaluationContext(context);
