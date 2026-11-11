@@ -1,72 +1,40 @@
 name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      prerelease:
-        description: "Prerelease"
-        required: true
-        default: false
-        type: boolean
-      draft:
-        description: "Draft"
-        required: true
-        default: false
-        type: boolean
-      version-increment-type:
-        description: "Which part of the version to increment:"
-        required: true
-        type: choice
-        options:
-          - major
-          - minor
-          - patch
-        default: "patch"
+  push:
+    branches:
+      - main
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
-  release:
-    name: Version Bump and Release
+  release-please:
+    name: Release Please
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      # AUTOMATION_USER_TOKEN, not GITHUB_TOKEN: PRs opened by GITHUB_TOKEN don't trigger CI.
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        id: release
+        with:
+          token: ${{ secrets.AUTOMATION_USER_TOKEN }}
 
+  publish:
+    name: Publish to Maven Central
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
-          token: ${{ secrets.AUTOMATION_USER_TOKEN }}
-          fetch-depth: 0
-
-      - uses: DevCycleHQ/release-action/prepare-release@v2.3.0
-        id: prepare-release
-        with:
-          github-token: ${{ secrets.AUTOMATION_USER_TOKEN }}
-          prerelease: ${{ github.event.inputs.prerelease }}
-          draft: ${{ github.event.inputs.draft }}
-          version-increment-type: ${{ github.event.inputs.version-increment-type }}
-
-      - name: Update Version in code
-        run: |
-          sed -i "s/^version = \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/version = \"${{steps.prepare-release.outputs.next-release-tag}}\"/g" build.gradle
-          sed -i "s/private String sdkVersion = \"[0-9]\+\.[0-9]\+\.[0-9]\+\";/private String sdkVersion = \"${{steps.prepare-release.outputs.next-release-tag}}\";/g" src/main/java/com/devcycle/sdk/server/common/model/PlatformData.java
-          sed -i "s/<java\.server\.sdk\.version>[0-9]\+\.[0-9]\+\.[0-9]\+<\/java\.server\.sdk\.version>/<java.server.sdk.version>${{steps.prepare-release.outputs.next-release-tag}}<\/java.server.sdk.version>/g" ./benchmark/pom.xml
-          sed -i "s/<version>[0-9]\+\.[0-9]\+\.[0-9]\+<\/version>/<version>${{steps.prepare-release.outputs.next-release-tag}}<\/version>/g" ./README.md
-          sed -i "s/java-server-sdk:[0-9]\+\.[0-9]\+\.[0-9]\+/java-server-sdk:${{steps.prepare-release.outputs.next-release-tag}}/g" ./README.md
-
-      - name: Commit version change
-        run: |
-          git config --global user.email "foundation-admin@devcycle.com"
-          git config --global user.name "DevCycle Automation"
-          git add ./build.gradle
-          git add ./src/main/java/com/devcycle/sdk/server/common/model/PlatformData.java
-          git add ./benchmark/pom.xml
-          git add ./README.md
-          git commit -m "Release ${{steps.prepare-release.outputs.next-release-tag}}"
-
-      - name: Push version change
-        run: |
-          git push origin HEAD:main
-        if: inputs.draft != true
+          ref: ${{ needs.release-please.outputs.tag_name }}
 
       - name: Set up Java 18
         uses: actions/setup-java@v5
@@ -84,18 +52,3 @@ jobs:
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
         run: |
           ./gradlew publishAllPublicationsToMavenCentral --no-configuration-cache
-
-      - uses: DevCycleHQ/release-action/create-release@v2.3.0
-        id: create-release
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ steps.prepare-release.outputs.next-release-tag }}
-          target: main
-          prerelease: ${{ github.event.inputs.prerelease }}
-          draft: ${{ github.event.inputs.draft }}
-          changelog: ${{ steps.prepare-release.outputs.changelog }}
-
-      - name: Display link to release
-        run: |
-          echo "::notice title=Release ID::${{ steps.create-release.outputs.release-id }}"
-          echo "::notice title=Release URL::${{ steps.create-release.outputs.release-url }}"
