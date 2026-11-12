@@ -32,7 +32,7 @@ public class PlatformData {
 
     @Schema(description = "DevCycle SDK Version")
     @Builder.Default
-    private String sdkVersion = "2.10.0"; // x-release-please-version
+    private String sdkVersion = "2.10.1"; // x-release-please-version
 
     @Schema(description = "DevCycle SDK Platform")
     @Builder.Default
