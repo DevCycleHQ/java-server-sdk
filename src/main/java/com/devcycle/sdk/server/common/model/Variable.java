@@ -43,6 +43,20 @@ public class Variable<T> {
     @JsonIgnore
     private final String evalReason = null;
 
+    /**
+     * Number values arrive as a Double (local bucketing) or as whatever Jackson picks for the
+     * JSON literal (cloud bucketing), so convert them to the class of the default value.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T convertNumber(Number value, T defaultValue) {
+        if (defaultValue instanceof Integer) {
+            return (T) Integer.valueOf(value.intValue());
+        } else if (defaultValue instanceof Float) {
+            return (T) Float.valueOf(value.floatValue());
+        }
+        return (T) Double.valueOf(value.doubleValue());
+    }
+
     public enum TypeEnum {
         STRING("String"),
         BOOLEAN("Boolean"),
