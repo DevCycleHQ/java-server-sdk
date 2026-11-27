@@ -191,6 +191,21 @@ public class DevCycleLocalClientTest {
     }
 
     @Test
+    public void variableNumberValueMatchesDefaultTypeTest() {
+        DevCycleUser user = getUser();
+        DevCycleLocalClient myClient = createClient(TestDataFixtures.SmallConfig());
+
+        Integer intValue = myClient.variableValue(user, "num-var", 0);
+        Assert.assertEquals(Integer.valueOf(12345), intValue);
+
+        Float floatValue = myClient.variableValue(user, "num-var", 0.0f);
+        Assert.assertEquals(Float.valueOf(12345.0f), floatValue);
+
+        Double doubleValue = myClient.variableValue(user, "num-var", 0.0);
+        Assert.assertEquals(Double.valueOf(12345.0), doubleValue);
+    }
+
+    @Test
     public void variableJsonValueTest() {
         DevCycleUser user = getUser();
         user.setEmail("giveMeVariationOn@email.com");

@@ -145,6 +145,9 @@ public final class DevCycleCloudClient implements IDevCycleClient {
             if (variable.getType() != variableType) {
                 throw new IllegalArgumentException(ErrorResponse.ErrorMessage.VARIABLE_TYPE_MISMATCH.getMessage());
             }
+            if (variableType == TypeEnum.NUMBER) {
+                variable.setValue(Variable.convertNumber((Number) variable.getValue(), defaultValue));
+            }
             if (beforeError != null) {
                 throw beforeError;
             }

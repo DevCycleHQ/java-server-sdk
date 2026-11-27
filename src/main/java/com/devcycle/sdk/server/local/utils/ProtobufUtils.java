@@ -76,7 +76,7 @@ public class ProtobufUtils {
                 variable = (Variable<T>) Variable.builder()
                         .key(sdkVariable.getKey())
                         .type(Variable.TypeEnum.NUMBER)
-                        .value(sdkVariable.getDoubleValue())
+                        .value(Variable.convertNumber(sdkVariable.getDoubleValue(), defaultValue))
                         .defaultValue(defaultValue)
                         .isDefaulted(false)
                         .eval(convertToEvalReason(sdkVariable.getEval()))

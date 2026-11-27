@@ -113,6 +113,38 @@ public class DevCycleCloudClientTest {
     }
 
     @Test
+    public void variableNumberValueMatchesDefaultTypeTest() {
+        DevCycleUser user = DevCycleUser.builder()
+                .userId("j_test")
+                .build();
+
+        // Jackson deserializes a whole JSON number as Integer and a fractional one as Double
+        when(apiInterface.getVariableByKey(user, "whole-number", dvcOptions.getEnableEdgeDB()))
+                .thenReturn(Calls.response(numberVariable("whole-number", 5)));
+        when(apiInterface.getVariableByKey(user, "fraction", dvcOptions.getEnableEdgeDB()))
+                .thenReturn(Calls.response(numberVariable("fraction", 2.5)));
+        when(apiInterface.getVariableByKey(user, "truncated", dvcOptions.getEnableEdgeDB()))
+                .thenReturn(Calls.response(numberVariable("truncated", 2.5)));
+
+        Double doubleValue = api.variableValue(user, "whole-number", 1.0);
+        Assert.assertEquals(Double.valueOf(5.0), doubleValue);
+
+        Float floatValue = api.variableValue(user, "fraction", 1.0f);
+        Assert.assertEquals(Float.valueOf(2.5f), floatValue);
+
+        Integer intValue = api.variableValue(user, "truncated", 1);
+        Assert.assertEquals(Integer.valueOf(2), intValue);
+    }
+
+    private static Variable numberVariable(String key, Number value) {
+        return Variable.builder()
+                .key(key)
+                .type(Variable.TypeEnum.NUMBER)
+                .value(value)
+                .build();
+    }
+
+    @Test
     public void getVariableTypeMismatchTest() {
         DevCycleUser user = DevCycleUser.builder()
                 .userId("j_test")
